@@ -19,7 +19,7 @@ VALIDATED_PYTHON_MAX_EXCLUSIVE: Final[tuple[int, int]] = (3, 13)
 class CheckStatus(StrEnum):
     """Severity of one diagnostic check."""
 
-    PASS = "pass"
+    PASS = "pass"  # noqa: S105 - diagnostic status, not a credential
     WARN = "warn"
     FAIL = "fail"
 
@@ -125,9 +125,7 @@ def collect_diagnostics(
                 "pacote instalado; artefatos do checkout não são exigidos",
             )
         )
-    checks.append(
-        _directory_check("data_directory", resolved_settings.data_dir, required=False)
-    )
+    checks.append(_directory_check("data_directory", resolved_settings.data_dir, required=False))
     return DiagnosticReport(
         application="Multicam Inteligente",
         version=__version__,

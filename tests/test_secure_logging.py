@@ -76,29 +76,30 @@ class SecureLoggingTests(TestCase):
     def test_file_handler_rotates_and_writes_json(self) -> None:
         with TemporaryDirectory() as temp_dir:
             log_dir = Path(temp_dir)
-            logger = configure_secure_logging(
-                logger_name="multicam.tests.rotation",
-                stream=StringIO(),
-                log_dir=log_dir,
-                max_bytes=256,
-                backup_count=1,
-            )
-            for _ in range(20):
-                log_event(
-                    logger,
-                    logging.INFO,
-                    "rotation_probe",
+            with patch("app.observability.secure_logging.os.name", "posix"):
+                logger = configure_secure_logging(
+                    logger_name="multicam.tests.rotation",
+                    stream=StringIO(),
+                    log_dir=log_dir,
+                    max_bytes=256,
+                    backup_count=1,
                 )
-            for handler in logger.handlers:
-                handler.flush()
+                for _ in range(20):
+                    log_event(
+                        logger,
+                        logging.INFO,
+                        "rotation_probe",
+                    )
+                for handler in logger.handlers:
+                    handler.flush()
 
-            current = log_dir / "multicam.log"
-            rotated = log_dir / "multicam.log.1"
-            payload = json.loads(current.read_text(encoding="utf-8").splitlines()[-1])
-            rotated_exists = rotated.is_file()
-            for handler in tuple(logger.handlers):
-                logger.removeHandler(handler)
-                handler.close()
+                current = log_dir / "multicam.log"
+                rotated = log_dir / "multicam.log.1"
+                payload = json.loads(current.read_text(encoding="utf-8").splitlines()[-1])
+                rotated_exists = rotated.is_file()
+                for handler in tuple(logger.handlers):
+                    logger.removeHandler(handler)
+                    handler.close()
 
         self.assertTrue(rotated_exists)
         self.assertEqual(payload["event"], "rotation_probe")
@@ -106,24 +107,25 @@ class SecureLoggingTests(TestCase):
     def test_protected_log_omits_raw_exception_message_and_absolute_path(self) -> None:
         with TemporaryDirectory() as temp_dir:
             log_dir = Path(temp_dir)
-            logger = configure_secure_logging(
-                logger_name="multicam.tests.exception-file",
-                stream=StringIO(),
-                log_dir=log_dir,
-            )
-            try:
-                raise RuntimeError("opaque-sensitive-value-123")
-            except RuntimeError:
-                log_event(
-                    logger,
-                    logging.ERROR,
-                    "safe_exception_probe",
-                    exc_info=True,
+            with patch("app.observability.secure_logging.os.name", "posix"):
+                logger = configure_secure_logging(
+                    logger_name="multicam.tests.exception-file",
+                    stream=StringIO(),
+                    log_dir=log_dir,
                 )
-            for handler in tuple(logger.handlers):
-                handler.flush()
-                logger.removeHandler(handler)
-                handler.close()
+                try:
+                    raise RuntimeError("opaque-sensitive-value-123")
+                except RuntimeError:
+                    log_event(
+                        logger,
+                        logging.ERROR,
+                        "safe_exception_probe",
+                        exc_info=True,
+                    )
+                for handler in tuple(logger.handlers):
+                    handler.flush()
+                    logger.removeHandler(handler)
+                    handler.close()
 
             rendered = (log_dir / "multicam.log").read_text(encoding="utf-8")
 
@@ -176,26 +178,30 @@ class SecureLoggingTests(TestCase):
 
         self.assertNotEqual(first, second)
 
-    def test_configuration_refuses_foreign_handler_without_closing_it(self) -> None:
+    def test_configuration_detaches_foreign_handler_without_closing_it(self) -> None:
         logger = logging.getLogger("multicam.tests.foreign-handler")
         foreign_handler = logging.StreamHandler(StringIO())
         logger.addHandler(foreign_handler)
         try:
-            with self.assertRaisesRegex(RuntimeError, "handlers externos"):
-                configure_secure_logging(logger_name=logger.name, stream=StringIO())
+            configure_secure_logging(logger_name=logger.name, stream=StringIO())
 
-            self.assertIn(foreign_handler, logger.handlers)
+            self.assertNotIn(foreign_handler, logger.handlers)
+            self.assertFalse(getattr(foreign_handler, "_closed", False))
         finally:
-            logger.removeHandler(foreign_handler)
+            if foreign_handler in logger.handlers:
+                logger.removeHandler(foreign_handler)
             foreign_handler.close()
 
     def test_file_destination_failure_falls_back_without_path_disclosure(self) -> None:
         stream = StringIO()
         with TemporaryDirectory() as temp_dir:
             private_path = Path(temp_dir) / "private-location"
-            with patch(
-                "app.observability.secure_logging._SecureRotatingFileHandler",
-                side_effect=OSError(f"denied: {private_path}"),
+            with (
+                patch("app.observability.secure_logging.os.name", "posix"),
+                patch(
+                    "app.observability.secure_logging._SecureRotatingFileHandler",
+                    side_effect=OSError(f"denied: {private_path}"),
+                ),
             ):
                 configure_secure_logging(
                     logger_name="multicam.tests.fallback",
@@ -207,6 +213,24 @@ class SecureLoggingTests(TestCase):
         self.assertEqual(payload["event"], "log_destination_unavailable")
         self.assertNotIn(str(private_path), stream.getvalue())
         self.assertEqual(payload["context"]["error_type"], "OSError")
+
+    def test_windows_file_logging_fails_closed_without_creating_path(self) -> None:
+        stream = StringIO()
+        with TemporaryDirectory() as temp_dir:
+            log_dir = Path(temp_dir) / "private-logs"
+            with patch("app.observability.secure_logging.os.name", "nt"):
+                logger = configure_secure_logging(
+                    logger_name="multicam.tests.windows-file-policy",
+                    stream=stream,
+                    log_dir=log_dir,
+                )
+
+            self.assertFalse(log_dir.exists())
+            self.assertEqual(len(logger.handlers), 1)
+
+        payload = json.loads(stream.getvalue())
+        self.assertEqual(payload["event"], "secure_file_logging_unavailable")
+        self.assertNotIn(str(log_dir), stream.getvalue())
 
     def test_file_logging_requires_at_least_one_backup(self) -> None:
         with TemporaryDirectory() as temp_dir:

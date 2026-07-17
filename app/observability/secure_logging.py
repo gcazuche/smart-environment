@@ -13,6 +13,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from hashlib import sha256
+from io import TextIOWrapper
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from stat import S_IRUSR, S_IWUSR, S_IXUSR
@@ -38,9 +39,7 @@ _SENSITIVE_HEADER = re.compile(
     r"(?im)\b(authorization|proxy-authorization|cookie|set-cookie)\b"
     r"(\s*[:=]\s*)[^\r\n]*"
 )
-_URL_CREDENTIALS = re.compile(
-    r"(?i)\b([a-z][a-z0-9+.-]*://)([^/\s:@]+):([^@\s/]+)@"
-)
+_URL_CREDENTIALS = re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)([^/\s:@]+):([^@\s/]+)@")
 _LABELED_SECRET = re.compile(
     r"(?i)\b(password|passwd|pwd|secret|token|api[-_]?key|authorization|cookie)\b"
     r"(\s*[:=]\s*)(?:\"[^\"]*\"|'[^']*'|[^\s,;]+)"
@@ -137,9 +136,7 @@ class SecureLogContext:
             "error_type": self.error_type,
         }
         return {
-            key: _safe_log_identifier(value)
-            for key, value in values.items()
-            if value is not None
+            key: _safe_log_identifier(value) for key, value in values.items() if value is not None
         }
 
 
@@ -165,9 +162,7 @@ def sanitize_for_log(value: object, *, key: object | None = None) -> object:
         return sanitized
     if isinstance(value, (list, tuple, set, frozenset)):
         items = list(value)
-        sanitized_items = [
-            sanitize_for_log(item) for item in items[:_MAX_COLLECTION_ITEMS]
-        ]
+        sanitized_items = [sanitize_for_log(item) for item in items[:_MAX_COLLECTION_ITEMS]]
         if len(items) > _MAX_COLLECTION_ITEMS:
             sanitized_items.append("[TRUNCATED]")
         return sanitized_items
@@ -208,9 +203,7 @@ class _JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         event_name = _normalize_event_name(getattr(record, "event_name", "log"))
-        correlation_id = _normalize_correlation_id(
-            getattr(record, "correlation_id", None)
-        )
+        correlation_id = _normalize_correlation_id(getattr(record, "correlation_id", None))
         record.correlation_id = correlation_id
         payload: dict[str, object] = {
             "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(),
@@ -285,7 +278,7 @@ class _SecureRotatingFileHandler(RotatingFileHandler):
             encoding=encoding,
         )
 
-    def _open(self) -> TextIO:
+    def _open(self) -> TextIOWrapper:
         stream = super()._open()
         if os.name != "nt":
             try:
@@ -302,14 +295,10 @@ class _SecureRotatingFileHandler(RotatingFileHandler):
             "logger": "multicam",
             "event": "log_write_failed",
             "message": "log_write_failed",
-            "correlation_id": _normalize_correlation_id(
-                getattr(record, "correlation_id", None)
-            ),
+            "correlation_id": _normalize_correlation_id(getattr(record, "correlation_id", None)),
         }
         try:
-            self._fallback_stream.write(
-                json.dumps(payload, separators=(",", ":")) + "\n"
-            )
+            self._fallback_stream.write(json.dumps(payload, separators=(",", ":")) + "\n")
         except (OSError, ValueError):
             return
 
@@ -336,6 +325,12 @@ def _close_owned_handlers(logger: logging.Logger) -> None:
             handler.close()
 
 
+def _detach_foreign_handlers(logger: logging.Logger) -> None:
+    for handler in tuple(logger.handlers):
+        if not _is_owned_handler(handler):
+            logger.removeHandler(handler)
+
+
 def configure_secure_logging(
     *,
     level: str = "INFO",
@@ -354,12 +349,7 @@ def configure_secure_logging(
 
     with _CONFIGURATION_LOCK:
         logger = logging.getLogger(logger_name)
-        foreign_handlers = [
-            handler for handler in logger.handlers if not _is_owned_handler(handler)
-        ]
-        if foreign_handlers:
-            raise RuntimeError("logger reservado já possui handlers externos")
-
+        _detach_foreign_handlers(logger)
         logger.setLevel(_resolve_level(level))
         logger.propagate = False
         _close_owned_handlers(logger)
@@ -371,6 +361,14 @@ def configure_secure_logging(
         logger.addHandler(stream_handler)
 
         if log_dir is not None:
+            if os.name == "nt":
+                log_event(
+                    logger,
+                    logging.WARNING,
+                    "secure_file_logging_unavailable",
+                    context=SecureLogContext(operation="configure-logging"),
+                )
+                return logger
             file_handler: _SecureRotatingFileHandler | None = None
             try:
                 log_dir.mkdir(
@@ -389,9 +387,7 @@ def configure_secure_logging(
                     fallback_stream=fallback_stream,
                 )
                 _mark_owned_handler(file_handler)
-                file_handler.setFormatter(
-                    _JsonFormatter(include_exception_details=True)
-                )
+                file_handler.setFormatter(_JsonFormatter(include_exception_details=True))
                 logger.addHandler(file_handler)
             except OSError as exc:
                 if file_handler is not None:

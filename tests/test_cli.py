@@ -64,9 +64,7 @@ class CliTests(TestCase):
             exit_code = main(["version"])
 
         metadata = tomllib.loads(
-            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
-                encoding="utf-8"
-            )
+            (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
         )
         self.assertEqual(exit_code, 0)
         self.assertEqual(stdout.getvalue().strip(), __version__)

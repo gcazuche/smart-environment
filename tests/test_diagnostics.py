@@ -1,7 +1,6 @@
 """Tests for deterministic and non-mutating diagnostics."""
 
 import json
-
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
@@ -55,9 +54,7 @@ class DiagnosticsTests(TestCase):
                 (root / directory).mkdir()
 
             serialized = json.dumps(
-                collect_diagnostics(
-                    _settings_for(root), version_info=(3, 12, 1)
-                ).to_dict()
+                collect_diagnostics(_settings_for(root), version_info=(3, 12, 1)).to_dict()
             )
             payload = json.loads(serialized)
 

@@ -32,9 +32,7 @@ def _boolean(name: str, raw_value: str) -> bool:
         return True
     if value in _FALSE_VALUES:
         return False
-    raise ConfigurationError(
-        f"{name} deve usar true/false, yes/no, on/off ou 1/0"
-    )
+    raise ConfigurationError(f"{name} deve usar true/false, yes/no, on/off ou 1/0")
 
 
 def _bounded_integer(name: str, raw_value: str, minimum: int, maximum: int) -> int:
