@@ -1,45 +1,48 @@
 # Fase 1 — Resumo
 
-Status: **em andamento — logging seguro concluído com ressalvas; gates finais abertos**.
+Status: **concluída com ressalvas operacionais documentadas**.
 
-## Objetivo alcançado até aqui
+## Objetivo alcançado
 
 - Contexto GSD, requisitos, roadmap, decisões, riscos e pesquisas persistidos.
-- Pacote Python modular inicial com configuração validada.
-- CLI `doctor` somente leitura, com saída humana/JSON e códigos de saída.
-- Logging JSON com contexto allowlist, correlação, redaction, rotação e fronteira fatal.
-- Vinte e seis testes unitários stdlib, compilação e smoke tests aprovados em Python
-  3.12.13.
-- Contexto confirmado para uma webcam inicial, Supabase/internet preferenciais,
-  expansão ESP32 e frames por evento.
+- Pacote Python modular com configuração validada e CLI `doctor` somente leitura.
+- Logging JSON com allowlist, correlação, redaction, rotação POSIX e fronteira fatal.
+- `uv.lock`, pré-requisito verificado `uv==0.11.17` e build backend fixado.
+- Pytest, Ruff, format-check, mypy strict, unittest, compileall, build e instalação
+  limpa aprovados.
+- **28/28 testes** aprovados em Python 3.11.15 e 3.12.13.
+- Webcam integrada confirmada por smoke de um frame em memória via DirectShow, sem
+  persistência ou biometria.
 
-## Arquivos principais
+## Decisões consolidadas
 
-- Criados: `pyproject.toml`, `.env.example`, `.gitignore`, `README.md`, `main.py`,
-  `app/`, `tests/`, `.planning/` e sentinelas de `data/`.
-- Modificados: não havia arquivos de aplicação anteriores.
+Python 3.11–3.12 é a matriz inicial. O motor facial será substituível e nenhum peso
+será baixado antes de validar licença para o uso pretendido. Supabase é a preferência
+central ainda sujeita a prova de conceito; SQLite permanece a primeira fronteira local
+e offline. Frames completos são opt-in e vinculados a eventos, nunca gravação contínua
+por pressuposto.
 
-## Decisões
+No Windows, logging em arquivo falha fechado e retorna a stderr porque `os.chmod` não
+configura DACL. Um adaptador Win32 e diretório fora do repositório/OneDrive serão
+necessários antes de ativá-lo.
 
-Python 3.12 é baseline; motor facial é substituível; InsightFace/ONNX é somente
-candidato condicionado à licença dos pesos. Supabase/PostgreSQL/pgvector central e
-SQLite local são propostas; dependências reais entram por fase e lockfile.
+## Ressalvas transferidas
 
-## Limitações e dívidas
-
-- pytest, Ruff e mypy não estão instalados; esses gates não foram executados.
-- SEC-007 permanece `em andamento` porque camadas futuras ainda não usam o contexto,
-  ACL explícita no Windows não foi validada e o entrypoint não ativa arquivo de log.
-- Build/instalação em venv limpo, Python 3.11 e lockfile continuam pendentes.
-- Nenhuma câmera, biometria, GPU, banco, API ou GUI foi testada/implementada.
-- Quantidade de pessoas, hardware, retenção e respostas jurídicas seguem `unspecified`.
-
-## Como validar
-
-Use os comandos e resultados em `VERIFICATION.md`. A fase não está concluída até os
-gates restantes passarem e as lacunas P0 de contexto serem tratadas.
+- PRIV-001 foi fechado somente como gate negativo: o sistema não possui caminho de
+  biometria real e deverá revalidar finalidade/base legal antes do cadastro da Fase 6.
+- SEC-007 continua em andamento para integração das camadas futuras e DACL Windows.
+- CAM-007 continua pendente: o smoke real não substitui adaptador, fonte simulada,
+  timeout/reconexão e testes automatizados da Fase 4.
+- Retenção, base legal, escala, hardware de produção, metas biométricas e licença dos
+  pesos continuam `unspecified`.
+- Nenhum serviço Supabase/PostgreSQL, modelo facial, GPU, API ou GUI foi validado.
 
 ## Próxima fase
 
-Ainda não autorizada: primeiro concluir FND-01-05 e o aceite da Fase 1; as ressalvas de
-SEC-007 devem ser resolvidas antes de habilitar persistência de logs em produção.
+A Fase 2 foi aberta apenas para configuração e persistência local. O primeiro slice
+implementável é um runtime SQLite preguiçoso e transacional, sem criar tabelas
+biométricas, conectar rede ou aceitar DSN arbitrária. O encerramento da fase continuará
+bloqueado até a prova de conceito isolada de Supabase/PostgreSQL/pgvector/Storage.
+
+Consulte `VERIFICATION.md` para comandos e evidências e
+`.planning/phases/02-database/PLAN.md` para a próxima tarefa atômica.

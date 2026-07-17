@@ -5,10 +5,10 @@
 | Tarefa | Estado | Evidência/lacuna |
 |---|---|---|
 | FND-01-01 | concluída | documentos e pesquisas persistidos e revisados |
-| FND-01-02 | concluída com ressalva | configuração testada em 3.12; 3.11 não executado |
+| FND-01-02 | concluída | configuração testada em Python 3.11.15 e 3.12.13 |
 | FND-01-03 | concluída | diagnóstico, testes de CLI e smoke doctor aprovados |
-| FND-01-04 | concluída com ressalvas | logs JSON, contexto allowlist, correlação, rotação e fronteira global; ACL Windows e bootstrap persistente seguem para integração |
-| FND-01-05 | em andamento | gates stdlib passam; pytest/Ruff/mypy, instalação limpa e lockfile pendentes |
+| FND-01-04 | concluída com ressalvas | logs JSON, allowlist, correlação, rotação e fronteira global; arquivo no Windows falha fechado até existir DACL validada |
+| FND-01-05 | concluída | lock, sync offline, gates 3.11/3.12, build e wheel limpo aprovados |
 
 ## FND-01-01 — Inicializar contexto GSD
 

@@ -704,7 +704,9 @@ O go-live exige aceite formal desses riscos pelo responsável técnico, controla
 
 - Pesquisa baseada somente em documentação oficial/primária listada abaixo.
 - Nenhum código, banco, rede, câmera, endpoint, pacote, imagem ou credencial foi analisado nesta etapa.
-- Nenhum SAST, SCA, secret scan, DAST, fuzzing, pentest ou conexão RTSP foi executado.
+- Nesta etapa de pesquisa, nenhum SAST, SCA, secret scan, DAST, fuzzing, pentest ou
+  conexão RTSP foi executado. A verificação posterior da Fase 1 fez apenas uma busca
+  passiva local por padrões de segredo; não equivale a um scanner dedicado.
 - Os itens da matriz são ameaças de projeto, não vulnerabilidades confirmadas.
 - Parâmetros de senha, token, threshold, retenção e offline precisam ser calibrados no ambiente e aprovados; números genéricos não foram transformados em política jurídica.
 - A pesquisa deve ser atualizada ao escolher hospedagem, biblioteca biométrica, mecanismo de cache criptografado e topologia de produção.

@@ -1,5 +1,24 @@
 # Changelog GSD
 
+## 2026-07-17 — Fase 1 concluída e Fase 2 aberta
+
+- Ambiente `.venv` recriado a partir de `uv.lock`, com `uv==0.11.17` como pré-requisito
+  verificado; build backend fixado em `setuptools==83.0.0` e `wheel==0.47.0`.
+- Corrigidos isolamento do logger sob pytest, tipo de `_open`, falso positivo S105,
+  imports, formatação e cache pytest com ACL incompatível.
+- Logging em arquivo no Windows agora falha fechado, sem criar caminho, até existir
+  um adaptador DACL validado.
+- `configure_secure_logging` aceita apenas `multicam`/`multicam.*`; logger do host foi
+  coberto por regressão e mantém seus handlers intactos.
+- **28/28** testes aprovados em Python 3.11.15 e 3.12.13; Ruff, format-check, mypy,
+  unittest, compileall, build, wheel limpo, compatibilidade e busca passiva local por
+  padrões de segredos aprovados.
+- Webcam integrada validada em spike autorizado: MSMF não abriu; DirectShow leu um
+  frame 640×480 em memória e liberou o dispositivo; nenhuma imagem/arquivo novo foi
+  criado em `data/`.
+- Fase 1 encerrada com ressalvas operacionais; Fase 2 aberta por DB-02-01.
+- Próxima tarefa: DB-02-02, runtime SQLite local e transacional, sem biometria ou rede.
+
 ## 2026-07-17 — Contexto de implantação e logging seguro
 
 - Escopo confirmado: uma webcam integrada na primeira versão, múltiplas

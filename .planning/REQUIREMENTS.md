@@ -132,7 +132,8 @@ locais de uso, responsáveis e canais externos de alerta.
   - Fonte simulada permite frames válidos, timeout, corrupção e desconexão programados.
   - Uso e limitações são documentados para Windows e Linux.
 - Testes: execução automatizada da fonte simulada; smoke test do script; hardware real marcado como teste manual pendente.
-- Status: pendente
+- Status: pendente — webcam integrada validada por spike manual de um frame em
+  2026-07-17; script, fonte simulada e contrato da Fase 4 ainda não existem
 
 ### CAM-008 — Ingestão segura de frames de ESP32
 
@@ -699,8 +700,10 @@ locais de uso, responsáveis e canais externos de alerta.
   - Nenhuma senha, chave, token ou URL credenciada fica no código ou exemplo.
   - Configuração possui tipos, defaults seguros e validação.
   - Logs mascaram valores sensíveis.
-- Testes: secret scan, configuração ausente/inválida, inspeção de logs e arquivo de exemplo.
-- Status: em andamento
+- Testes: busca passiva local por padrões de segredo no baseline, configuração
+  ausente/inválida, inspeção de logs e arquivo de exemplo; scanner dedicado em SEC-008.
+- Status: concluído para o gate da Fase 1 — não há segredo real, configuração e logs
+  foram testados; qualquer fase que introduzir credencial deve preservar estes critérios
 
 ### SEC-002 — Transporte e API protegidos
 
@@ -807,7 +810,9 @@ locais de uso, responsáveis e canais externos de alerta.
   - Cadastro registra versão do aviso/consentimento quando aplicável.
   - Mudança de finalidade exige revisão e não reutiliza dados automaticamente.
 - Testes: validação de pré-condição, registro/revogação aplicável e auditoria.
-- Status: pendente
+- Status: concluído como gate negativo da Fase 1 — uso biométrico real permanece
+  tecnicamente bloqueado enquanto finalidade detalhada, responsáveis, aviso e base
+  legal estiverem `unspecified`; cadastro/consentimento será revalidado antes da Fase 6
 
 ### PRIV-002 — Minimização de biometria e imagens
 
@@ -967,7 +972,9 @@ locais de uso, responsáveis e canais externos de alerta.
   - Código evita arquivos monolíticos, caminhos absolutos, credenciais e except vazios.
   - Versões compatíveis são fixadas após pesquisa.
 - Testes: execução dos comandos nativos, import smoke e verificação de configuração.
-- Status: em andamento
+- Status: concluído para o baseline da Fase 1 — comandos documentados, lock/build
+  fixados e gates aprovados em Python 3.11 e 3.12; ampliar a matriz por dependência
+  nativa nas fases correspondentes
 
 ### TEST-002 — Câmeras simuladas e integração de captura
 

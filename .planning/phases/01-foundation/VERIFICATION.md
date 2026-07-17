@@ -1,66 +1,125 @@
 # Fase 1 — Verificação
 
-Status: **Aprovado com ressalvas até FND-01-04; fase ainda aberta**.
+Status: **aprovada com ressalvas operacionais; FND-01-01..05 concluídas**.
 
-## Implementação
+## Implementação verificada
 
-Foram implementados configuração mínima validada, diagnóstico somente leitura,
-entrypoints, logging JSON seguro e testes stdlib. O contexto foi refinado para uma
-webcam inicial, Supabase/internet preferenciais, futura ingestão ESP32 e frames de
-eventos. Planejamento, pesquisa e checkpoint estão persistidos.
+Foram verificados configuração tipada, CLI somente leitura, logging JSON seguro,
+fronteira global de exceções, empacotamento e ambiente reproduzível. O lock principal
+não contém OpenCV, modelo facial, cliente Supabase nem dado biométrico.
 
-## Critérios e comandos
+## Comandos executados
 
 ```powershell
-& '<runtime-python-3.12.13>' -m unittest discover -s tests -v
-& '<runtime-python-3.12.13>' -m compileall -q app main.py tests
-& '<runtime-python-3.12.13>' -m app doctor --json
-& '<runtime-python-3.12.13>' -m app version
-& '<runtime-python-3.12.13>' main.py doctor
+uv lock --offline --cache-dir .uv-cache
+uv sync --extra dev --locked --offline --cache-dir .uv-cache
+.\.venv\Scripts\python.exe -m pytest -q
+uv run --python 3.11 --isolated --extra dev --locked --offline `
+  --cache-dir .uv-cache python -m pytest -q
+.\.venv\Scripts\ruff.exe check app main.py tests
+.\.venv\Scripts\ruff.exe format --check app main.py tests
+.\.venv\Scripts\mypy.exe app main.py tests
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+.\.venv\Scripts\python.exe -m compileall -q app main.py tests
+.\.venv\Scripts\python.exe -m app doctor --json
+uv build --offline --cache-dir .uv-cache --no-progress
+uv --cache-dir .uv-cache pip check --python .\.venv\Scripts\python.exe
+$highConfidenceSecretPatterns = (@(
+  '-----BEGIN ' + '(RSA |EC |OPENSSH )?' + 'PRIVATE KEY-----',
+  'AKIA' + '[0-9A-Z]{16}',
+  'sk_' + 'live_[0-9A-Za-z]+',
+  'service_' + 'role\s*[=:]\s*[0-9A-Za-z._-]+'
+)) -join '|'
+rg -n --hidden --glob '!.git/**' --glob '!.venv/**' --glob '!.uv-cache/**' `
+  --glob '!dist/**' --glob '!build/**' --glob '!*.egg-info/**' `
+  $highConfidenceSecretPatterns .
 ```
 
-## Evidências
+O wheel também foi instalado a partir de `%TEMP%`, fora do checkout, com:
 
-- `unittest`: **26 testes, 26 aprovados**, 0 falhas, 0 erros (0,248 s).
-- `compileall`: exit code 0.
-- `tomllib` sobre `pyproject.toml`: `pyproject: OK`.
-- `doctor --json`: exit code 0, cinco checks `pass`, `has_failures=false`.
-- layout instalado simulado: não exige `tests/`/`.planning` nem aponta dados para
-  `site-packages`; coberto por teste unitário.
-- `version`: exit code 0, versão `0.1.0`.
-- `main.py doctor`: exit code 0, cinco checks `OK`.
-- `MULTICAM_MAX_CAMERAS=0`: exit code 2 esperado e erro sanitizado.
-- busca passiva por chaves privadas/tokens de alta confiança: nenhum match.
-- redaction: Bearer/Basic, Authorization/Cookie, credencial em URL, embeddings,
-  imagens e campos pessoais comuns não aparecem na saída testada.
-- contexto: somente `operation`, `camera_id`, `device_id` e `error_type`; contexto
-  livre é recusado e identificador com `@` é redigido.
-- exceção fatal: mensagem/traceback bruto e path absoluto não são emitidos; arquivo
-  opcional preserva apenas tipos, source hash, função e linha.
-- logging: correlação com escopo, IDs não reutilizados fora do escopo, rotação,
-  `backup_count>=1`, proteção POSIX reaplicada e fallback de destino aprovados.
-- bootstrap do logger e exceção inesperada retornam código controlado sem traceback.
-- primeira tentativa de invocar o Python falhou no parser PowerShell e não executou
-  teste algum; causa/correção registradas em `debugging/2026-07-17-powershell-python-invocation.md`.
+```powershell
+$wheel = (Resolve-Path '.\dist\multicam_inteligente-0.1.0-py3-none-any.whl').Path
+$cache = (Resolve-Path '.\.uv-cache').Path
+Push-Location $env:TEMP
+uv run --isolated --python 3.11 --offline --cache-dir $cache `
+  --with $wheel multicam version
+uv run --isolated --python 3.11 --offline --cache-dir $cache `
+  --with $wheel multicam doctor --json
+Pop-Location
+```
 
-## Gaps
+Na busca passiva, a variável representou os quatro padrões efetivamente procurados:
+cabeçalho de chave privada PEM (RSA/EC/OpenSSH), access key AWS `AKIA` seguida de 16
+caracteres maiúsculos/dígitos, token `sk_live_` e atribuição `service_role`. Exit code
+1 do `rg` significou nenhum match no escopo após as exclusões acima. Isso não equivale
+a SAST/SCA ou scanner de segredos dedicado.
 
-- `pytest`, Ruff e mypy: consultas `python -m <ferramenta> --version` retornaram
-  `No module named ...`; gates não executados e nenhum download foi feito.
-- Python 3.11, build/instalação em venv limpo e lockfile: não validados.
-- `git diff --check` retornou 0 para arquivos rastreados; arquivos novos também foram
-  cobertos por `compileall`, testes e verificação explícita de linhas Python >100.
-- nenhuma dependência, câmera, modelo, GPU, banco, rede ou GUI foi exercitada.
-- ACL explícita do arquivo de log no Windows e o diretório persistente real não foram
-  validados; o entrypoint usa somente stderr estruturado nesta fase.
+## Evidências automatizadas
 
-## Testes manuais
+- Python 3.12.13: **28 testes, 28 aprovados**.
+- Python 3.11.15 gerenciado pelo `uv`: **28 testes, 28 aprovados**.
+- `unittest`: **28/28**; `compileall`: exit code 0.
+- Ruff lint e format-check: aprovados em 13 arquivos.
+- mypy strict: aprovado em 13 arquivos.
+- `uv.lock`: 16 pacotes resolvidos; sync e lock offline aprovados.
+- Build reproduzível com `setuptools==83.0.0` e `wheel==0.47.0`: sdist e wheel
+  gerados; wheel contém somente `app` e metadados.
+- Instalação limpa do wheel: versão `0.1.0`; `doctor` sem falhas e sem depender de
+  `tests/` ou `.planning`.
+- Compatibilidade do ambiente: 15 pacotes verificados, sem conflito.
+- Busca passiva local por quatro famílias de padrões de segredo: nenhum match.
+- `doctor --json`, CLI humana, versão, configuração inválida, redaction, correlação,
+  rotação, fallback e fronteira fatal aprovados.
 
-CLI humana foi executada. Testes de câmera/hardware não são aplicáveis à etapa e não
-serão declarados como validados.
+## Erros corrigidos
+
+- O capturador do pytest adicionava um handler ao logger reservado; a configuração
+  agora destaca handlers externos sem fechá-los e mantém `propagate=False`, evitando
+  encaminhar exceções brutas. Nomes fora de `multicam`/`multicam.*` são recusados antes
+  de tocar handlers do host.
+- A anotação de `_SecureRotatingFileHandler._open` foi ajustada para `TextIOWrapper`.
+- O falso positivo S105 de `CheckStatus.PASS` recebeu supressão local justificada.
+- Imports/formatação foram normalizados pelo Ruff.
+- O cache do pytest foi desativado porque a troca de identidade entre sandbox e
+  usuário Windows produzia ACL incompatível em `.pytest_cache`.
+- Logging em arquivo no Windows agora falha fechado: não cria diretório/arquivo e usa
+  somente stderr até existir um adaptador DACL validado.
+
+Detalhes de causa e regressão estão em
+`.planning/debugging/2026-07-17-fnd01-quality-gates.md`.
+
+## Smoke autorizado da primeira câmera
+
+Em 2026-07-17 foi executado um spike diagnóstico efêmero com
+`opencv-python-headless==4.13.0.92`, índice 0 e timeout rígido de oito segundos:
+
+- câmera PnP observada: `USB2.0 HD UVC WebCam`;
+- MSMF: não abriu; fallback DirectShow: abriu;
+- um frame válido em memória: 640×480, três canais, `uint8`;
+- duração: 2.247 ms; array recebido sobrescrito com zeros best-effort e `release()`
+  executado, sem garantia sobre cópias internas do driver;
+- nenhum preview, hash, arquivo, modelo facial, reconhecimento ou upload;
+- imagens/arquivos em `data/`: 5 antes, 5 depois, **0 novos**.
+
+A primeira invocação do wrapper falhou com `NameError` antes de abrir a câmera por
+perda de aspas na passagem PowerShell → Python. A passagem foi corrigida com Base64 e
+o teste foi repetido com sucesso. O spike confirma o hardware inicial, mas não conclui
+CAM-007 nem antecipa a implementação de captura da Fase 4.
+
+## Ressalvas não bloqueantes
+
+- O arquivo de log persistente continua desabilitado no Windows; DACL, rotação real e
+  diretório em `%LOCALAPPDATA%` serão validados antes de uso comercial.
+- OpenCV ainda não pertence ao ambiente da aplicação; entra apenas na Fase 4 após
+  fonte simulada e testes de ciclo de vida.
+- Nenhum GPU, modelo facial, PostgreSQL/Supabase, rede externa ou GUI foi exercitado.
+- Retenção, base legal, região/plano do Supabase, escala e licença dos pesos continuam
+  abertos e bloqueiam biometria comercial real.
 
 ## Resultado final
 
-**Aprovado com ressalvas** para FND-01-01..04. FND-01-05 e a Fase 1 permanecem
-abertos até os gates de ambiente/lock serem executados. SEC-007 continua `em
-andamento` nas camadas futuras e não autoriza log persistente de produção no Windows.
+FND-01-05 e a Fase 1 estão concluídas. TEST-001 e o baseline de SEC-001 foram
+atendidos. PRIV-001 foi atendido como gate negativo: nenhuma biometria real pode operar
+enquanto finalidade detalhada, responsáveis, aviso e base legal estiverem abertos.
+SEC-007 permanece em andamento porque novas camadas ainda deverão integrar o mesmo
+contrato e arquivo persistente no Windows segue proibido até o gate DACL.

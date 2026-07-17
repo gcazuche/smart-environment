@@ -2,7 +2,7 @@
 
 Versão: 0.1
 Data: 2026-07-17
-Status global: em andamento; Fase 1 iniciada e 0 de 20 fases concluídas.
+Status global: em andamento; Fase 2 iniciada e 1 de 20 fases concluídas.
 
 ## Regras de execução
 
@@ -28,7 +28,7 @@ Status global: em andamento; Fase 1 iniciada e 0 de 20 fases concluídas.
 
 ## Fase 1 — Fundação e ambiente
 
-Status: em andamento
+Status: concluída em 2026-07-17, com ressalvas operacionais em `VERIFICATION.md`
 
 **Objetivo:** inicializar o fluxo GSD, delimitar a primeira versão, pesquisar escolhas críticas, definir arquitetura-base e criar um projeto Python reproduzível, modular e seguro.
 
@@ -59,16 +59,17 @@ Status: em andamento
 
 ## Fase 2 — Configurações e banco
 
-Status: planejada
+Status: em andamento — contexto aberto; primeiro slice local ainda não implementado
 
 **Objetivo:** implementar configuração tipada e persistência transacional com esquema, migrações, integridade e abstração de embeddings.
 
 **Requisitos:** DB-001, DB-002, DB-003, DB-004, SEC-003, PRIV-002.
 
-**Dependências:** Fase 1 concluída; prova de conceito documentada da preferência
-Supabase/PostgreSQL, pgvector e Storage. Alternativa local/gerenciada é fallback se o
-spike reprovar segurança, operação, custo ou compatibilidade; não uma escolha reaberta
-sem evidência.
+**Dependências:** Fase 1 concluída. O runtime SQLite local pode iniciar sem rede. A
+prova de conceito documentada de Supabase/PostgreSQL, pgvector e Storage é gate para
+implementar o adaptador remoto e encerrar a fase. Alternativa local/gerenciada é
+fallback se o spike reprovar segurança, operação, custo ou compatibilidade; não uma
+escolha reaberta sem evidência.
 
 **Entregáveis:**
 

@@ -96,3 +96,32 @@ Decisões podem ser revistas por evidência. Itens ainda condicionais são marca
 - **Justificativa:** preserva o fluxo exigido sem modificar o ambiente global/local.
 - **Consequências:** comandos GSD são documentação até o usuário optar pela instalação.
 - **Revisão:** por solicitação do usuário.
+
+## ADR-007 — Logger reservado controla seus próprios handlers
+
+- **Data:** 2026-07-17
+- **Status:** aceita para o baseline
+- **Problema:** pytest e hosts podem anexar handlers que encaminhariam `exc_info` bruto,
+  enquanto recusar qualquer handler externo quebrou isolamento entre testes.
+- **Alternativas:** propagar ao root; rejeitar configuração; manter handlers externos;
+  destacá-los sem fechá-los.
+- **Decisão:** loggers no namespace reservado `multicam` usam `propagate=False`; a
+  configuração destaca handlers não pertencentes ao projeto, sem fechar recursos do
+  host, e instala somente handlers seguros próprios.
+- **Consequências:** integrações que precisam consumir eventos deverão usar uma saída
+  sanitizada explícita, não anexar handler arbitrário ao logger reservado.
+- **Revisão:** ao criar API pública de observabilidade ou integrar um coletor.
+
+## ADR-008 — Webcam integrada e fallback DirectShow no primeiro hardware
+
+- **Data:** 2026-07-17
+- **Status:** evidência de spike; implementação pendente na Fase 4
+- **Problema:** escolher e validar o primeiro hardware real sem antecipar captura ou
+  persistência biométrica.
+- **Alternativas:** webcam integrada, webcam USB adicional, stream IP/RTSP ou ESP32.
+- **Decisão:** a webcam integrada `USB2.0 HD UVC WebCam` é `camera-local-1`. No smoke
+  atual, MSMF não abriu e DirectShow entregou um frame 640×480; a futura implementação
+  deve manter fallback e fonte simulada, sem assumir índice 0 como identidade estável.
+- **Consequências:** o spike não fixa FPS, resolução comercial, driver ou backend para
+  outras máquinas e não conclui CAM-007. ESP32 permanece expansão posterior.
+- **Revisão:** Fase 4, com testes simulados e checklist Windows/Linux.
