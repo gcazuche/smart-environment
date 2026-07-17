@@ -9,15 +9,18 @@ artefatos GSD necessários para retomar o trabalho sem depender da conversa.
 
 - TEST-001: testes automatizados e evidência.
 - SEC-001: configuração sem segredos no repositório.
-- SEC-007: tratamento de exceções e logs seguros (ainda pendente).
+- SEC-007: baseline de tratamento de exceções e logs seguros implementado; integração
+  com camadas futuras, ACL Windows e destino persistente real permanecem pendentes.
 - Os demais requisitos permanecem planejados, não implementados.
 
 ## Estado atual de entrada
 
-- Repositório Git vazio, branch `main`, sem commits.
+- Repositório Git inicializado, branch `main`, com checkpoints locais da fundação.
 - Python/pytest/ruff/mypy não estão no `PATH` do sistema.
 - Runtime empacotado disponível: Python 3.12.13.
-- Escala, hardware, SO de produção, banco/hospedagem e retenção: `unspecified`.
+- Uma webcam integrada é a fonte real inicial; webcams/ESP32 são expansão futura.
+- Supabase/internet são preferências; SQLite/offline continua obrigatório.
+- Hardware, SO de produção, quantidade de pessoas, retenção e base legal: `unspecified`.
 
 ## Decisões relevantes
 
@@ -25,6 +28,8 @@ artefatos GSD necessários para retomar o trabalho sem depender da conversa.
 - Baseline Python 3.12 e suporte alvo a 3.11.
 - Nenhum modelo/peso facial é baixado nesta fase.
 - Nenhuma dependência externa é necessária para o smoke test inicial.
+- Frames completos são opt-in por evento; gravação contínua não é presumida.
+- Licenças são avaliadas com postura comercial, embora o uso imediato seja um TCC.
 
 ## Restrições
 

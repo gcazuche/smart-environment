@@ -46,19 +46,25 @@ avaliada, transparência e controles compatíveis com a LGPD.
 A primeira versão utilizável será uma vertical local e autorizada:
 
 1. execução em um computador;
-2. uma a quatro fontes simultâneas, incluindo fonte simulada;
+2. exatamente uma fonte real: a webcam integrada do próprio computador, além de
+   fontes simuladas somente para testes;
 3. cadastro, embeddings, reconhecimento e desconhecidos;
-4. PostgreSQL central local e cache/fila SQLite no cliente;
+4. Supabase como serviço central preferencial, ainda sujeito a validação técnica,
+   e cache/fila SQLite no cliente para operação local/offline;
 5. login com papéis administrador, operador e visualizador;
 6. painel PySide6 básico, histórico e auditoria;
-7. API local segura e contratos preparados para distribuição;
+7. API segura e contratos preparados para acesso preferencial pela internet, sem
+   eliminar a operação local durante indisponibilidade de rede;
 8. testes automatizados sem exigir câmera física.
 
-Escala, sistema operacional alvo, GPU, quantidade de identidades e retenção ainda
-estão `unspecified`; os números acima são premissas provisórias, não limites finais.
+Sistema operacional alvo, GPU, quantidade de identidades e política de retenção
+ainda estão `unspecified`. A primeira versão tem exatamente uma câmera real; a
+arquitetura, porém, deve permitir expansão posterior sem fixar esse número como limite.
 
 ## Funcionalidades futuras
 
+- Múltiplas webcams e câmeras baseadas em ESP32; os modelos, protocolos e formatos
+  finais dessas fontes ainda não foram definidos.
 - Vários computadores clientes e alta disponibilidade do servidor.
 - Balanceamento de inferência entre dispositivos.
 - Anti-spoofing por modelo especializado e sensores de profundidade.
@@ -76,10 +82,20 @@ estão `unspecified`; os números acima são premissas provisórias, não limite
 
 ## Premissas
 
-- Uso inicial: 1–4 câmeras em rede local (`unspecified`, aguardando confirmação).
+- Uso inicial confirmado: exatamente 1 webcam integrada do próprio computador.
+- Expansão futura: múltiplas webcams e câmeras baseadas em ESP32; tipos finais de
+  câmera e protocolos permanecem `unspecified`.
 - Crescimento e volume de pessoas: `unspecified`.
-- PostgreSQL local como padrão inicial; Supabase permanece alternativa.
-- Modo offline é obrigatório e a fila local usa identificadores idempotentes.
+- Supabase é o serviço central preferencial, mas a escolha ainda requer prova de
+  conceito e validação técnica, de segurança, privacidade, custo e licenças.
+- A internet é o meio de comunicação preferido; modo local/offline continua
+  obrigatório e a fila local usa identificadores idempotentes.
+- O armazenamento de frames foi solicitado, mas retenção, granularidade (por evento
+  ou contínua), local de armazenamento e base legal permanecem `unspecified`. Frames
+  completos são opt-in e associados a eventos por padrão; captura/gravação contínua
+  não é presumida.
+- O contexto imediato é acadêmico (TCC), mas arquitetura, dependências e licenças
+  devem ser avaliadas como se houvesse uso comercial.
 - HTTPS é terminado em proxy confiável no ambiente distribuído.
 
 ## Privacidade

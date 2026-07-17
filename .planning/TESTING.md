@@ -13,10 +13,10 @@
 | Tipo | Cobertura planejada |
 |---|---|
 | Unitário | configuração, filas, limiar, deduplicação, permissões, retenção |
-| Integração | PostgreSQL/pgvector, Alembic, filesystem, fila offline |
+| Integração | Supabase/PostgreSQL/pgvector, Storage privado, Alembic, filesystem e fila offline |
 | API | autenticação, autorização, validação, paginação, idempotência |
 | Interface | modelos/view-models, sinais e smoke test Qt offscreen |
-| Câmeras | fonte simulada, arquivo, desconexão/reconexão; hardware manual |
+| Câmeras | fonte simulada, webcam integrada, arquivo, ESP32 simulado, desconexão/reconexão; hardware manual |
 | Reconhecimento | conhecidos/desconhecidos, limiar, margem, falso positivo/negativo |
 | Sincronização | offline, retry, ordem, conflito e duplicação |
 | Carga | múltiplas fontes, filas limitadas, CPU/RAM, latência e descarte |

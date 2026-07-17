@@ -16,8 +16,14 @@ busca em redes sociais ou vigilância fora do escopo declarado.
 - planejamento GSD persistente em `.planning/`;
 - configuração mínima por variáveis de ambiente, com validação;
 - comando de diagnóstico somente leitura;
+- logging JSON seguro com correlação e tratamento global de exceções;
 - testes unitários sem dependências externas;
 - arquitetura e roadmap para banco, câmeras, visão, GUI, API e sincronização.
+
+A primeira fonte real será uma webcam integrada. A arquitetura prepara expansão para
+múltiplas webcams e ESP32, com inferência local, Supabase como serviço central
+preferencial e frames completos somente por evento/opt-in. Nada disso, além da
+fundação, foi conectado a hardware ou serviço real nesta fase.
 
 ## Pré-requisitos
 
@@ -67,7 +73,8 @@ python -m app doctor --json
 
 O fluxo manual adotado é:
 
-1. ler `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md` e `DECISIONS.md`;
+1. ler `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`,
+   `.planning/ROADMAP.md`, `.planning/STATE.md` e `.planning/DECISIONS.md`;
 2. abrir o contexto/plano da fase atual;
 3. executar uma tarefa atômica;
 4. testar e registrar evidência;
@@ -101,7 +108,9 @@ Ela não foi instalada automaticamente. Detalhes: `.planning/research/GSD_TOOLIN
 
 - nenhum teste de câmera, GPU, PostgreSQL ou GUI foi executado;
 - o motor/modelo facial depende de decisão técnica e de licença dos pesos;
-- escala, retenção, topologia e hardware aguardam confirmação;
+- uma câmera inicial está confirmada; escala futura, modelos ESP32, retenção, base
+  legal, hardware e região/plano do Supabase aguardam definição/validação;
+- arquivo de log persistente não está ativo; ACL do Windows ainda precisa de gate;
 - `.env` não é carregado automaticamente nesta fase; exporte as variáveis ou use os
   defaults seguros do diagnóstico.
 

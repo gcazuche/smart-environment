@@ -7,8 +7,8 @@
 | FND-01-01 | concluída | documentos e pesquisas persistidos e revisados |
 | FND-01-02 | concluída com ressalva | configuração testada em 3.12; 3.11 não executado |
 | FND-01-03 | concluída | diagnóstico, testes de CLI e smoke doctor aprovados |
-| FND-01-04 | pendente | logging/redaction e fronteira global de exceções |
-| FND-01-05 | pendente | pytest/Ruff/mypy, instalação limpa e lockfile |
+| FND-01-04 | concluída com ressalvas | logs JSON, contexto allowlist, correlação, rotação e fronteira global; ACL Windows e bootstrap persistente seguem para integração |
+| FND-01-05 | em andamento | gates stdlib passam; pytest/Ruff/mypy, instalação limpa e lockfile pendentes |
 
 ## FND-01-01 — Inicializar contexto GSD
 
@@ -67,7 +67,7 @@
 - **Prioridade:** P0
 - **Risco:** médio
 - **Objetivo:** atender o baseline de SEC-007 sem vazar dados em erros.
-- **Arquivos:** `app/logging.py` (nome final a confirmar), entrypoints e testes.
+- **Arquivos:** `app/observability/secure_logging.py`, entrypoints e testes.
 - **Dependências:** FND-01-02..03.
 - **Passos:** definir eventos/redaction/correlation ID; capturar apenas na fronteira;
   preservar causa no log protegido; testar destino indisponível e saída pública.
@@ -77,6 +77,10 @@
 - **Resultado esperado:** limite de erro seguro e observável.
 - **Reversão:** voltar ao entrypoint anterior e manter incidente registrado.
 - **Impacto de segurança:** reduz exposição de paths, tokens e dados biométricos.
+- **Evidência executada:** testes de Basic/Cookie, PII em contexto, traceback sem
+  mensagem bruta/path, correlação, rotação, proteção POSIX pós-rotação, destino
+  indisponível, handler externo, bootstrap e encerramento fatal. ACL explícita no
+  Windows e ativação do arquivo no entrypoint não são presumidas.
 
 ## FND-01-05 — Validar e fechar a fase
 

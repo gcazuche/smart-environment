@@ -2,7 +2,8 @@
 
 Versão: 0.1
 Data: 2026-07-17
-Estado: backlog inicial; nenhuma tarefa concluída.
+Estado: backlog inicial; nenhum item `BLG-*` concluído. Tarefas atômicas `FND-*` têm
+estado próprio no plano da Fase 1.
 
 ## Política de priorização
 
@@ -27,7 +28,8 @@ Estado: backlog inicial; nenhuma tarefa concluída.
 - Resultado esperado: registrar usuários, locais, base legal, consentimento, quantidades de pessoas/câmeras, SO, hardware/GPU, rede, retenção e metas; manter respostas ausentes como unspecified e bloquear uso real quando necessário.
 - Validação: revisão das respostas com responsável de produto/privacidade e checklist de lacunas.
 - Impacto de segurança: impede implantação biométrica sem finalidade, autoridade ou capacidade definidas.
-- Status: pendente
+- Status: em andamento — câmera inicial, direção Supabase/internet, frames e postura
+  comercial confirmados; pessoas, hardware, retenção e base legal ainda pendentes
 
 ### BLG-002 — Pesquisar stack, modelos, licenças e arquitetura
 
@@ -40,7 +42,8 @@ Estado: backlog inicial; nenhuma tarefa concluída.
 - Resultado esperado: comparar OpenCV, InsightFace/FaceNet/DeepFace, ONNX providers, PySide6, FastAPI, PostgreSQL/Supabase, pgvector/FAISS e opções de concorrência, com compatibilidade, manutenção, precisão, segurança e licenças.
 - Validação: matriz de evidências baseada em fontes primárias, spike mínimo e ADRs; escolhas sem evidência continuam unspecified.
 - Impacto de segurança: evita modelo/dependência inseguro, abandonado ou com licença incompatível.
-- Status: em andamento — pesquisa documental concluída; spikes/licenças pendentes
+- Status: em andamento — pesquisa documental inclui Supabase/ESP32; provas de conceito,
+  benchmark e licenças de modelos/pesos pendentes
 
 ### BLG-003 — Inicializar projeto e gates básicos
 
@@ -53,7 +56,8 @@ Estado: backlog inicial; nenhuma tarefa concluída.
 - Resultado esperado: projeto modular, configuração tipada, logs redigidos, exceção global, ambiente reproduzível, lint, format-check, type-check, Pytest e secret scan.
 - Validação: recriar ambiente limpo e executar import/build, qualidade, smoke test e scan.
 - Impacto de segurança: estabelece defaults seguros e impede segredo real no repositório.
-- Status: em andamento — núcleo stdlib testado; lock/lint/type-check pendentes
+- Status: em andamento — núcleo stdlib e baseline de logging seguro testados;
+  lock/lint/type-check, ACL de arquivo no Windows e bootstrap persistente pendentes
 
 ### BLG-004 — Modelar esquema e configurações
 
@@ -382,16 +386,18 @@ Estado: backlog inicial; nenhuma tarefa concluída.
 - Impacto de segurança: impede associação biométrica silenciosa ou sem autoridade.
 - Status: pendente
 
-### BLG-029 — Implementar contratos da API central
+### BLG-029 — Implementar contratos da API central e ingestão ESP32
 
 - Fase: 12
 - Tipo: API
 - Risco: crítico
 - Dependências: BLG-022, BLG-028
-- Requisitos: SYNC-001
+- Requisitos: SYNC-001, CAM-008
 - Arquivos-alvo: app/api/, tests/api/
-- Resultado esperado: API versionada, OpenAPI, paginação, erros e idempotency keys para recursos e sync.
-- Validação: contract tests, entradas inválidas, paginação, compatibilidade e erros.
+- Resultado esperado: API versionada, OpenAPI, paginação, erros e idempotency keys para
+  recursos/sync, além de gateway autenticado e limitado para frames JPEG do ESP32.
+- Validação: contract tests, entradas inválidas, paginação, compatibilidade, erros,
+  JPEG hostil/sobredimensionado, replay, timeout e rate limit por dispositivo.
 - Impacto de segurança: nova trust boundary exige validação e mínimo de dados.
 - Status: pendente
 

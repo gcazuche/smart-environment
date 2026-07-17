@@ -10,7 +10,8 @@ os dois podem coexistir no mesmo computador sem remover a fronteira lógica.
 ```mermaid
 flowchart LR
     subgraph Edge["Cliente de borda"]
-        C["Câmeras autorizadas"] --> CAP["Workers de captura"]
+        W["Webcam integrada (v1)"] --> CAP["Workers de captura"]
+        E["Webcams/ESP32 (futuro)"] --> ING["Adaptadores/gateway"] --> CAP
         CAP --> Q["Filas limitadas / latest frame"]
         Q --> INF["Detecção, tracking e embeddings"]
         INF --> MATCH["Índice local versionado"]
@@ -18,14 +19,28 @@ flowchart LR
         EV --> OQ["Fila offline idempotente"]
         UI["PySide6"] <-->|"sinais/DTOs"| CAP
     end
-    subgraph Central["Servidor central"]
+    subgraph Central["Serviço central preferencial"]
         API["FastAPI / HTTPS"] --> SVC["Serviços de aplicação"]
-        SVC --> PG["PostgreSQL + pgvector"]
+        SVC --> PG["Supabase PostgreSQL + pgvector"]
+        SVC --> OBJ["Supabase Storage privado"]
         SVC --> AUD["Auditoria e alertas"]
     end
     OQ -->|"lotes assinados/autenticados"| API
     API -->|"versões, pessoas e políticas"| MATCH
 ```
+
+## Topologia evolutiva confirmada
+
+- **Primeira versão:** um computador, uma webcam integrada e reconhecimento local;
+  a rede não participa da decisão a cada frame.
+- **Central preferencial:** Supabase mantém metadados canônicos, pgvector e objetos
+  privados, sujeito a prova de conceito de RLS, região, custo, backup e restauração.
+- **Expansão:** cada webcam recebe worker/fila limitada; ESP32 é nó de
+  captura/transporte e envia JPEG por conexão autenticada de saída ou gateway local.
+- **Internet:** nenhum stream MJPEG do ESP32 é publicado diretamente. Chaves
+  `service_role`/secret ficam somente no backend confiável, nunca no desktop ou ESP32.
+- **Queda de rede:** inferência local continua e eventos entram em outbox SQLite
+  idempotente; sincronização posterior usa backoff e limites.
 
 ## Módulos
 
@@ -76,11 +91,15 @@ escaláveis que devem receber mensagens limitadas e idempotentes.
 
 ## Dados e armazenamento
 
-- PostgreSQL é a fonte canônica relacional.
+- Supabase/PostgreSQL é a fonte canônica relacional preferencial, ainda não validada.
 - `pgvector` guarda vetores tipados e indexáveis próximos às permissões/metadados.
 - Cliente mantém subconjunto autorizado e versionado; SQLite persiste a fila offline.
-- Imagens são opcionais, com nomes gerados pelo sistema, diretório não público,
-  metadados no banco, limites de tamanho e retenção.
+- Imagens são opcionais e vinculadas a eventos; Supabase Storage privado é a opção
+  preferencial, com nomes gerados, metadados no banco, limites e URLs assinadas curtas.
+- Backup do PostgreSQL não é tratado como backup dos objetos do Storage; restore e
+  reconciliação dos dois conjuntos exigem testes separados.
+- Gravação contínua não é presumida. Retenção, granularidade e base legal continuam
+  `unspecified` e bloqueiam armazenamento comercial real.
 - Logs nunca contêm senhas, tokens, URL RTSP completa ou embedding bruto.
 
 ## Sincronização offline
@@ -103,7 +122,7 @@ versão e cursor. Conflitos administrativos são registrados, não sobrescritos 
 ```mermaid
 flowchart TB
     OP["Usuário"] -->|"credenciais"| UI["Cliente/UI"]
-    CAM["RTSP/USB não confiável"] --> EDGE["Processamento de borda"]
+    CAM["Webcam/RTSP/ESP32 não confiável"] --> EDGE["Processamento de borda"]
     EDGE -->|"mTLS/JWT sobre HTTPS"| API["API central"]
     API --> DB["Dados biométricos"]
     ADMIN["Administrador"] -->|"ações privilegiadas"| API

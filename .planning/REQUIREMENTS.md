@@ -18,31 +18,39 @@ câmeras, banco, API e GUI continuam sem implementação ou validação real.
 
 | Entrada | Valor |
 |---|---|
-| repo_url_ou_snapshot | workspace local fornecido; estado de implementação não avaliado neste artefato |
-| stack_tecnologica | Python 3.11+ e tecnologias preferenciais descritas; versões e escolhas finais unspecified |
+| repo_url_ou_snapshot | workspace local fornecido e fundação Python avaliada; não há remoto configurado |
+| stack_tecnologica | Python 3.11+; Supabase preferencial; SQLite offline; webcam integrada inicial; versões e escolhas biométricas finais unspecified |
 | nivel_seguranca | unspecified; o domínio biométrico exige baseline conservador |
 | alvos_compliance | LGPD explicitamente citada; demais alvos unspecified |
 | entregaveis_desejados | sistema local evolutivo para cliente-servidor, GUI, API, reconhecimento, sincronização, testes e documentação |
 | fontes_prioritarias | documentação oficial e padrões primários; lista final unspecified |
 | ferramentas_prioritarias | OpenCV, alternativas de reconhecimento, ONNX Runtime, FastAPI, PostgreSQL/Supabase, SQLAlchemy, Alembic, PySide6 e Pytest; seleção final unspecified |
 | escopo_funcional | descrito neste documento e no roadmap |
-| restricoes_operacionais | uso autorizado, proteção biométrica, operação CPU e GPU opcional; capacidade e topologia unspecified |
-| ambiente_execucao | Windows e Linux devem ser documentados; SO inicial, hardware, GPU e rede reais unspecified |
+| restricoes_operacionais | uso autorizado, proteção biométrica, uma webcam real inicial, internet preferencial com modo offline e postura de licença comercial |
+| ambiente_execucao | computador Windows atual com webcam integrada; Windows/Linux futuros, hardware, GPU e rede reais ainda unspecified |
 | alvo_dast | unspecified |
 | autorizacao_para_testes_ativos | unspecified; nenhum teste ativo está autorizado por este baseline |
 
-Decisões ainda unspecified: quantidade inicial e futura de câmeras; combinação real de USB/IP/RTSP; quantidade de pessoas; hardware e GPU; SO primário; PostgreSQL local ou Supabase; pgvector, FAISS ou outra representação; implantação LAN ou internet; período de retenção; metas de latência/FPS/precisão; limiares de confiança; política de vivacidade; funcionalidades exatas da primeira versão; locais de uso; base legal, consentimento e responsáveis operacionais; canais externos de alerta.
+Decisões confirmadas: uma webcam integrada na primeira versão; expansão futura para
+múltiplas webcams e ESP32; Supabase como preferência ainda sujeita a prova de conceito;
+internet como meio preferencial, sem remover operação offline; armazenamento de frames
+solicitado; avaliação de licenças como produto comercial. Ainda estão `unspecified`:
+quantidade futura e protocolos finais das câmeras; quantidade de pessoas; hardware/GPU;
+SO de produção; período e granularidade de retenção; base legal/consentimento; região,
+plano, custos e limites do Supabase; metas de latência/FPS/precisão; limiares; vivacidade;
+locais de uso, responsáveis e canais externos de alerta.
 
 ## Câmeras
 
 ### CAM-001 — Abstração de fontes de vídeo
 
-- Descrição: disponibilizar uma interface substituível de câmera para USB, webcam integrada, IP/RTSP, arquivo de vídeo e fonte simulada.
+- Descrição: disponibilizar uma interface substituível, começando pela webcam integrada
+  e fonte simulada e permitindo futuros adaptadores USB, IP/RTSP, arquivo e ESP32.
 - Prioridade: crítica
 - Fase: 4 — Captura de uma câmera
 - Dependências: SEC-001
 - Critérios de aceitação:
-  - Cada tipo possui adaptador com abrir, ler, estado e liberar.
+  - Cada tipo efetivamente implementado possui adaptador com abrir, ler, estado e liberar.
   - Fonte inválida retorna erro tipado sem encerrar a aplicação.
   - Caminhos e credenciais não ficam fixos no código.
 - Testes: unitários por adaptador simulado; integração com arquivo; validação manual de cada hardware real disponível.
@@ -124,6 +132,24 @@ Decisões ainda unspecified: quantidade inicial e futura de câmeras; combinaç�
   - Fonte simulada permite frames válidos, timeout, corrupção e desconexão programados.
   - Uso e limitações são documentados para Windows e Linux.
 - Testes: execução automatizada da fonte simulada; smoke test do script; hardware real marcado como teste manual pendente.
+- Status: pendente
+
+### CAM-008 — Ingestão segura de frames de ESP32
+
+- Descrição: receber JPEG/snapshots de câmeras ESP32 como nós de captura, mantendo
+  detecção e reconhecimento no cliente de borda/servidor confiável no baseline.
+- Prioridade: alta
+- Fase: 12 — API central
+- Dependências: CAM-001, SYNC-001, SEC-002
+- Critérios de aceitação:
+  - O ESP32 inicia comunicação autenticada de saída ou usa gateway local confiável;
+    nenhum servidor MJPEG/HTTP do dispositivo é exposto diretamente à internet.
+  - Payload, tipo, tamanho, resolução, frequência, timeout e dispositivo são validados.
+  - Credencial elevada do Supabase nunca é instalada no ESP32; revogação e rotação são
+    possíveis por dispositivo.
+  - Falha de rede não bloqueia outras fontes e não cria fila de frames sem limite.
+- Testes: dispositivo simulado, JPEG inválido/sobredimensionado, autenticação negada,
+  replay, timeout, reconexão, rate limit e checklist manual em hardware autorizado.
 - Status: pendente
 
 ## Reconhecimento facial
@@ -482,6 +508,9 @@ Decisões ainda unspecified: quantidade inicial e futura de câmeras; combinaç�
   - Agrupamento registra método/versão e permite correção humana.
   - Intervalo configurável limita imagens repetidas.
   - Exclusão e conversão preservam auditoria mínima legalmente permitida.
+  - Frame completo é opt-in e vinculado a evento; o padrão não presume vídeo contínuo.
+  - Objetos ficam privados, com referência no banco e acesso temporário autorizado;
+    retenção e exclusão reconciliam metadado e objeto.
 - Testes: agrupamento/separação, repetição, classificação, exclusão, conversão e retenção.
 - Status: pendente
 
@@ -749,7 +778,8 @@ Decisões ainda unspecified: quantidade inicial e futura de câmeras; combinaç�
   - IDs de correlação ligam erro, câmera, dispositivo e operação.
   - Encerramento controlado ocorre em erro fatal.
 - Testes: exceções injetadas por camada, redaction, rotação de log, correlação e falha do destino de log.
-- Status: pendente
+- Status: em andamento — baseline da CLI coberto por logs JSON, redaction, correlação,
+  rotação e fronteira fatal; integração com as camadas futuras permanece pendente
 
 ### SEC-008 — Supply chain e gates de segurança
 

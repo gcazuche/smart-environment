@@ -45,20 +45,30 @@ Decisões podem ser revistas por evidência. Itens ainda condicionais são marca
   embeddings de modelos diferentes nunca são comparados diretamente.
 - **Revisão:** Fase 5, antes de baixar qualquer peso.
 
-## ADR-004 — PostgreSQL/pgvector central e SQLite local
+## ADR-004 — Supabase central preferencial e SQLite local
 
 - **Data:** 2026-07-17
 - **Status:** proposta
-- **Problema:** combinar fonte canônica, busca vetorial e operação offline.
+- **Problema:** combinar um serviço central acessível preferencialmente pela internet,
+  busca vetorial e operação local/offline.
 - **Alternativas:** PostgreSQL puro/BYTEA; PostgreSQL+pgvector; Supabase; FAISS;
   banco vetorial dedicado.
-- **Decisão:** PostgreSQL + pgvector no servidor; SQLite com BLOBs versionados e fila
-  no cliente; FAISS somente se benchmark justificar índice local grande.
-- **Justificativa:** integridade transacional e busca vetorial ficam próximas; SQLite
-  fornece fila durável sem serviço adicional na borda.
-- **Consequências:** dados locais sensíveis exigem permissões/criptografia adequadas;
-  Supabase segue opção de hospedagem, não muda o modelo lógico.
-- **Revisão:** após confirmação de escala e implantação.
+- **Decisão:** adotar Supabase como serviço central preferencial, preservando
+  PostgreSQL/pgvector como modelo lógico candidato e SQLite com BLOBs versionados e
+  fila idempotente no cliente. A adoção de Supabase ainda não está validada; FAISS
+  somente será considerado se benchmark justificar um índice local grande.
+- **Justificativa:** o usuário prefere acesso pela internet e escolheu Supabase como
+  direção central, enquanto SQLite permite que a captura e a fila sobrevivam a
+  indisponibilidade de rede.
+- **Consequências:** a prova de conceito deve validar pgvector, autenticação/RLS,
+  isolamento entre clientes, região e residência dos dados, quotas, custos, backup,
+  restauração, gestão de segredos e requisitos LGPD/comerciais. A borda não pode
+  depender da rede a cada frame e dados locais sensíveis exigem proteção adequada.
+  Frames completos permanecem opt-in e vinculados a eventos por padrão; gravação
+  contínua não é presumida. Retenção, granularidade, local de armazenamento, base
+  legal e volume de pessoas ainda estão `unspecified`.
+- **Revisão:** após prova de conceito do Supabase e confirmação de escala, retenção,
+  base legal e implantação.
 
 ## ADR-005 — Concorrência por responsabilidade
 

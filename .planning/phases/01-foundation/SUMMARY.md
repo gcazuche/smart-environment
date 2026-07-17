@@ -1,13 +1,17 @@
 # Fase 1 — Resumo
 
-Status: **em andamento — primeira etapa funcional entregue**.
+Status: **em andamento — logging seguro concluído com ressalvas; gates finais abertos**.
 
 ## Objetivo alcançado até aqui
 
 - Contexto GSD, requisitos, roadmap, decisões, riscos e pesquisas persistidos.
 - Pacote Python modular inicial com configuração validada.
 - CLI `doctor` somente leitura, com saída humana/JSON e códigos de saída.
-- Treze testes unitários stdlib, compilação e smoke tests aprovados em Python 3.12.13.
+- Logging JSON com contexto allowlist, correlação, redaction, rotação e fronteira fatal.
+- Vinte e seis testes unitários stdlib, compilação e smoke tests aprovados em Python
+  3.12.13.
+- Contexto confirmado para uma webcam inicial, Supabase/internet preferenciais,
+  expansão ESP32 e frames por evento.
 
 ## Arquivos principais
 
@@ -18,16 +22,17 @@ Status: **em andamento — primeira etapa funcional entregue**.
 ## Decisões
 
 Python 3.12 é baseline; motor facial é substituível; InsightFace/ONNX é somente
-candidato condicionado à licença dos pesos; PostgreSQL/pgvector central e SQLite
-local são propostas; dependências reais entram por fase e lockfile.
+candidato condicionado à licença dos pesos. Supabase/PostgreSQL/pgvector central e
+SQLite local são propostas; dependências reais entram por fase e lockfile.
 
 ## Limitações e dívidas
 
 - pytest, Ruff e mypy não estão instalados; esses gates não foram executados.
-- Logging/redaction e tratamento global de exceções (SEC-007) estão replanejados.
+- SEC-007 permanece `em andamento` porque camadas futuras ainda não usam o contexto,
+  ACL explícita no Windows não foi validada e o entrypoint não ativa arquivo de log.
 - Build/instalação em venv limpo, Python 3.11 e lockfile continuam pendentes.
 - Nenhuma câmera, biometria, GPU, banco, API ou GUI foi testada/implementada.
-- Respostas operacionais e jurídicas continuam `unspecified`.
+- Quantidade de pessoas, hardware, retenção e respostas jurídicas seguem `unspecified`.
 
 ## Como validar
 
@@ -36,4 +41,5 @@ gates restantes passarem e as lacunas P0 de contexto serem tratadas.
 
 ## Próxima fase
 
-Ainda não autorizada: primeiro concluir FND-01-04, FND-01-05 e o aceite da Fase 1.
+Ainda não autorizada: primeiro concluir FND-01-05 e o aceite da Fase 1; as ressalvas de
+SEC-007 devem ser resolvidas antes de habilitar persistência de logs em produção.

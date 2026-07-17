@@ -22,6 +22,9 @@ Escala: probabilidade e impacto `baixa`, `média`, `alta`. Status inicial `abert
 | R-016 | dependência vulnerável/supply chain | média | alta | lock, hashes, SCA, fontes oficiais, revisão de update | rollback/upgrade e advisory | aberto |
 | R-017 | incompatibilidade Python/GPU/driver | alta | média | matriz e smoke tests, CPU fallback | desativar GPU/voltar versão | aberto |
 | R-018 | exclusão incompleta em cache/backups | média | alta | mapa de dados, tombstone, expiração, procedimento verificável | job de remediação e evidência | aberto |
+| R-019 | presumir que backup do banco inclui objetos do Storage | média | alta | política separada de backup/restore e reconciliação DB↔objeto | restaurar objetos pela cópia independente e reconciliar referências | aberto |
+| R-020 | expor câmera ESP32/MJPEG diretamente à internet | média | alta | conexão de saída autenticada ou gateway, TLS, revogação e rate limit | isolar dispositivo, revogar credencial e reprovisionar | aberto |
+| R-021 | custo/egress/quota do Supabase crescer por frames | alta | média | frames só por evento, compressão, quota, retenção e métricas | pausar objetos e preservar metadados mínimos | aberto |
 
 ## Riscos aceitos nesta etapa
 

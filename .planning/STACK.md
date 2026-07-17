@@ -6,15 +6,17 @@ instalada. Não se declara compatibilidade de GPU sem executar a matriz correspo
 | Camada | Escolha inicial | Versão/política | Estado e justificativa |
 |---|---|---|---|
 | Linguagem | Python | `>=3.11`; baseline 3.12 | Fundação stdlib testada em 3.12.13; stack de visão ainda não validada |
-| Captura | OpenCV | candidata `4.13.0.92` | Major 5 é recente; I/O/codec será validado por fonte/SO |
+| Captura no PC | OpenCV | candidata `4.13.0.92` | primeira fonte real é webcam integrada; I/O/codec será validado por fonte/SO |
+| Captura ESP32 futura | `esp32-camera` via gateway autenticado | versão a fixar por placa/ESP-IDF | ESP32 captura/transporta JPEG; inferência no dispositivo não é baseline |
 | Detecção/embedding | adaptador `FaceEngine` | InsightFace `1.0.1` é candidato | pesos/model packs bloqueados até licença e smoke test |
 | Inferência | ONNX Runtime | candidata `1.27.0`; CPU obrigatório | GPU em artefato/matriz separados; provider testado em runtime |
 | API | FastAPI + Uvicorn | candidata FastAPI `0.139.2` | Tipagem/OpenAPI; patch recém-publicado exige regressão e pin |
 | Interface | PySide6 | candidata `6.11.1` | LGPL/comercial; revisar distribuição e manter loop isolado |
 | ORM | SQLAlchemy | candidata `2.0.51` | linha 2.0 estável; sessões e queries parametrizadas |
 | Migrações | Alembic | candidata `1.18.5` | autogenerate sempre revisado e testado |
-| Banco central | PostgreSQL | candidata `18.4`, minor corrente | fonte canônica; suporte operacional e restore obrigatórios |
+| Serviço central | Supabase/PostgreSQL | plano, região e versão gerenciada a validar | preferência para internet; fonte canônica, RLS, restore e custos exigem prova de conceito |
 | Vetores centrais | pgvector | candidata `0.8.5` | busca exata primeiro; filtros relacionais e versão mínima |
+| Frames de eventos | Supabase Storage privado | versão gerenciada; URLs assinadas curtas | objetos separados do banco, sem gravação contínua por padrão; retenção ainda unspecified |
 | Cache/fila de borda | SQLite | stdlib/driver a definir | operação offline transacional |
 | Índice local opcional | FAISS CPU | candidata `1.14.3`, após benchmark | não será fonte de verdade; GPU oficial é Linux |
 | Senhas | Argon2id | parâmetros calibrados | bcrypt é fallback de migração, não default |

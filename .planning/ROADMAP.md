@@ -65,7 +65,10 @@ Status: planejada
 
 **Requisitos:** DB-001, DB-002, DB-003, DB-004, SEC-003, PRIV-002.
 
-**Dependências:** Fase 1 concluída; decisão documentada entre PostgreSQL local, Supabase ou alternativa; estratégia vetorial e topologia ainda podem exigir spike, mas não podem ser escolhidas sem pesquisa.
+**Dependências:** Fase 1 concluída; prova de conceito documentada da preferência
+Supabase/PostgreSQL, pgvector e Storage. Alternativa local/gerenciada é fallback se o
+spike reprovar segurança, operação, custo ou compatibilidade; não uma escolha reaberta
+sem evidência.
 
 **Entregáveis:**
 
@@ -129,7 +132,9 @@ Status: planejada
 
 **Requisitos:** CAM-001, CAM-002, CAM-003, CAM-007, PERF-001.
 
-**Dependências:** Fases 1–3 concluídas; tipos reais de câmera e SO primário podem continuar unspecified, usando fonte simulada/arquivo para automação.
+**Dependências:** Fases 1–3 concluídas; a fonte real inicial está confirmada como a
+webcam integrada do computador. Fonte simulada continua obrigatória para automação;
+SO de produção e detalhes do hardware permanecem `unspecified`.
 
 **Entregáveis:**
 
@@ -280,11 +285,15 @@ Status: planejada
 
 Status: planejada
 
+Escopo: **pós-v1**; a primeira versão confirmada permanece com uma webcam.
+
 **Objetivo:** operar várias fontes simultaneamente com isolamento, reconexão e limites de capacidade.
 
 **Requisitos:** CAM-004, CAM-006, PERF-003.
 
-**Dependências:** Fase 8 concluída; quantidade inicial/futura e hardware de referência permanecem unspecified até levantamento.
+**Dependências:** Fase 8 concluída; a primeira versão permanece limitada a uma webcam.
+A expansão considera múltiplas webcams e ESP32, mas quantidade futura, modelos,
+protocolos e hardware de referência permanecem `unspecified`.
 
 **Entregáveis:**
 
@@ -372,9 +381,11 @@ Status: planejada
 
 **Objetivo:** expor contratos seguros e versionados para preparar operação cliente-servidor.
 
-**Requisitos:** SYNC-001, SEC-002.
+**Requisitos:** SYNC-001, SEC-002, CAM-008.
 
-**Dependências:** Fase 11 concluída; topologia LAN/internet, TLS, domínio e estratégia de deploy permanecem unspecified até ambiente definido.
+**Dependências:** Fase 11 concluída; internet é a preferência confirmada e LAN/gateway
+local continua suportada. Domínio, certificados, região/plano do Supabase, custos,
+quotas e estratégia final de deploy permanecem `unspecified` até prova de conceito.
 
 **Entregáveis:**
 
@@ -383,6 +394,8 @@ Status: planejada
 - Autenticação de usuário/dispositivo e autorização por recurso.
 - Health/readiness com conteúdo mínimo.
 - Configuração TLS/CORS/hosts por ambiente.
+- Gateway autenticado para frames ESP32; o dispositivo não recebe chave elevada do
+  Supabase nem expõe servidor de câmera diretamente à internet.
 
 **Critérios de conclusão:**
 
@@ -651,8 +664,8 @@ Status: planejada
 | Marco | Fases | Resultado demonstrável | Estado |
 |---|---|---|---|
 | M0 — Baseline seguro | 1–3 | projeto reproduzível, banco/configuração e controle de acesso | pendente |
-| M1 — Núcleo local de uma câmera | 4–8 | captura, cadastro, reconhecimento e histórico em fonte simulada/arquivo | pendente |
-| M2 — Operação local multicâmera | 9–11 | isolamento de múltiplas fontes, GUI e desconhecidos | pendente |
+| M1 — V1 local de uma câmera | 4–8 | captura, cadastro, reconhecimento e histórico em webcam/simulação/arquivo | pendente |
+| M2 — Evolução pós-v1 multicâmera | 9–11 | isolamento de múltiplas fontes, GUI e desconhecidos | pendente |
 | M3 — Operação distribuída | 12–14 | API, dispositivos, cache, sincronização e offline | pendente |
 | M4 — Controles avançados | 15–17 | vivacidade, alertas, privacidade, auditoria e hardening | pendente |
 | M5 — Release verificável | 18–20 | desempenho medido, testes completos, pacote e documentação | pendente |

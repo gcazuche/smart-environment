@@ -449,7 +449,7 @@ O caminho com menor acoplamento para a primeira implementação é:
 
 `Python 3.12 → OpenCV 4.13 → adaptador facial → modelo ONNX licenciado → ONNX Runtime CPU/GPU → PySide6 no cliente; FastAPI → SQLAlchemy/Alembic → PostgreSQL 18 + pgvector no servidor.`
 
-Essa é uma **hipótese técnica priorizada**, não uma stack validada. Três condições são bloqueadoras antes de implementar reconhecimento real: licença dos pesos, smoke test Python/OpenCV/InsightFace/ORT por plataforma e benchmark/calibração em dados autorizados representativos. DeepFace e FAISS permanecem ferramentas opcionais de avaliação/otimização, não dependências centrais. Supabase permanece alternativa futura de hospedagem PostgreSQL, não substituto do desenho offline/local.
+Essa é uma **hipótese técnica priorizada**, não uma stack validada. Três condições são bloqueadoras antes de implementar reconhecimento real: licença dos pesos, smoke test Python/OpenCV/InsightFace/ORT por plataforma e benchmark/calibração em dados autorizados representativos. DeepFace e FAISS permanecem ferramentas opcionais de avaliação/otimização, não dependências centrais. Após a confirmação de contexto, Supabase tornou-se o candidato preferencial de hospedagem PostgreSQL, ainda sem prova de conceito e sem substituir o desenho offline/local.
 
 ## Índice de fontes primárias/oficiais
 
