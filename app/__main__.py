@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
+import sys
 from collections.abc import Sequence
 
 from app import __version__
 from app.configuration import ConfigurationError, Settings
 from app.diagnostics import CheckStatus, DiagnosticReport, collect_diagnostics
+from app.observability import (
+    SecureLogContext,
+    configure_secure_logging,
+    correlation_scope,
+    log_event,
+    sanitize_for_log,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -50,15 +59,61 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     try:
-        report = collect_diagnostics(Settings.from_env())
-    except ConfigurationError as exc:
-        parser.exit(2, f"erro de configuração: {exc}\n")
-
-    if args.as_json:
-        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        _print_human_report(report)
-    return 1 if report.has_failures else 0
+        logger = configure_secure_logging()
+    except KeyboardInterrupt:
+        print("operação cancelada", file=sys.stderr)
+        return 130
+    except Exception:
+        print("erro interno ao iniciar observabilidade", file=sys.stderr)
+        return 1
+    with correlation_scope() as correlation_id:
+        try:
+            settings = Settings.from_env()
+            logger.setLevel(settings.log_level)
+            report = collect_diagnostics(settings)
+            if args.as_json:
+                print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+            else:
+                _print_human_report(report)
+            return 1 if report.has_failures else 0
+        except ConfigurationError as exc:
+            log_event(
+                logger,
+                logging.WARNING,
+                "configuration_rejected",
+                context=SecureLogContext(
+                    operation="load-settings",
+                    error_type=type(exc).__name__,
+                ),
+            )
+            public_detail = sanitize_for_log(str(exc))
+            print(f"erro de configuração: {public_detail}", file=sys.stderr)
+            return 2
+        except KeyboardInterrupt:
+            log_event(
+                logger,
+                logging.INFO,
+                "shutdown_requested",
+                context=SecureLogContext(operation="doctor"),
+            )
+            print("operação cancelada", file=sys.stderr)
+            return 130
+        except Exception as exc:
+            log_event(
+                logger,
+                logging.ERROR,
+                "fatal_error",
+                context=SecureLogContext(
+                    operation="doctor",
+                    error_type=type(exc).__name__,
+                ),
+                exc_info=True,
+            )
+            print(
+                f"erro interno; referência: {correlation_id}",
+                file=sys.stderr,
+            )
+            return 1
 
 
 if __name__ == "__main__":

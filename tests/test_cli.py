@@ -53,10 +53,9 @@ class CliTests(TestCase):
             side_effect=ConfigurationError("valor inválido"),
         ):
             with redirect_stderr(stderr):
-                with self.assertRaises(SystemExit) as raised:
-                    main(["doctor", "--json"])
+                exit_code = main(["doctor", "--json"])
 
-        self.assertEqual(raised.exception.code, 2)
+        self.assertEqual(exit_code, 2)
         self.assertIn("erro de configuração", stderr.getvalue())
 
     def test_version_command_matches_project_metadata(self) -> None:
@@ -72,3 +71,38 @@ class CliTests(TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(stdout.getvalue().strip(), __version__)
         self.assertEqual(metadata["project"]["version"], __version__)
+
+    def test_unexpected_error_is_sanitized_and_correlated(self) -> None:
+        stderr = StringIO()
+        with patch(
+            "app.__main__.collect_diagnostics",
+            side_effect=RuntimeError("Authorization: Bearer do-not-leak"),
+        ):
+            with redirect_stderr(stderr):
+                exit_code = main(["doctor", "--json"])
+
+        lines = stderr.getvalue().splitlines()
+        payload = json.loads(lines[0])
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(payload["event"], "fatal_error")
+        self.assertEqual(payload["exception_type"], "RuntimeError")
+        self.assertNotIn("do-not-leak", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())
+        self.assertIn(payload["correlation_id"], lines[-1])
+
+    def test_logging_bootstrap_failure_does_not_escape_global_boundary(self) -> None:
+        stderr = StringIO()
+        with patch(
+            "app.__main__.configure_secure_logging",
+            side_effect=RuntimeError("opaque-sensitive-value-456"),
+        ):
+            with redirect_stderr(stderr):
+                exit_code = main(["doctor", "--json"])
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(
+            stderr.getvalue().strip(),
+            "erro interno ao iniciar observabilidade",
+        )
+        self.assertNotIn("opaque-sensitive-value-456", stderr.getvalue())
+        self.assertNotIn("Traceback", stderr.getvalue())

@@ -76,7 +76,7 @@ class Settings:
     log_level: str = "INFO"
     recognition_device: str = "auto"
     offline_mode: bool = True
-    max_cameras: int = 4
+    max_cameras: int = 1
 
     @classmethod
     def from_env(
@@ -111,7 +111,7 @@ class Settings:
         )
         max_cameras = _bounded_integer(
             "MULTICAM_MAX_CAMERAS",
-            source.get("MULTICAM_MAX_CAMERAS", "4"),
+            source.get("MULTICAM_MAX_CAMERAS", "1"),
             1,
             64,
         )

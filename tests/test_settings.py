@@ -16,7 +16,7 @@ class SettingsTests(TestCase):
         self.assertEqual(settings.environment, "development")
         self.assertEqual(settings.data_dir, root / "data")
         self.assertTrue(settings.offline_mode)
-        self.assertEqual(settings.max_cameras, 4)
+        self.assertEqual(settings.max_cameras, 1)
 
     def test_invalid_boolean_is_rejected(self) -> None:
         with self.assertRaisesRegex(ConfigurationError, "MULTICAM_OFFLINE_MODE"):
