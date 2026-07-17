@@ -192,6 +192,20 @@ class SecureLoggingTests(TestCase):
                 logger.removeHandler(foreign_handler)
             foreign_handler.close()
 
+    def test_configuration_rejects_logger_outside_reserved_namespace(self) -> None:
+        logger = logging.getLogger("host.application")
+        foreign_handler = logging.StreamHandler(StringIO())
+        logger.addHandler(foreign_handler)
+        try:
+            with self.assertRaisesRegex(ValueError, "namespace reservado multicam"):
+                configure_secure_logging(logger_name=logger.name, stream=StringIO())
+
+            self.assertIn(foreign_handler, logger.handlers)
+            self.assertFalse(getattr(foreign_handler, "_closed", False))
+        finally:
+            logger.removeHandler(foreign_handler)
+            foreign_handler.close()
+
     def test_file_destination_failure_falls_back_without_path_disclosure(self) -> None:
         stream = StringIO()
         with TemporaryDirectory() as temp_dir:

@@ -27,6 +27,7 @@ _MAX_TEXT_LENGTH = 4_096
 _MAX_COLLECTION_ITEMS = 64
 _MAX_EXCEPTION_FRAMES = 16
 _MAX_EXCEPTION_CHAIN = 4
+_RESERVED_LOGGER_NAMESPACE = "multicam"
 _CONFIGURATION_LOCK = RLock()
 _OWNED_HANDLER_ATTRIBUTE = "_multicam_secure_handler"
 _CORRELATION_ID = ContextVar[str | None]("multicam_correlation_id", default=None)
@@ -342,6 +343,11 @@ def configure_secure_logging(
 ) -> logging.Logger:
     """Configure isolated JSON logging and optional rotating file output."""
 
+    if not (
+        logger_name == _RESERVED_LOGGER_NAMESPACE
+        or logger_name.startswith(f"{_RESERVED_LOGGER_NAMESPACE}.")
+    ):
+        raise ValueError("logger_name deve usar o namespace reservado multicam")
     if max_bytes < 1:
         raise ValueError("max_bytes deve ser positivo")
     if backup_count < 0 or (log_dir is not None and backup_count < 1):
