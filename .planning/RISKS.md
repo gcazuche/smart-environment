@@ -1,32 +1,43 @@
-# Registro de riscos
+# Registro de riscos — Smart Environment
 
-Escala: probabilidade e impacto `baixa`, `média`, `alta`. Status inicial `aberto`.
+Atualizado em: 2026-08-11
+Postura: alto risco por câmeras em ambiente de trabalho; redução antes de expansão
 
-| ID | Risco | Prob. | Impacto | Mitigação/detecção | Recuperação | Status |
-|---|---|---:|---:|---|---|---|
-| R-001 | falso positivo | média | alta | limiar+margem, calibração, testes negativos, revisão humana | corrigir evento e recalibrar | aberto |
-| R-002 | falso negativo ou viés entre grupos | média | alta | métricas estratificadas e dataset autorizado representativo | recadastro/modelo/limiar | aberto |
-| R-003 | uso sem base legal/autorização | média | alta | governança, finalidade, avisos, RBAC, auditoria | suspender processamento e eliminar conforme política | aberto |
-| R-004 | vazamento de biometria/imagens | média | alta | minimização, criptografia, segregação, retenção, logs seguros | revogar acessos, conter, notificar conforme obrigação | aberto |
-| R-005 | spoof por foto/tela/vídeo | alta | alta | vivacidade em camadas e estado inconclusivo | exigir verificação humana/segundo fator | aberto |
-| R-006 | licença inadequada de pesos/modelos | média | alta | revisão antes do download/distribuição | trocar provider e re-embedding | aberto |
-| R-007 | queda de servidor/internet | alta | média | cache local e fila idempotente | sincronizar com backoff | aberto |
-| R-008 | evento duplicado/conflito | média | média | UUID, unicidade, hash e versões | conciliação auditada | aberto |
-| R-009 | sobrecarga de CPU/RAM | alta | alta | filas limitadas, FPS/resolução adaptativos, métricas | reduzir carga/desativar câmera | aberto |
-| R-010 | interface travada | média | alta | afinidade Qt e workers | reiniciar worker sem perder fila | aberto |
-| R-011 | RTSP instável/credencial exposta | alta | média | timeout, backoff+jitter, secrets externos, URL mascarada | rotacionar credencial/reconectar | aberto |
-| R-012 | corrupção do banco/fila | baixa | alta | transações, checks, backups e restore testado | restauração e replay idempotente | aberto |
-| R-013 | disco cheio por snapshots | alta | alta | quota, retenção, deduplicação e alertas | pausar imagens, preservar metadados, limpeza segura | aberto |
-| R-014 | upload/path traversal | média | alta | limite, magic bytes, nome gerado, diretório isolado | quarentena/remoção e auditoria | aberto |
-| R-015 | brute force/sequestro de sessão | média | alta | Argon2id, rate limit, bloqueio, sessões curtas | revogar sessões e investigar | aberto |
-| R-016 | dependência vulnerável/supply chain | média | alta | lock, hashes, SCA, fontes oficiais, revisão de update | rollback/upgrade e advisory | aberto |
-| R-017 | incompatibilidade Python/GPU/driver | alta | média | matriz e smoke tests, CPU fallback | desativar GPU/voltar versão | aberto |
-| R-018 | exclusão incompleta em cache/backups | média | alta | mapa de dados, tombstone, expiração, procedimento verificável | job de remediação e evidência | aberto |
-| R-019 | presumir que backup do banco inclui objetos do Storage | média | alta | política separada de backup/restore e reconciliação DB↔objeto | restaurar objetos pela cópia independente e reconciliar referências | aberto |
-| R-020 | expor câmera ESP32/MJPEG diretamente à internet | média | alta | conexão de saída autenticada ou gateway, TLS, revogação e rate limit | isolar dispositivo, revogar credencial e reprovisionar | aberto |
-| R-021 | custo/egress/quota do Supabase crescer por frames | alta | média | frames só por evento, compressão, quota, retenção e métricas | pausar objetos e preservar metadados mínimos | aberto |
+| ID | Risco | Nível | Tratamento/gate | Estado |
+|---|---|---|---|---|
+| R-001 | Ocupação ser convertida em vigilância comportamental ou punição | crítico | excluir distração/produtividade do MVP; GOV-002/GOV-004; revisão humana | mitigado no plano; controle técnico pendente |
+| R-002 | Biometria ser reintroduzida sem necessidade | crítico | schema sem identidade; novo projeto/RIPD/aprovação para qualquer mudança | mitigado no plano |
+| R-003 | Eventos agregados permitirem reidentificação por horário/zona vazia | alto | granularidade mínima, limiar de grupo, restrição de consulta/exportação | aberto; parâmetros unspecified |
+| R-004 | Frames vazarem por arquivo, log, cache, trace ou rede | crítico | buffers limitados; invariant e regressões de zero persistência | aberto; implementação pendente |
+| R-005 | Câmera falhar e sistema declarar ambiente vazio | alto | estado `unknown`, health e último sucesso; nunca inferir vazio da falha | aberto |
+| R-006 | Contagem errada orientar decisões inadequadas | alto | medir FP/FN por cenário, confiança, aviso e revisão humana | aberto |
+| R-007 | Alerta patrimonial gerar acusação injusta | alto | linguagem não acusatória, correção e revisão auditada | mitigado no escopo; implementação pendente |
+| R-008 | Recomendação de energia desligar recurso necessário | crítico | sugestão apenas no MVP; automação com override, redundância e fail-safe | contido fora do MVP |
+| R-009 | Acesso cruzado entre organizações/locais no Supabase | crítico | backend + RLS + testes negativos cross-tenant | aberto; PoC pendente |
+| R-010 | Chave privilegiada chegar ao navegador/dispositivo/log | crítico | `service_role` somente no backend; rotação, redaction e secret scan | aberto; nenhum segredo criado |
+| R-011 | Retenção indefinida reconstruir rotinas de pessoas | alto | prazo por classe, eliminação verificável, limitar granularidade | aberto; prazos unspecified |
+| R-012 | Backup existir mas não restaurar ou não eliminar dado vencido | alto | restore descartável; RPO/RTO; política para réplicas e backups | aberto |
+| R-013 | Monitoramento oculto ou em área sensível | crítico | aviso, autorização, zones permitidas; proibir áreas privadas e áudio | contido no plano; piloto bloqueado |
+| R-014 | Captura incidental de visitantes ou menores | alto | sinalização, enquadramento, horários; escolas/menores fora do primeiro piloto | aberto |
+| R-015 | Modelo/pesos incompatíveis com uso comercial | alto | validar licença de código, pesos e dataset antes de baixar/adotar | aberto; detector unspecified |
+| R-016 | Viés/baixa qualidade por luz, oclusão ou densidade | alto | dataset representativo autorizado, métricas segmentadas e fallback `unknown` | aberto |
+| R-017 | Dependência vulnerável ou atualização quebrar runtime nativo | alto | pin, lock, SCA, smoke e rollback; CPU baseline | baseline parcial |
+| R-018 | Supabase exceder custo/quota ou região não atender requisitos | alto | PoC, orçamento, quotas, residência e alternativa documentada | aberto |
+| R-019 | Internet interromper ingestão e gerar backlog ilimitado | alto | outbox limitada, retenção, backoff e idempotência | planejado |
+| R-020 | ESP32/stream futuro ficar público ou sem revogação | crítico | conexão de saída, TLS, credencial por dispositivo, gateway e limites | contido fora do MVP |
+| R-021 | Automação/multicâmera começar antes do piloto medido | alto | gates SE-07/SE-11 e autorização por etapa | controlado pelo roadmap |
+| R-022 | Documentos antigos guiarem implementação facial acidental | alto | marcar antiga Fase 2 e pesquisas como legado; STATE aponta somente SE-* | tratado em SE-01 |
+| R-023 | Nome técnico `multicam` causar confusão com a marca Smart Environment | médio | declarar legado; planejar migração sem quebrar CLI/configuração | aceito nesta etapa |
+| R-024 | TCC ser apresentado como produto comercial validado | alto | separar protótipo, piloto e produção; registrar evidências e limitações | aberto até SE-12 |
 
-## Riscos aceitos nesta etapa
+## Riscos aceitos na Etapa SE-01
 
-Nenhum risco alto foi aceito. Vários permanecem abertos porque não há biometria,
-modelo, rede ou banco implementado na Fase 1.
+- O nome do pacote, variáveis `MULTICAM_*` e CLI permanecem legados; renomear agora
+  alteraria código e está fora da etapa documental.
+- Supabase é a direção preferencial, mas ainda não foi tecnicamente validado.
+- Retenção, responsáveis, base legal, região, detector, precisão e metas de capacidade
+  permanecem `unspecified`; isso bloqueia dados reais, não o planejamento.
+- A webcam foi validada apenas por um frame autorizado; captura contínua não existe.
+
+Aceitação de risco nesta lista não substitui aprovação jurídica, de segurança,
+privacidade ou operação na organização que eventualmente realizar o piloto.

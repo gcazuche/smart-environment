@@ -1,96 +1,76 @@
-# Estado GSD
+# Estado GSD — Smart Environment
 
-Atualizado em: 2026-07-17
+Atualizado em: 2026-08-11
 
 - **Repositório:** `C:\Users\angel\OneDrive\Documents\Multicam`
-- **Branch:** `main`
-- **Commit executável da Fase 1:** `909d3ac` (correções-base em `b642e45`)
-- **Checkpoint de planejamento:** o commit que contém este arquivo
+- **Branch no início de SE-01:** `main`
+- **Fundação técnica histórica:** concluída; código preservado
+- **Checkpoint funcional atual:** nenhuma funcionalidade Smart Environment implementada
 
 ## Posição atual
 
-- **Fase atual:** 2 — Configurações e banco
-- **Plano atual:** `.planning/phases/02-database/PLAN.md`
-- **Tarefa atual:** DB-02-02 — runtime SQLite local mínimo
-- **Última tarefa concluída:** DB-02-01 — contexto, pesquisa e fronteiras da Fase 2
-- **Próxima ação:** implementar engine preguiçosa/transacional sem tabelas biométricas
-- **Progresso global:** fundação reproduzível concluída; nenhuma função biométrica entregue
+- **Etapa concluída:** SE-01 — Rebaseline Smart Environment
+- **Plano da etapa:** `.planning/phases/se-01-replanning/PLAN.md`
+- **Próxima etapa possível:** SE-02 — Domínio, dados e Supabase seguro
+- **Próxima tarefa possível:** SEB-006 — matriz de finalidades e responsáveis
+- **Autorização para SE-02:** não concedida; não iniciar automaticamente
+- **Plano antigo:** `.planning/phases/02-database/` superado e somente histórico
 
-## O que funciona
+## Resultado de SE-01
 
-- Ambiente `uv==0.11.17`, `uv.lock`, sync offline e build backend fixado.
-- Configuração validada, uma câmera como limite padrão e `doctor` somente leitura.
-- Logging JSON com allowlist, correlação, redaction, fronteira fatal e fail-closed de
-  arquivo no Windows.
-- **28/28 testes** em Python 3.11.15 e 3.12.13; Ruff, format-check, mypy strict,
-  unittest, compileall, build, wheel limpo e compatibilidade aprovados.
-- Webcam integrada `USB2.0 HD UVC WebCam` abriu por DirectShow em spike autorizado:
-  um frame 640×480 somente em memória, dispositivo liberado e zero imagem/arquivo novo
-  em `data/`.
-- Pesquisa oficial para Supabase/pgvector/Storage, ESP32 e entrada SQLAlchemy persistida.
+- Produto redefinido como gestão inteligente de ambientes.
+- MVP fixado em uma webcam, frames transitórios, contagem sem identificação, evento
+  agregado, Supabase e dashboard web.
+- “Desempenho” limitado ao ambiente; distração/produtividade individual excluídas.
+- Reconhecimento facial, embeddings, pgvector, vivacidade e PySide6 retirados do baseline.
+- Roadmap incremental, requisitos, riscos, testes, stack e ADRs realinhados.
+- Nenhum código funcional, dependência, banco, câmera ou serviço externo foi alterado.
 
-## O que ainda não existe
+## O que funciona hoje
 
-- Runtime SQLite, esquema, migrações, repositories ou conexão Supabase/PostgreSQL.
-- Captura contínua, fonte simulada, modelo facial, cadastro, reconhecimento, API, GUI,
-  autenticação, sincronização e alertas.
-- Arquivo de log de produção no Windows; DACL precisa de adaptador e teste real.
-- OpenCV no lock da aplicação; o pacote foi usado somente no spike efêmero.
+- Ambiente reproduzível com `uv.lock` e Python 3.11/3.12.
+- Configuração mínima, comando `doctor`, logging JSON seguro e tratamento de exceções.
+- 28 testes da fundação aprovados no checkpoint anterior, junto com Ruff, mypy,
+  compilação e build.
+- Webcam `USB2.0 HD UVC WebCam` abriu em spike autorizado por DirectShow, leu um frame
+  640×480 somente em memória e foi liberada; nenhum arquivo novo apareceu em `data/`.
 
-## Testes e evidências
+## O que não existe
 
-- **Aprovados:** pytest/unittest 28/28 em 3.11 e 3.12; Ruff; format-check; mypy;
-  compileall; doctor; build; instalação limpa do wheel; `uv pip check`; busca passiva
-  local por padrões de segredos; `git diff --check`; smoke manual sanitizado da webcam.
-- **Pendentes da próxima tarefa:** runtime SQLite, foreign keys por conexão,
-  commit/rollback, confinamento de path, dispose no Windows e ausência de rede.
+- Schema, migrações, projeto Supabase, Auth, RLS ou conexão PostgreSQL.
+- Outbox SQLite, API, sincronização ou autenticação da aplicação.
+- Captura contínua, fonte simulada ou OpenCV no lock principal.
+- Detector de pessoas, agregador de ocupação ou métricas de qualidade.
+- HTML/CSS/JavaScript do dashboard, gráficos, sustentabilidade ou patrimônio.
+- Alertas, múltiplas câmeras, ESP32, automação ou piloto.
 
-## Erros conhecidos
+## Bloqueios antes de dados reais
 
-- `python` e `py` não estão no `PATH` do sistema; usar `.venv` ou `uv`.
-- O cache global do `uv` colide com uma entrada existente neste Windows; todos os
-  comandos do projeto usam `--cache-dir .uv-cache`.
-- MSMF não abriu a webcam no spike atual; DirectShow funcionou. O índice 0 e o backend
-  não são identidade/contrato portável e serão reavaliados na Fase 4.
-
-## Bloqueios
-
-- Supabase remoto requer projeto de teste, autorização, região/plano e prova de RLS,
-  pgvector, Storage privado, quota, custo, backup e restore.
-- Esquema biométrico requer nomes canônicos, tenant/site, modelo/dimensão, minimização,
-  retenção, base legal e proteção em repouso.
-- Uso biométrico comercial real permanece bloqueado por base legal/consentimento,
-  licença dos pesos, metas de precisão/viés e política de dados.
+- finalidade detalhada, controlador, operadores de tratamento, encarregado e local autorizado;
+- base legal/RIPD/avisos aplicáveis e áreas/horários permitidos;
+- retenção, granularidade contra reidentificação e processo de direitos;
+- região/plano/quotas/custo/backup/restore do Supabase;
+- detector/pesos/licença comercial e critérios de qualidade.
 
 ## Decisões abertas
 
-- Quantidade futura de webcams/ESP32 e pessoas; protocolos finais do ESP32.
-- SO e hardware de produção, GPU, metas de FPS/latência e câmeras predominantes.
-- Região/plano/custos/quotas/restore do Supabase e topologia do gateway.
-- Tenant/site, nomes do esquema, retenção, base legal e política de snapshots.
-- Modelo/pesos com licença compatível com eventual uso comercial.
+- framework web e biblioteca de gráficos;
+- detector de pessoas e runtime de inferência;
+- granularidade temporal/espacial do evento;
+- estratégia Realtime versus polling;
+- metas de FPS, latência, capacidade e custo;
+- protocolo/modelos de câmeras futuras/ESP32;
+- momento e estratégia para migrar o nome técnico `multicam`.
 
-## Arquivos importantes
+## Como retomar
 
-- `.planning/PROJECT.md`
-- `.planning/REQUIREMENTS.md`
-- `.planning/ROADMAP.md`
-- `.planning/DECISIONS.md`
-- `.planning/ARCHITECTURE.md`
-- `.planning/phases/02-database/CONTEXT.md`
-- `.planning/phases/02-database/RESEARCH.md`
-- `.planning/phases/02-database/PLAN.md`
-
-## Comandos para continuar
-
-```powershell
-uv sync --locked --extra dev --cache-dir .uv-cache
-.\.venv\Scripts\python.exe -m pytest -q
-git status --short
-```
+1. Ler `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `DECISIONS.md` e este arquivo.
+2. Confirmar com o usuário que somente SE-02 está autorizada.
+3. Resolver SEB-006 antes de criar schema ou conectar Supabase.
+4. Usar apenas dados sintéticos até os gates de governança permitirem outra coisa.
 
 ## Prompt de retomada sugerido
 
-> Leia os arquivos GSD obrigatórios e continue por DB-02-02. Implemente somente o
-> runtime SQLite local, preguiçoso e transacional definido no plano. Não crie tabelas
-> biométricas, não aceite DSN arbitrária e não conecte Supabase sem o spike autorizado.
+> Continue somente pela Etapa SE-02 do Smart Environment. Primeiro faça SEB-006:
+> matriz de finalidades, dados e responsáveis. Não abra a webcam, não crie detector,
+> não use dados reais e não conecte Supabase antes de confirmar autorização e projeto.

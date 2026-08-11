@@ -1,59 +1,124 @@
-# Estratégia de testes
+# Estratégia de testes — Smart Environment
+
+Atualizado em: 2026-08-11
 
 ## Princípios
 
-- Testar regra de negócio sem câmera, rede, GUI ou modelo real.
-- Usar câmera simulada determinística e relógio/UUID injetáveis.
-- Separar unitário, integração, contrato, desempenho, segurança e hardware manual.
-- Nunca usar rostos reais no repositório; fixtures sintéticas/licenciadas e autorizadas.
-- Registrar comando, ambiente, resultado e lacunas em `VERIFICATION.md`.
+- Teste automatizado usa dados sintéticos e fonte de câmera simulada por padrão.
+- Hardware, Supabase e piloto são suítes separadas, autorizadas e claramente rotuladas.
+- Resultado não executado permanece pendente; planejamento não é evidência funcional.
+- Cenários negativos e de falha têm o mesmo peso do happy path.
+- Privacidade é invariant verificável: pixels não persistem nem saem da borda no MVP.
+- Uma contagem é estimativa técnica; qualidade deve ser medida por condição de uso.
 
-## Pirâmide e escopo
+## Camadas
 
-| Tipo | Cobertura planejada |
-|---|---|
-| Unitário | configuração, filas, limiar, deduplicação, permissões, retenção |
-| Integração | Supabase/PostgreSQL/pgvector, Storage privado, Alembic, filesystem e fila offline |
-| API | autenticação, autorização, validação, paginação, idempotência |
-| Interface | modelos/view-models, sinais e smoke test Qt offscreen |
-| Câmeras | fonte simulada, webcam integrada, arquivo, ESP32 simulado, desconexão/reconexão; hardware manual |
-| Reconhecimento | conhecidos/desconhecidos, limiar, margem, falso positivo/negativo |
-| Sincronização | offline, retry, ordem, conflito e duplicação |
-| Carga | múltiplas fontes, filas limitadas, CPU/RAM, latência e descarte |
-| Segurança | SAST, SCA, secrets, RBAC, uploads, brute force, logs |
-| Encerramento | liberação de câmera, workers, transações e fila |
+| Camada | Exemplos | Gate |
+|---|---|---|
+| Unidade | validação, agregação, fórmulas, estados, RBAC | cada tarefa |
+| Contrato | `CameraSource`, evento, API, repositories | mudança de interface/schema |
+| Integração local | SQLite/outbox, migrações, lifecycle OpenCV simulado | SE-02 a SE-05 |
+| Integração remota | Supabase Auth/RLS/Postgres/restore descartável | SE-02 e release |
+| Interface | DOM, autenticação, gráfico, acessibilidade, responsividade | SE-06 |
+| Visão | 0/1/N, oclusão, iluminação, densidade, FP/FN, latência | SE-04/SE-07 |
+| E2E | webcam→evento→API→Supabase→dashboard | SE-07 |
+| Segurança | abuso, autorização negativa, injection, segredo, SCA/SAST | incremental/SE-12 |
+| Operação | rede offline, replay, soak, backup/restore, rollback, fail-safe | SE-07/SE-12 |
 
-## Comandos padrão
+## Gates existentes da fundação
 
 ```powershell
-python -m unittest discover -s tests -v
-python -m pytest -q
-python -m ruff check .
-python -m ruff format --check .
-python -m mypy app tests
-python -m compileall -q app main.py
-python -m app doctor --json
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\ruff.exe check app main.py tests
+.\.venv\Scripts\ruff.exe format --check app main.py tests
+.\.venv\Scripts\mypy.exe app main.py tests
+.\.venv\Scripts\python.exe -m compileall -q app main.py tests
+uv build --offline --cache-dir .uv-cache
+uv --cache-dir .uv-cache pip check --python .\.venv\Scripts\python.exe
 ```
 
-Nesta primeira fase, somente `unittest`, `compileall` e o smoke test não requerem
-downloads. Pytest/Ruff/mypy são gates assim que o ambiente de desenvolvimento for
-instalado.
+Esses comandos validam a fundação atual. Ainda não validam OpenCV, detector,
+Supabase, API, interface ou qualquer requisito Smart Environment funcional.
 
-## Critérios para reconhecimento
+## Suítes obrigatórias por etapa
 
-- Conjunto autorizado separado em cadastro, calibração e teste.
-- Métricas por grupo relevante e condições de câmera/iluminação.
-- Reportar FAR/FMR, FRR/FNMR e curvas por limiar; não apenas “acurácia”.
-- Teste negativo deve demonstrar que o melhor candidato abaixo do limiar é desconhecido.
-- Mudança de modelo invalida comparação direta e exige re-embedding/calibração.
+### SE-02 — Dados e Supabase
 
-## Testes manuais obrigatórios
+- schema vazio→head e downgrade suportado;
+- FK, unique/check, timestamps e rollback;
+- payload proibido sem identidade/pixels;
+- Auth expiração/revogação;
+- matriz RBAC e RLS positiva/negativa, inclusive cross-tenant;
+- backup/restore e eliminação em projeto autorizado;
+- nenhuma chave privilegiada no bundle, log ou Git.
 
-- Descoberta/liberação de cada modelo de câmera real.
-- RTSP interrompido e retomado.
-- CPU e cada configuração GPU suportada.
-- Cadastro guiado com consentimento e descarte de imagem rejeitada.
-- Tela cheia/grade e encerramento da GUI.
-- Backup e restauração em ambiente isolado.
+### SE-03 — Uma webcam
 
-Hardware real permanece pendente até o usuário executar e fornecer evidências.
+- fonte simulada determinística, frame inválido, EOF e timeout;
+- start/stop/restart e abertura/leitura/liberação repetidas;
+- fila cheia, cancelamento e shutdown;
+- smoke manual autorizado em hardware, separado do CI, em cenário controlado vazio
+  ou somente com o próprio responsável informado; nenhuma terceira pessoa é capturada
+  antes do gate completo de transparência de SE-07;
+- arquivos/banco/rede/logs inspecionados para ausência de pixels.
+
+### SE-04 — Ocupação
+
+- 0, 1 e N pessoas; parcial/oclusão; luz e densidade;
+- falso positivo, falso negativo e estado `unknown`;
+- agregação de janela, deduplicação e tracking efêmero;
+- CPU, memória, FPS e latência preliminares;
+- nenhum identificador persiste entre janelas/câmeras;
+- relatório informa amostra, condições e limitações, sem acurácia inventada.
+
+### SE-05/SE-06 — API e web
+
+- schema/tamanho/tipo inválidos, injection, replay e rate limit;
+- queda de rede, resposta perdida, retry e idempotência;
+- loading/empty/stale/unknown/error;
+- acesso por papel/local e tentativa cross-tenant;
+- teclado, foco, contraste, zoom, mobile e informação sem depender de cor;
+- ausência de stream, pixel, URL de câmera ou segredo no navegador.
+
+### SE-07 — Piloto
+
+- vertical completa com uma webcam e um ambiente autorizados;
+- latência, disponibilidade, erro de contagem, CPU/RAM/rede e custo;
+- retenção, exclusão, exportação e restore;
+- aviso, enquadramento e áreas autorizadas conferidos;
+- critérios de interrupção e rollback exercitados.
+
+### SE-08 a SE-12
+
+- fórmulas e timezone; estimativa versus medição;
+- patrimônio/alerta sem acusação e com correção humana;
+- deduplicação/canal de notificação;
+- falha isolada por câmera e credencial revogada;
+- carga/soak, SAST, SCA, segredos, SBOM, backup/restore e fail-safe.
+
+## Invariant de zero persistência de frames
+
+Antes e depois de um teste controlado, verificar explicitamente:
+
+- arquivos nas áreas de dados/log/cache conhecidas;
+- linhas/objetos gravados no banco e outbox;
+- requisições de rede emitidas pelo processo;
+- logs, exceções e artefatos de teste;
+- memória/buffer liberado conforme contrato possível de observar.
+
+O teste só sustenta o escopo inspecionado. Não usar frases genéricas como “nenhum
+arquivo foi criado” quando a evidência verificou apenas um diretório.
+
+## Dados de teste e piloto
+
+- Preferir imagens/vídeos sintéticos ou datasets cuja licença e finalidade permitam o uso.
+- Material de voluntários exige informação, autorização, escopo e descarte definidos.
+- Não capturar áudio; não testar em banheiros, vestiários, descanso ou áreas privadas.
+- Crianças/adolescentes e escolas ficam fora do primeiro piloto.
+- Não commitar frames, exports, credenciais ou dados reais.
+
+## Evidência mínima
+
+Cada `VERIFICATION.md` registra data, ambiente, versão, comando/procedimento, escopo,
+resultado, limitações, arquivos alterados e pendências. Hardware e serviço remoto só
+contam quando a evidência identifica o ambiente autorizado sem expor segredo ou pessoa.

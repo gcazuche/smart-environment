@@ -1,4 +1,9 @@
-# Fase 2 — Plano atômico
+> [!CAUTION]
+> **SUPERADO em 2026-08-11. NÃO EXECUTAR DB-02-02.** O rebaseline Smart Environment
+> substituiu este plano. Consulte `.planning/STATE.md` e `.planning/ROADMAP.md`.
+> Conteúdo abaixo preservado como histórico, não como backlog ativo.
+
+# Fase 2 — Plano atômico (histórico)
 
 ## Estado de execução
 

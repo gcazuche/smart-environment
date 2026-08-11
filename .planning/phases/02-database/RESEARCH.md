@@ -1,4 +1,9 @@
-# Fase 2 — Pesquisa de entrada
+> [!IMPORTANT]
+> **PESQUISA HISTÓRICA desde 2026-08-11.** A análise SQLite/pgvector/biometria abaixo
+> não define a Etapa SE-02 atual. Evidências genéricas podem ser reavaliadas; não use
+> versões ou decisões sem nova validação.
+
+# Fase 2 — Pesquisa de entrada (histórica)
 
 Atualizado em: 2026-07-17
 

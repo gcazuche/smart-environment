@@ -1,5 +1,21 @@
 # Changelog GSD
 
+## 2026-08-11 — Rebaseline Smart Environment (SE-01)
+
+- Objetivo alterado de câmeras com reconhecimento facial para gestão inteligente de
+  ambientes, ocupação, sustentabilidade, recursos e patrimônio.
+- MVP definido como uma webcam autorizada, frames transitórios, detecção/contagem sem
+  identificação, evento agregado, API/Supabase e dashboard HTML/CSS/JavaScript.
+- “Desempenho” limitado ao desempenho operacional do ambiente; reconhecimento facial,
+  distração, emoção, produtividade individual, áudio e punição automatizada retirados.
+- Arquitetura, stack, requisitos, roadmap, backlog, riscos, testes, ADRs, README e
+  estado foram realinhados; antiga Fase 2 marcada como superada.
+- Fundação Python, configuração, logging, lockfile, testes e evidência da webcam foram
+  preservados; pacote/CLI `multicam` permanece como nome técnico legado.
+- Nenhum código funcional, dependência, banco, câmera ou serviço externo foi alterado.
+- Próxima etapa possível: SE-02, ainda não autorizada; primeiro gate é a matriz de
+  finalidades, dados e responsáveis.
+
 ## 2026-07-17 — Fase 1 concluída e Fase 2 aberta
 
 - Ambiente `.venv` recriado a partir de `uv.lock`, com `uv==0.11.17` como pré-requisito

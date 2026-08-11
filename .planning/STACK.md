@@ -1,44 +1,73 @@
-# Stack técnica inicial
+# Stack técnica — Smart Environment
 
-Versões exatas serão travadas em lockfile somente antes da primeira dependência ser
-instalada. Não se declara compatibilidade de GPU sem executar a matriz correspondente.
+Atualizado em: 2026-08-11
 
-| Camada | Escolha inicial | Versão/política | Estado e justificativa |
+Versões entram no `uv.lock` somente quando uma fase realmente usa a dependência. Uma
+biblioteca candidata não é tratada como instalada, segura ou compatível sem evidência.
+
+## Stack ativa e planejada
+
+| Camada | Direção | Estado | Gate antes de adotar |
 |---|---|---|---|
-| Linguagem | Python | `>=3.11`; baseline 3.12 | Fundação stdlib testada em 3.12.13; stack de visão ainda não validada |
-| Captura no PC | OpenCV | candidata `4.13.0.92` | primeira fonte real é webcam integrada; I/O/codec será validado por fonte/SO |
-| Captura ESP32 futura | `esp32-camera` via gateway autenticado | versão a fixar por placa/ESP-IDF | ESP32 captura/transporta JPEG; inferência no dispositivo não é baseline |
-| Detecção/embedding | adaptador `FaceEngine` | InsightFace `1.0.1` é candidato | pesos/model packs bloqueados até licença e smoke test |
-| Inferência | ONNX Runtime | candidata `1.27.0`; CPU obrigatório | GPU em artefato/matriz separados; provider testado em runtime |
-| API | FastAPI + Uvicorn | candidata FastAPI `0.139.2` | Tipagem/OpenAPI; patch recém-publicado exige regressão e pin |
-| Interface | PySide6 | candidata `6.11.1` | LGPL/comercial; revisar distribuição e manter loop isolado |
-| ORM | SQLAlchemy | candidata `2.0.51` | linha 2.0 estável; sessões e queries parametrizadas |
-| Migrações | Alembic | candidata `1.18.5` | autogenerate sempre revisado e testado |
-| Serviço central | Supabase/PostgreSQL | plano, região e versão gerenciada a validar | preferência para internet; fonte canônica, RLS, restore e custos exigem prova de conceito |
-| Vetores centrais | pgvector | candidata `0.8.5` | busca exata primeiro; filtros relacionais e versão mínima |
-| Frames de eventos | Supabase Storage privado | versão gerenciada; URLs assinadas curtas | objetos separados do banco, sem gravação contínua por padrão; retenção ainda unspecified |
-| Cache/fila de borda | SQLite | stdlib/driver a definir | operação offline transacional |
-| Índice local opcional | FAISS CPU | candidata `1.14.3`, após benchmark | não será fonte de verdade; GPU oficial é Linux |
-| Senhas | Argon2id | parâmetros calibrados | bcrypt é fallback de migração, não default |
-| Tokens | JWT curto + rotação/allowlist | algoritmo e biblioteca a fixar | HTTPS obrigatório; validar issuer/audience |
-| Testes | pytest + unittest | pytest a fixar; unittest stdlib | Fase 1 não depende de download |
-| Qualidade | Ruff, mypy | a fixar | lint, formato e type-check em CI |
-| Segurança | pip-audit, gitleaks, Semgrep | gates incrementais | somente scanners passivos nesta etapa |
+| Linguagem | Python `>=3.11,<3.13` | fundação validada em 3.11/3.12 | manter matriz e lock reproduzível |
+| Interface | HTML, CSS e JavaScript | planejada | UX responsiva, acessibilidade e política de sessão |
+| Framework web | sem escolha final | `unspecified` | PoC mínima; evitar framework sem necessidade |
+| API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
+| Captura | OpenCV CPU-first | candidata; smoke efêmero aprovado | fonte simulada, lifecycle, licença e matriz Windows |
+| Detecção de pessoas | adaptador substituível | `unspecified` | licença comercial dos pesos, precisão, CPU e viés |
+| Persistência central | Supabase/PostgreSQL | preferencial, não validada | Auth, RLS, região, quota, custo, backup e restore |
+| ORM/migrações | SQLAlchemy + Alembic | candidatas | schema mínimo, upgrade/downgrade e transações |
+| Outbox local | SQLite | candidata | confinamento, limites, retenção e idempotência |
+| Realtime | Supabase Realtime ou polling | `unspecified` | autorização, custo, reconexão e carga |
+| Gráficos | biblioteca web a selecionar | `unspecified` | acessibilidade, tamanho, licença e manutenção |
+| Testes | pytest + unittest | baseline existente | testes por camada e evidência de hardware separada |
+| Qualidade | Ruff + mypy strict | baseline existente | gates verdes em cada tarefa |
+| Segurança | busca de segredos, SCA, SAST e SBOM | incremental | ferramentas/escopo registrados; sem alegação genérica |
 
-## Dependências opcionais de GPU
+## Dependências existentes
 
-- NVIDIA/CUDA deve usar o pacote/provider documentado pelo ONNX Runtime e uma matriz
-  explícita de driver, CUDA, cuDNN, modelo e sistema operacional.
-- CPU continua sendo caminho suportado e coberto por testes.
-- O sistema nunca escolhe GPU apenas pela presença do hardware; testa o provider e
-  volta para CPU com alerta claro.
+O código atual usa apenas a fundação Python necessária para configuração, diagnóstico,
+logging e testes. OpenCV foi usado em um ambiente efêmero para o smoke autorizado da
+webcam e ainda não pertence ao lock principal.
+
+## Itens retirados do baseline
+
+| Item antigo | Situação nova |
+|---|---|
+| InsightFace/FaceEngine | fora do MVP; nenhum peso será baixado |
+| ONNX para embeddings faciais | fora do MVP; runtime de inferência será decidido com o detector de pessoas |
+| pgvector/FAISS | sem necessidade enquanto não houver vetores |
+| PySide6 | substituído pelo direcionamento de interface web |
+| Supabase Storage para frames | fora do MVP porque frames não serão persistidos |
+| Vivacidade e matching facial | fora do roadmap ativo |
+
+Esses itens continuam citados apenas em pesquisa histórica. Reintroduzi-los exigirá
+uma nova decisão, justificativa proporcional, licença e gate de privacidade.
+
+## Política para modelos de visão
+
+1. Verificar separadamente licença do código, pesos, dataset e uso comercial.
+2. Registrar origem, hash/versão, pré-processamento e limitações.
+3. Comparar ao menos uma alternativa leve CPU-first em dados sintéticos/autorizados.
+4. Medir 0, 1 e N pessoas, oclusão, iluminação, falso positivo e falso negativo.
+5. Não inferir identidade, emoção, atenção ou produtividade.
+6. Manter fallback `unknown`; falha de modelo não equivale a ambiente vazio.
 
 ## Política de dependências
 
-1. Fonte oficial e manutenção ativa verificadas.
-2. Licença do código e dos pesos analisada separadamente.
-3. Versão mínima/máxima registrada e travada em lockfile com hashes quando viável.
-4. SCA e smoke test antes de aceitar atualização.
-5. Dependências de desktop, servidor, visão e GPU ficam em extras separados.
+- preferir fonte oficial e projeto mantido;
+- fixar versão e registrar licença antes do merge;
+- manter runtime, desenvolvimento e componentes opcionais separados;
+- executar SCA e smoke test de atualização;
+- suportar CPU; GPU só entra após matriz real de driver/runtime;
+- não colocar SDK ou chave privilegiada do Supabase no navegador ou dispositivo;
+- não adicionar uma dependência apenas porque apareceu no planejamento anterior.
 
-Consulte `.planning/research/TECHNOLOGY_COMPARISON.md` para evidências e lacunas.
+## Decisões ainda abertas
+
+- framework web, biblioteca de gráficos e estratégia Realtime;
+- detector de pessoas e runtime de inferência;
+- versões de FastAPI, OpenCV, SQLAlchemy, Alembic e SDKs;
+- região/plano do Supabase e requisitos de residência/restore;
+- empacotamento da borda e implantação do backend;
+- gateway e protocolo de câmeras futuras/ESP32.

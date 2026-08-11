@@ -1,126 +1,153 @@
-# Multicam Inteligente
+# Smart Environment
+
+Atualizado em: 2026-08-11
+Estado: visão revalidada na Etapa SE-01
 
 ## Visão
 
-Plataforma modular de câmeras autorizadas capaz de cadastrar pessoas, executar
-reconhecimento facial local, registrar eventos auditáveis e sincronizar clientes
-com um servidor central sem depender da rede a cada frame.
+O Smart Environment é uma plataforma para compreender e melhorar o uso de ambientes
+de trabalho. O sistema combina uma câmera autorizada, processamento local com visão
+computacional, uma API Python, Supabase e uma interface web para apresentar ocupação,
+sustentabilidade, recursos, patrimônio e alertas operacionais.
+
+O projeto nasce como TCC, mas será planejado como produto comercial: dependências,
+segurança, privacidade, operação e licenças precisam suportar esse cenário, sem alegar
+que um piloto acadêmico já está pronto para produção.
 
 ## Problema
 
-Soluções monolíticas de vídeo costumam misturar captura, inferência, interface e
-persistência. Isso aumenta o impacto de uma câmera defeituosa, dificulta testes e
-torna perigoso o tratamento de biometria. Este projeto separa essas responsabilidades
-e adota privacidade e segurança desde a especificação.
+Empresas, escolas, escritórios e laboratórios frequentemente não possuem dados
+confiáveis sobre horários de maior movimento, períodos de ociosidade dos espaços,
+estado de equipamentos e situações fora do padrão. Isso dificulta decisões sobre
+energia, capacidade, manutenção, segurança patrimonial e organização dos ambientes.
 
 ## Objetivo
 
-Entregar um sistema real, executável e verificável que:
+Entregar, de forma incremental, um sistema que:
 
-- isole falhas por câmera;
-- reconheça somente acima de um limiar calibrado;
-- trate correspondências incertas como desconhecidas;
-- opere temporariamente offline com sincronização idempotente;
-- aplique autenticação, autorização, auditoria e retenção;
-- mantenha contexto GSD persistente e evidência dos testes.
+- informe ocupação atual e histórica por ambiente;
+- produza indicadores operacionais e de sustentabilidade compreensíveis;
+- permita cadastrar ambientes, câmeras e patrimônios autorizados;
+- emita alertas configuráveis, auditáveis e sujeitos a revisão humana;
+- ofereça acesso web autenticado por diferentes dispositivos;
+- opere com minimização de dados, segurança por padrão e evidência de testes;
+- evolua de uma webcam para múltiplas fontes sem reescrever o domínio central.
 
-## Público autorizado
+## Significado de desempenho
 
-Administradores, operadores e visualizadores previamente autorizados pela
-organização controladora dos dados. O uso pressupõe finalidade legítima, base legal
-avaliada, transparência e controles compatíveis com a LGPD.
+Neste projeto, **desempenho** significa desempenho operacional do ambiente: ocupação,
+disponibilidade, uso de espaço, estado dos dispositivos e oportunidades estimadas de
+redução de desperdício. O MVP não mede produtividade individual e não classifica
+atenção, emoção, distração ou qualidade de trabalho de colaboradores.
 
-## Escopo
+## Público e partes afetadas
 
-- Fontes USB, webcam integrada, RTSP/IP, arquivos e câmeras simuladas.
-- Cadastro guiado com 10 a 100 imagens e validação de qualidade.
-- Motor facial substituível, CPU-first e GPU opcional.
-- Eventos de conhecidos e desconhecidos com deduplicação temporal.
-- Cliente local, API central, PostgreSQL/pgvector e cache/fila local.
-- Interface PySide6 sem trabalho pesado na thread gráfica.
-- RBAC, escopo por câmera/local, auditoria, alertas e exportação.
-- Operação offline temporária e sincronização idempotente.
+- **Administrador:** configura organização, ambientes, usuários e políticas.
+- **Operador do sistema:** acompanha ocupação, dispositivos, alertas e patrimônio permitido.
+- **Visualizador:** consulta painéis e relatórios dentro do próprio escopo.
+- **Colaboradores e visitantes:** pessoas potencialmente observadas; são titulares de
+  dados e não devem ser transformadas implicitamente em usuários ou suspeitos.
+- **Gestores:** usam indicadores agregados para decisões operacionais, nunca como
+  única base para decisões disciplinares ou efeitos relevantes sobre uma pessoa.
 
-## Primeira versão
+## MVP vertical
 
-A primeira versão utilizável será uma vertical local e autorizada:
+O primeiro produto utilizável terá este fluxo:
 
-1. execução em um computador;
-2. exatamente uma fonte real: a webcam integrada do próprio computador, além de
-   fontes simuladas somente para testes;
-3. cadastro, embeddings, reconhecimento e desconhecidos;
-4. Supabase como serviço central preferencial, ainda sujeito a validação técnica,
-   e cache/fila SQLite no cliente para operação local/offline;
-5. login com papéis administrador, operador e visualizador;
-6. painel PySide6 básico, histórico e auditoria;
-7. API segura e contratos preparados para acesso preferencial pela internet, sem
-   eliminar a operação local durante indisponibilidade de rede;
-8. testes automatizados sem exigir câmera física.
+```text
+1 webcam autorizada
+  -> frames transitórios no computador
+  -> detecção e contagem de pessoas sem identificação
+  -> evento agregado de ocupação
+  -> API Python e sincronização idempotente
+  -> Supabase
+  -> painel web HTML/CSS/JavaScript autenticado
+```
 
-Sistema operacional alvo, GPU, quantidade de identidades e política de retenção
-ainda estão `unspecified`. A primeira versão tem exatamente uma câmera real; a
-arquitetura, porém, deve permitir expansão posterior sem fixar esse número como limite.
+O evento agregado descreve ambiente, câmera, janela de tempo, contagem ou estado de
+ocupação e confiança técnica. Ele não contém nome, `person_id`, imagem, recorte de
+rosto, embedding biométrico, áudio ou identificador persistente de trajetória.
 
-## Funcionalidades futuras
+## Pilares funcionais
 
-- Múltiplas webcams e câmeras baseadas em ESP32; os modelos, protocolos e formatos
-  finais dessas fontes ainda não foram definidos.
-- Vários computadores clientes e alta disponibilidade do servidor.
-- Balanceamento de inferência entre dispositivos.
-- Anti-spoofing por modelo especializado e sensores de profundidade.
-- Notificações externas, sempre desativadas por padrão.
-- Empacotamento e atualização assinada.
+1. **Ocupação:** situação atual, histórico, picos, períodos vazios e qualidade do
+   dispositivo.
+2. **Sustentabilidade:** horas-ocupação e oportunidades estimadas de reduzir consumo,
+   com premissas visíveis e revisão humana.
+3. **Recursos e patrimônio:** inventário, zonas, estados e movimentações autorizadas;
+   alertas são indicativos e não acusatórios.
+4. **Alertas e relatórios:** regras configuráveis, deduplicação, ciclo de vida,
+   gráficos, filtros e exportações permitidas.
+5. **Expansão:** múltiplas webcams, câmeras IP ou ESP32 por gateway autenticado depois
+   que o MVP de uma câmera estiver medido e estável.
 
-## Restrições
+## Escopo da primeira versão
 
-- Python 3.11 ou superior; Python 3.12 é a referência inicialmente validável.
-- CPU deve ser suportada; GPU não pode ser requisito.
-- Nenhuma consulta remota por frame.
-- Nenhuma biometria real ou segredo entra no Git.
-- Nenhuma alegação de acurácia ou vivacidade sem avaliação representativa.
-- Teste em hardware real depende do usuário e será documentado separadamente.
+- Um computador Windows e exatamente uma webcam integrada como hardware real.
+- Fonte simulada obrigatória para testes automatizados futuros.
+- Processamento de vídeo na borda; a rede não participa de cada frame.
+- Supabase como serviço central preferencial, sujeito a PoC de Auth, RLS, custo,
+  região, backup e restauração.
+- Painel responsivo no navegador; não haverá interface desktop PySide6 no baseline.
+- Sugestões de sustentabilidade antes de qualquer automação física.
+- Dados sintéticos até existir ambiente autorizado, aviso, política de retenção e
+  decisão documentada sobre base legal.
 
-## Premissas
+## Fora do MVP
 
-- Uso inicial confirmado: exatamente 1 webcam integrada do próprio computador.
-- Expansão futura: múltiplas webcams e câmeras baseadas em ESP32; tipos finais de
-  câmera e protocolos permanecem `unspecified`.
-- Crescimento e volume de pessoas: `unspecified`.
-- Supabase é o serviço central preferencial, mas a escolha ainda requer prova de
-  conceito e validação técnica, de segurança, privacidade, custo e licenças.
-- A internet é o meio de comunicação preferido; modo local/offline continua
-  obrigatório e a fila local usa identificadores idempotentes.
-- O armazenamento de frames foi solicitado, mas retenção, granularidade (por evento
-  ou contínua), local de armazenamento e base legal permanecem `unspecified`. Frames
-  completos são opt-in e associados a eventos por padrão; captura/gravação contínua
-  não é presumida.
-- O contexto imediato é acadêmico (TCC), mas arquitetura, dependências e licenças
-  devem ser avaliadas como se houvesse uso comercial.
-- HTTPS é terminado em proxy confiável no ambiente distribuído.
+- Reconhecimento facial, cadastro de pessoas, embeddings, pgvector e vivacidade.
+- Inferência de distração, atenção, emoção, olhar, produtividade ou jornada individual.
+- Ranking de colaboradores ou decisão disciplinar automatizada.
+- Áudio, gravação contínua, transmissão pública ao vivo ou armazenamento de frames.
+- Declaração automática de furto ou culpa a partir de visão computacional.
+- Acionamento autônomo de iluminação, ventilação, climatização ou sistema crítico.
+- Múltiplas câmeras, RTSP, ESP32 e escala comercial antes do piloto de uma webcam.
 
-## Privacidade
+Uma futura função de identificação individual só poderá entrar em uma fase opcional
+se houver necessidade demonstrada, alternativa menos invasiva insuficiente, revisão
+jurídica, transparência, governança, validação representativa, retenção definida,
+controle de acesso, contestação e aprovação humana. Ela não é presumida pelo roadmap.
 
-Biometria é dado pessoal sensível. A arquitetura prioriza minimização, separação de
-identificadores, criptografia em trânsito, proteção em repouso conforme o ambiente,
-retenção configurável, acesso mínimo, auditoria e eliminação verificável. A base legal,
-o RIPD e os avisos aplicáveis devem ser confirmados pelo controlador e por assessoria
-jurídica; este projeto não substitui aconselhamento jurídico.
+## Privacidade e segurança
 
-## Definição de sucesso
+- Frames são efêmeros: permanecem em memória pelo tempo mínimo do processamento e não
+  são enviados ao Supabase no baseline.
+- Persistem apenas eventos agregados e minimizados.
+- Acesso é negado por padrão e limitado por organização, local e papel.
+- Credenciais privilegiadas permanecem somente no backend confiável.
+- Retenção, exclusão, auditoria e direitos dos titulares devem ser verificáveis.
+- Alertas exigem interpretação humana e contexto; ausência de detecção não prova
+  ausência de uma pessoa e uma detecção não prova identidade ou conduta.
+- LGPD é relevante ao contexto brasileiro. Base legal, controlador, operador, RIPD,
+  avisos, retenção e encarregado permanecem decisões organizacionais `unspecified`;
+  este projeto não substitui avaliação jurídica.
 
-- Critérios dos requisitos da versão são rastreados a testes/evidências.
-- Uma câmera com falha não interrompe as demais nem a interface.
-- Limiar rejeita correspondências insuficientes; testes positivos e negativos existem.
-- Eventos offline são reenviados sem duplicação após reconexão.
-- Ações privilegiadas e acessos sensíveis deixam trilha de auditoria.
-- Não existem findings críticos conhecidos sem tratamento ou aceitação explícita.
-- Instalação, operação, backup, restauração e exclusão são documentados.
+## Restrições e premissas
 
-## Fora do escopo
+- Python 3.11 ou 3.12; CPU precisa ser suportada; GPU é opcional e não validada.
+- HTML, CSS e JavaScript formam a interface; framework web permanece `unspecified`.
+- Python, OpenCV e banco de dados compõem o backend; o detector de pessoas ainda será
+  selecionado por licença, desempenho e qualidade em dados autorizados.
+- Internet é o meio preferencial, mas captura e agregação não podem parar por uma
+  indisponibilidade transitória; a estratégia offline será implementada em fase própria.
+- Modelos de câmera futuros, protocolos ESP32, volume, metas de FPS/latência, número
+  de ambientes, retenção e orçamento do Supabase permanecem `unspecified`.
+- O pacote e a CLI ainda usam o nome técnico legado `multicam`; renomear código,
+  variáveis e caminhos será uma migração separada, não parte da Etapa SE-01.
 
-- Identificação secreta ou sem autorização.
-- Busca em redes sociais ou bases obtidas irregularmente.
-- Rastreamento fora das câmeras cadastradas.
-- Compartilhamento automático de biometria com terceiros.
-- Vigilância pública indiscriminada, decisões automatizadas punitivas ou garantia de
-  vivacidade inviolável.
+## Definição de sucesso do MVP
+
+- Uma webcam autorizada abre, entrega frames e é liberada repetidamente sem gravá-los.
+- Cenários 0, 1 e N pessoas produzem eventos agregados com limitações documentadas.
+- Queda de rede não bloqueia a captura e o reenvio não duplica eventos.
+- Um usuário autenticado visualiza ocupação atual e histórica somente no seu escopo.
+- Retenção e exclusão de eventos são demonstradas; nenhum pixel ou identidade persiste.
+- Latência, disponibilidade e erro de contagem são medidos em piloto autorizado.
+- Nenhum finding crítico conhecido fica sem contenção ou decisão explícita.
+
+## Evidência preservada do projeto anterior
+
+A fundação Python, configuração, logging seguro, lockfile, gates de qualidade e smoke
+autorizado da webcam continuam válidos. O antigo planejamento de reconhecimento facial
+é mantido apenas como histórico em Git e nos documentos de pesquisa identificados como
+legado; ele não representa mais o produto ativo.

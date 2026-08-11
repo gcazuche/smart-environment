@@ -1,4 +1,9 @@
-# Fase 2 — Contexto
+> [!CAUTION]
+> **SUPERADO em 2026-08-11. NÃO EXECUTAR.** Este contexto pertence ao produto facial
+> anterior. A próxima etapa ativa é `SE-02`, definida em `.planning/ROADMAP.md`, e só
+> começa após autorização explícita. Conteúdo abaixo preservado como histórico.
+
+# Fase 2 — Contexto (histórico)
 
 ## Objetivo
 

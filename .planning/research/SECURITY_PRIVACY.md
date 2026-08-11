@@ -1,4 +1,9 @@
-# Pesquisa inicial — segurança, privacidade e arquitetura
+> [!IMPORTANT]
+> **THREAT MODEL FACIAL HISTÓRICO desde 2026-08-11.** Os controles gerais continuam
+> úteis, mas biometria, embeddings, reconhecimento e interface PySide6 não fazem parte
+> do MVP atual. Requisitos ativos estão em `.planning/REQUIREMENTS.md`.
+
+# Pesquisa inicial — segurança, privacidade e arquitetura (histórica)
 
 **Projeto:** sistema autorizado de câmeras inteligentes com reconhecimento facial
 **Data de referência:** 2026-07-17

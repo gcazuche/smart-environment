@@ -1,4 +1,9 @@
-# Comparação tecnológica — Fase 1
+> [!IMPORTANT]
+> **BASELINE FACIAL HISTÓRICO desde 2026-08-11.** As conclusões sobre FaceEngine,
+> PySide6, pgvector, embeddings e vivacidade não orientam o Smart Environment ativo.
+> OpenCV/Python/banco podem ser reaproveitados somente após revalidação na fase atual.
+
+# Comparação tecnológica — Fase 1 (histórica)
 
 **Projeto:** sistema multicâmera com reconhecimento facial
 **Data de corte da pesquisa:** 2026-07-17

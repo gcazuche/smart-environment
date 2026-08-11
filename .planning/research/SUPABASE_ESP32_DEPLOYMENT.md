@@ -1,4 +1,9 @@
-# Supabase e ESP32-CAM — arquitetura de implantação
+> [!IMPORTANT]
+> **PESQUISA PARCIALMENTE HISTÓRICA desde 2026-08-11.** Supabase e ESP32 continuam
+> direções possíveis, mas pgvector, biometria e Storage de frames saíram do baseline.
+> Nenhuma PoC remota foi executada; revalidar cada decisão no roadmap `SE-*`.
+
+# Supabase e ESP32-CAM — arquitetura de implantação (histórica/parcial)
 
 **Projeto:** sistema multicâmera com reconhecimento facial
 **Data de corte:** 2026-07-17
