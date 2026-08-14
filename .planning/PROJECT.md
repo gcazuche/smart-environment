@@ -35,10 +35,17 @@ Entregar, de forma incremental, um sistema que:
 
 ## Significado de desempenho
 
-Neste projeto, **desempenho** significa desempenho operacional do ambiente: ocupação,
-disponibilidade, uso de espaço, estado dos dispositivos e oportunidades estimadas de
-redução de desperdício. O MVP não mede produtividade individual e não classifica
-atenção, emoção, distração ou qualidade de trabalho de colaboradores.
+Neste projeto, **desempenho** inclui duas camadas diferentes:
+
+1. desempenho operacional do ambiente: ocupação, disponibilidade, uso do espaço e
+   oportunidades estimadas de redução de desperdício;
+2. estado de atividade observável: estimativa visual de que uma pessoa aparenta estar
+   em atividade compatível com trabalho, em pausa/relaxamento ou em estado inconclusivo.
+
+A segunda camada não mede intenção, qualidade, produtividade real ou estado mental.
+Usar celular, conversar ou permanecer parado pode ser trabalho dependendo do contexto.
+As regras serão configuráveis por ambiente, os resultados serão estimativas e nenhuma
+decisão disciplinar poderá ser tomada automaticamente.
 
 ## Público e partes afetadas
 
@@ -63,6 +70,9 @@ O primeiro produto utilizável terá este fluxo:
   -> Supabase
   -> painel web HTML/CSS/JavaScript autenticado
 ```
+
+Antes dessa vertical completa, a primeira prova local será menor: abrir a webcam,
+detectar pessoas, desenhar caixas e exibir a contagem em tempo real, sem persistência.
 
 O evento agregado descreve ambiente, câmera, janela de tempo, contagem ou estado de
 ocupação e confiança técnica. Ele não contém nome, `person_id`, imagem, recorte de
@@ -96,7 +106,8 @@ rosto, embedding biométrico, áudio ou identificador persistente de trajetória
 ## Fora do MVP
 
 - Reconhecimento facial, cadastro de pessoas, embeddings, pgvector e vivacidade.
-- Inferência de distração, atenção, emoção, olhar, produtividade ou jornada individual.
+- Inferência de emoção, intenção, qualidade do trabalho ou produtividade real.
+- Classificação de atividade usada como controle de ponto, ranking ou punição automática.
 - Ranking de colaboradores ou decisão disciplinar automatizada.
 - Áudio, gravação contínua, transmissão pública ao vivo ou armazenamento de frames.
 - Declaração automática de furto ou culpa a partir de visão computacional.
@@ -107,6 +118,10 @@ Uma futura função de identificação individual só poderá entrar em uma fase
 se houver necessidade demonstrada, alternativa menos invasiva insuficiente, revisão
 jurídica, transparência, governança, validação representativa, retenção definida,
 controle de acesso, contestação e aprovação humana. Ela não é presumida pelo roadmap.
+
+A classificação de atividade inicialmente usa apenas rastreamento temporário dentro da
+sessão. Histórico associado a um colaborador identificado continua fora do MVP e exige
+o mesmo gate reforçado de identificação individual.
 
 ## Privacidade e segurança
 

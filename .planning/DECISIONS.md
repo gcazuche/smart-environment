@@ -133,3 +133,32 @@ que a decisão não orienta mais o produto ativo; não apaga o registro anterior
   identidade ou culpa.
 - **Consequências:** revisão/correção humana e auditoria são obrigatórias; qualquer PoC
   visual de objeto terá dataset, licença e métrica próprios.
+
+## ADR-015 — PoC de câmera e pessoas antes do Supabase
+
+- **Data:** 2026-08-14
+- **Status:** aceita pelo usuário.
+- **Decisão:** antecipar a prova local de webcam, caixas e contagem para SE-02; domínio e
+  Supabase passam a SE-03.
+- **Consequências:** valor visual é validado cedo e sem rede; o slice não persiste frames,
+  não identifica pessoas e não classifica atividade.
+
+## ADR-016 — Detector HOG/OpenCV como baseline substituível
+
+- **Data:** 2026-08-14
+- **Status:** aceita para PoC, não para produção.
+- **Decisão:** começar com o detector de pessoas HOG/SVM já incluído no OpenCV 4.13,
+  atrás de contrato substituível e sem download de pesos externos.
+- **Justificativa:** patch pequeno, operação CPU/offline e licença Apache 2.0 do OpenCV.
+- **Consequências:** HOG favorece corpo inteiro e pode falhar com pessoa sentada,
+  parcialmente visível ou em iluminação difícil; SE-02 mede essa limitação e um modelo
+  melhor poderá substituir o backend sem alterar câmera/CLI.
+
+## ADR-017 — Atividade observável, não produtividade real
+
+- **Data:** 2026-08-14
+- **Status:** aceita como direção para SE-04.
+- **Decisão:** no futuro estimar `trabalho_aparente`, `pausa_aparente` ou `inconclusivo`,
+  com regras por contexto e tracking efêmero.
+- **Consequências:** nenhuma inferência de intenção/emoção, identidade, controle de ponto,
+  ranking ou punição automática; resultado sempre é apresentado como estimativa.

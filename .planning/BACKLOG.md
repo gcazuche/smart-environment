@@ -1,6 +1,6 @@
 # Backlog priorizado — Smart Environment
 
-Atualizado em: 2026-08-11
+Atualizado em: 2026-08-14
 
 ## Política
 
@@ -18,23 +18,23 @@ Atualizado em: 2026-08-11
 | SEB-003 | Redesenhar arquitetura e stack | SE-01 | GOV-001, CAM-003 | concluída |
 | SEB-004 | Documentar requisitos, riscos e roadmap | SE-01 | documentação de GOV-001 a GOV-004 | concluída |
 | SEB-005 | Marcar antiga Fase 2 como superada e validar consistência | SE-01 | TEST-001 | concluída |
-| SEB-006 | Confirmar matriz de finalidades, responsáveis e mudança de uso | SE-02 | GOV-002 a GOV-004 | pendente |
-| SEB-007 | Definir contrato mínimo e granularidade | SE-02 | DATA-001, PRIV-003 | pendente |
-| SEB-008 | Criar migrações e testes de integridade com dados sintéticos | SE-02 | DATA-002 | pendente |
-| SEB-009 | Provar Supabase Auth/RLS e fronteira de segredos | SE-02 | DATA-003, AUTH-001 a AUTH-003, SEC-001, SEC-002 | bloqueada por projeto/credenciais/autorização |
-| SEB-010 | Definir retenção, exclusão, backup e rollback iniciais | SE-02 | DATA-004, OPS-002 | pendente |
+| SEB-006 | Confirmar matriz de finalidades, responsáveis e mudança de uso | SE-03 | GOV-002 a GOV-004 | pendente |
+| SEB-007 | Definir contrato mínimo e granularidade | SE-03 | DATA-001, PRIV-003 | pendente |
+| SEB-008 | Criar migrações e testes de integridade com dados sintéticos | SE-03 | DATA-002 | pendente |
+| SEB-009 | Provar Supabase Auth/RLS e fronteira de segredos | SE-03 | DATA-003, AUTH-001 a AUTH-003, SEC-001, SEC-002 | bloqueada por projeto/credenciais/autorização |
+| SEB-010 | Definir retenção, exclusão, backup e rollback iniciais | SE-03 | DATA-004, OPS-002 | pendente |
 
 ## P1 — Vertical de uma webcam
 
 | ID | Tarefa | Etapa | Requisitos | Estado |
 |---|---|---|---|---|
-| SEB-011 | Implementar contrato e fonte simulada | SE-03 | CAM-001, TEST-002 | pendente |
-| SEB-012 | Integrar OpenCV e lifecycle da webcam em cenário controlado | SE-03 | CAM-002, CAM-004, PRIV-004 | pendente |
-| SEB-013 | Implementar fila limitada e descarte de frames | SE-03 | CAM-003, OPS-001, PRIV-002 | pendente |
-| SEB-014 | Pesquisar detector CPU-first e licenças | SE-04 | OCC-001 | pendente |
-| SEB-015 | Implementar detecção 0/1/N e estado `unknown` | SE-04 | OCC-001, OCC-003 | pendente |
-| SEB-016 | Agregar eventos sem identificação | SE-04 | OCC-002, OCC-004 | pendente |
-| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-04 | TEST-003, PRIV-002 | pendente |
+| SEB-011 | Implementar contrato e fonte simulada | SE-02 | CAM-001, TEST-002 | concluída |
+| SEB-012 | Integrar OpenCV e lifecycle da webcam em cenário controlado | SE-02 | CAM-002, CAM-004, PRIV-004 | concluída |
+| SEB-013 | Implementar buffer transitório e descarte de frames | SE-02 | CAM-003, OPS-001, PRIV-002 | concluída no loop de um frame por vez |
+| SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — HOG/OpenCV como baseline substituível |
+| SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída em testes simulados; qualidade real pendente |
+| SEB-016 | Implementar estados observáveis e tracking efêmero | SE-04 | ACT-001 a ACT-003, OCC-002, OCC-004 | pendente |
+| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | pendente |
 | SEB-018 | Implementar ingestão autenticada | SE-05 | API-001, SEC-003 | pendente |
 | SEB-019 | Implementar outbox, retry e idempotência | SE-05 | API-002, API-003 | pendente |
 | SEB-020 | Instrumentar logs e métricas minimizados | SE-05 | API-004, SEC-004 | pendente |
@@ -71,7 +71,8 @@ Atualizado em: 2026-08-11
 
 - cadastro de pessoas e galeria de desconhecidos;
 - reconhecimento facial, embeddings, matching, pgvector e vivacidade;
-- avaliação de distração, atenção, emoção ou produtividade individual;
+- inferência de emoção, intenção ou produtividade real;
+- controle de ponto, ranking ou punição automática por classificação de atividade;
 - interface PySide6;
 - armazenamento de frames e transmissão pública;
 - automação física no MVP.
@@ -81,5 +82,6 @@ retorno exige nova autorização, finalidade e gate de risco.
 
 ## Próxima tarefa recomendada
 
-Após autorização explícita da Etapa 2: `SEB-006 — Confirmar matriz de finalidades e
-responsáveis`. Nenhum schema, dependência ou serviço deve ser criado antes desse gate.
+Continuar por `SEB-017`: avaliar qualidade e um detector adequado a corpo parcial,
+somente no protótipo local. Não iniciar Supabase, persistência ou classificação de
+atividade nesta etapa.

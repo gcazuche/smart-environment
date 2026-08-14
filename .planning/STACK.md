@@ -13,8 +13,8 @@ biblioteca candidata não é tratada como instalada, segura ou compatível sem e
 | Interface | HTML, CSS e JavaScript | planejada | UX responsiva, acessibilidade e política de sessão |
 | Framework web | sem escolha final | `unspecified` | PoC mínima; evitar framework sem necessidade |
 | API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
-| Captura | OpenCV CPU-first | candidata; smoke efêmero aprovado | fonte simulada, lifecycle, licença e matriz Windows |
-| Detecção de pessoas | adaptador substituível | `unspecified` | licença comercial dos pesos, precisão, CPU e viés |
+| Captura | OpenCV `4.13.0.92`, CPU-first | selecionada para SE-02 | fonte simulada, lifecycle e matriz Windows |
+| Detecção de pessoas | HOG padrão do OpenCV atrás de adaptador | baseline de PoC | Apache 2.0; validar limitação em pessoas sentadas/parciais |
 | Persistência central | Supabase/PostgreSQL | preferencial, não validada | Auth, RLS, região, quota, custo, backup e restore |
 | ORM/migrações | SQLAlchemy + Alembic | candidatas | schema mínimo, upgrade/downgrade e transações |
 | Outbox local | SQLite | candidata | confinamento, limites, retenção e idempotência |
@@ -50,7 +50,8 @@ uma nova decisão, justificativa proporcional, licença e gate de privacidade.
 2. Registrar origem, hash/versão, pré-processamento e limitações.
 3. Comparar ao menos uma alternativa leve CPU-first em dados sintéticos/autorizados.
 4. Medir 0, 1 e N pessoas, oclusão, iluminação, falso positivo e falso negativo.
-5. Não inferir identidade, emoção, atenção ou produtividade.
+5. Não inferir identidade, emoção, intenção ou produtividade real; atividade futura é
+   estimativa contextual e inclui `inconclusivo`.
 6. Manter fallback `unknown`; falha de modelo não equivale a ambiente vazio.
 
 ## Política de dependências

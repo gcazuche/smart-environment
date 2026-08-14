@@ -1,5 +1,17 @@
 # Changelog GSD
 
+## 2026-08-14 — Primeiro protótipo de câmera e detecção (SE-02)
+
+- OpenCV 4.13.0 e NumPy 2.3.5 adicionados ao lock.
+- Fonte de webcam com fallback Windows, validação de frame e liberação determinística.
+- Detector HOG substituível, caixas, contagem e janela local; nenhum writer ou cliente
+  de rede foi adicionado ao caminho de frames.
+- CLI `multicam camera` adicionada, com modo invisível obrigatoriamente limitado.
+- 44 testes automatizados cobrem câmera fake, fallback, 0/1/N, loop, encerramento e CLI.
+- Smoke autorizado abriu a webcam via DirectShow e processou 30 frames; zero pessoas
+  foram detectadas nessa amostra, então a qualidade para corpo parcial segue pendente.
+- Nas tentativas inspecionadas, a contagem de arquivos em `data/` permaneceu 5 → 5.
+
 ## 2026-08-11 — Rebaseline Smart Environment (SE-01)
 
 - Objetivo alterado de câmeras com reconhecimento facial para gestão inteligente de

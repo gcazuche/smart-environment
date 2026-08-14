@@ -23,6 +23,28 @@ def _complete_source_settings(root: Path) -> Settings:
 
 
 class CliTests(TestCase):
+    def test_camera_requires_limit_when_display_is_disabled(self) -> None:
+        stderr = StringIO()
+        with redirect_stderr(stderr):
+            exit_code = main(["camera", "--no-display"])
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("exige --max-frames", stderr.getvalue())
+
+    def test_camera_prints_only_bounded_summary(self) -> None:
+        from app.live_detection import RunSummary
+
+        stdout = StringIO()
+        summary = RunSummary(3, 1, 2, "dshow", "frame_limit")
+        with patch("app.live_detection.run_person_detection", return_value=summary):
+            with redirect_stdout(stdout):
+                exit_code = main(["camera", "--no-display", "--max-frames", "3"])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("frames=3", stdout.getvalue())
+        self.assertIn("pessoas_agora=1", stdout.getvalue())
+        self.assertNotIn("frame_data", stdout.getvalue())
+
     def test_doctor_json_is_parseable_and_returns_zero(self) -> None:
         with TemporaryDirectory() as temp_dir:
             settings = _complete_source_settings(Path(temp_dir))

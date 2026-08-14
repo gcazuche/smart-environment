@@ -30,8 +30,28 @@ def _parser() -> argparse.ArgumentParser:
     doctor = subparsers.add_parser("doctor", help="diagnóstico somente leitura")
     doctor.add_argument("--json", action="store_true", dest="as_json")
 
+    camera = subparsers.add_parser("camera", help="detectar pessoas com a webcam local")
+    camera.add_argument("--index", type=_non_negative_int, default=0)
+    camera.add_argument("--backend", choices=("auto", "dshow", "msmf", "any"), default="auto")
+    camera.add_argument("--no-display", action="store_true")
+    camera.add_argument("--max-frames", type=_positive_int)
+
     subparsers.add_parser("version", help="mostrar versão da aplicação")
     return parser
+
+
+def _non_negative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("deve ser zero ou maior")
+    return parsed
+
+
+def _positive_int(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("deve ser maior que zero")
+    return parsed
 
 
 def _print_human_report(report: DiagnosticReport) -> None:
@@ -46,6 +66,47 @@ def _print_human_report(report: DiagnosticReport) -> None:
         print(f"[{marker}] {check.name}: {check.detail}")
 
 
+def _run_camera_command(args: argparse.Namespace) -> int:
+    """Import the optional runtime path only when the operator requests it."""
+
+    from app.cameras import CameraError, OpenCVCamera
+    from app.live_detection import NullDisplay, OpenCVDisplay, run_person_detection
+    from app.vision import HogPersonDetector
+
+    if args.no_display and args.max_frames is None:
+        print("erro: --no-display exige --max-frames", file=sys.stderr)
+        return 2
+
+    camera = OpenCVCamera(index=args.index, backend=args.backend)
+    display = NullDisplay() if args.no_display else OpenCVDisplay()
+    try:
+        summary = run_person_detection(
+            camera,
+            HogPersonDetector(),
+            display,
+            max_frames=args.max_frames,
+        )
+    except CameraError as exc:
+        print(f"erro de câmera: {exc}", file=sys.stderr)
+        return 3
+    except KeyboardInterrupt:
+        print("operação cancelada", file=sys.stderr)
+        return 130
+    except Exception:
+        print("erro interno durante a detecção local", file=sys.stderr)
+        return 1
+
+    print(
+        "detecção encerrada: "
+        f"frames={summary.frames_processed}, "
+        f"pessoas_agora={summary.last_count}, "
+        f"máximo={summary.max_count}, "
+        f"backend={summary.backend_name}, "
+        f"motivo={summary.stopped_by}"
+    )
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the CLI and return a process exit code."""
 
@@ -57,6 +118,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command is None:
         parser.print_help()
         return 0
+    if args.command == "camera":
+        return _run_camera_command(args)
 
     try:
         logger = configure_secure_logging()

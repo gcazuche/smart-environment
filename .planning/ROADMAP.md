@@ -2,7 +2,7 @@
 
 Versão: 1.0
 Atualizado em: 2026-08-11
-Status global: Etapa SE-01 concluída; nenhuma funcionalidade Smart Environment implementada
+Status global: primeiro incremento da SE-02 concluído; qualidade do detector pendente
 
 ## Como ler este roadmap
 
@@ -56,53 +56,56 @@ individual não fazem parte do MVP; código, dependências, câmera e serviços 
 
 ---
 
-## SE-02 — Domínio, dados e Supabase seguro
+## SE-02 — Câmera e detecção local de pessoas
 
-**Status:** próxima; não iniciada
-**Objetivo:** definir e provar o contrato mínimo com dados sintéticos antes da câmera.
+**Status:** em andamento — autorizada em 2026-08-14
+**Objetivo:** provar primeiro o fluxo visual local usando a webcam do próprio computador.
 
-**Entregas:** entidades organização/local/ambiente/câmera; evento agregado e idempotente;
-migrações; Auth/RBAC/RLS; configuração e PoC isolada do Supabase.
+**Entregas:** contrato de câmera, fonte simulada, adaptador OpenCV com fallback de
+backend, detector de pessoas substituível, caixas, contagem, CLI local e encerramento seguro.
+
+**Aceite:** testes simulados cobrem abertura/leitura/falha/liberação e detecção 0/1/N;
+a webcam autorizada abre e fecha em ciclo limitado; a interface exibe caixas e contagem;
+nenhum frame é gravado, enviado pela rede ou incluído em logs.
+
+**Gate de pessoas:** teste real somente no ambiente controlado do próprio responsável,
+com áudio ausente e sem terceiros incidentais.
+
+**Fora:** classificação trabalhando/relaxando, identidade, Supabase, API, dashboard web,
+armazenamento, várias câmeras e promessa de precisão.
+
+---
+
+## SE-03 — Domínio, dados e Supabase seguro
+
+**Status:** planejada; não iniciada
+**Objetivo:** definir e provar contratos de dados com conteúdo sintético após o PoC local.
+
+**Entregas:** entidades organização/local/ambiente/câmera; eventos agregados e
+idempotentes; migrações; Auth/RBAC/RLS; configuração e PoC isolada do Supabase.
 
 **Aceite:** integridade e isolamento positivos/negativos testados; evento não contém
-identidade, pixels ou biometria; `service_role` só no backend; upgrade/downgrade,
-retenção inicial e caminho de rollback demonstrados.
+identidade nem pixels; `service_role` só no backend; upgrade/downgrade, retenção inicial
+e rollback demonstrados.
 
-**Fora:** OpenCV, câmera real, detector, dashboard e dados de pessoas.
-
----
-
-## SE-03 — Captura confiável de uma webcam
-
-**Status:** planejada
-**Objetivo:** integrar a primeira fonte real com lifecycle previsível e testes simulados.
-
-**Entregas:** `CameraSource`, fonte simulada, adaptador OpenCV, fila limitada, health,
-timeouts, start/stop/restart e liberação segura.
-
-**Aceite:** simulação passa em automação; webcam autorizada abre/lê/libera em ciclos;
-falhas são tipadas; memória permanece limitada; nenhum frame é salvo ou enviado.
-
-**Gate de pessoas:** o smoke real ocorre em cenário controlado, vazio ou somente com o
-próprio responsável informado, áudio desligado e sem terceiros. Qualquer outra pessoa
-observada aguarda o gate completo de transparência/piloto em SE-07.
-
-**Fora:** visão computacional, múltiplas fontes, RTSP e ESP32.
+**Fora:** dados reais de colaboradores e histórico individual identificado.
 
 ---
 
-## SE-04 — Detecção e ocupação sem identificação
+## SE-04 — Ocupação e atividade observável
 
 **Status:** planejada
-**Objetivo:** transformar frames transitórios em eventos agregados sem identidade.
+**Objetivo:** transformar detecções em ocupação e estimativas observáveis de atividade.
 
-**Entregas:** escolha licenciada do detector; detecção 0/1/N; tracking curto efêmero;
-agregação por janela; deduplicação; métricas de qualidade e desempenho.
+**Entregas:** tracking curto efêmero; agregação por janela; estados `trabalho aparente`,
+`pausa aparente` e `inconclusivo`; regras configuráveis; métricas de qualidade e limites.
 
-**Aceite:** testes sintéticos/autorizados cobrem cenários normais e adversos; somente
-eventos agregados persistem; falha produz `unknown`; CPU atende baseline medido.
+**Aceite:** testes sintéticos/autorizados cobrem cenários normais e adversos; a UI deixa
+claro que o resultado é estimativa; ambiguidade produz `inconclusivo`; nenhuma identidade
+persiste; falsos positivos/negativos e CPU têm baseline medido.
 
-**Fora:** rosto, nome, emoção, olhar, atenção, produtividade e punição automatizada.
+**Fora:** rosto/nome, emoção, intenção, produtividade real, controle de ponto, ranking e
+punição automatizada.
 
 ---
 
@@ -215,9 +218,9 @@ verdes; riscos residuais, licenças e limitações são documentados.
 | Etapa | Requisitos principais |
 |---|---|
 | SE-01 | GOV-001, PRIV-001 |
-| SE-02 | GOV-002 a GOV-004, DATA-001 a DATA-004, AUTH-001 a AUTH-003, SEC-001, SEC-002, PRIV-003, OPS-002 |
-| SE-03 | CAM-001 a CAM-004, PRIV-002, PRIV-004, OPS-001, TEST-002 |
-| SE-04 | OCC-001 a OCC-004, PRIV-002, PRIV-003, TEST-003 |
+| SE-02 | CAM-001 a CAM-004, OCC-001, OCC-003, PRIV-002, PRIV-004, OPS-001, TEST-002, TEST-003 |
+| SE-03 | GOV-002 a GOV-004, DATA-001 a DATA-004, AUTH-001 a AUTH-003, SEC-001, SEC-002, PRIV-003, OPS-002 |
+| SE-04 | OCC-002 a OCC-004, ACT-001 a ACT-004, PRIV-002, PRIV-003, TEST-003 |
 | SE-05 | API-001 a API-004, SEC-003, SEC-004 |
 | SE-06 | WEB-001 a WEB-004 |
 | SE-07 | DATA-004, PRIV-004, PRIV-005, OPS-002, OPS-004, OPS-005, TEST-003, TEST-004 |
@@ -231,6 +234,6 @@ verdes; riscos residuais, licenças e limitações são documentados.
 
 ## Próximo gate
 
-Não iniciar SE-02 automaticamente. Antes, o usuário deve autorizar a etapa; então será
-criado o plano atômico do domínio/Supabase e confirmados projeto de teste, credenciais,
-região, retenção e limites do que pode ser exercitado.
+Continuar somente na SE-02 por SEB-017: comparar um detector de corpo parcial com
+licença compatível em material sintético/autorizado e medir acerto, falso positivo,
+latência e CPU. Não iniciar domínio/Supabase nem atividade observável nesse incremento.

@@ -6,16 +6,16 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
-A **Etapa SE-01 — Rebaseline** está concluída. Nesta etapa foram atualizados somente
-escopo, arquitetura, requisitos, riscos e roadmap. Ainda não existe captura contínua,
-detector de pessoas, Supabase, API ou interface web.
+A **Etapa SE-02 — Câmera e detecção local** possui um primeiro protótipo executável.
+Ele abre a webcam, procura pessoas, desenha caixas e mostra a contagem, sem gravar
+frames. Supabase, API, dashboard e classificação de atividade ainda não entram.
 
 A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
 - ambiente recriável com `uv.lock` e gates de qualidade;
-- 28 testes aprovados no checkpoint anterior em Python 3.11 e 3.12;
+- 44 testes aprovados no checkpoint atual em Python 3.12;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
 O pacote, a CLI e as variáveis ainda usam o nome técnico legado `multicam` /
@@ -33,10 +33,10 @@ webcam autorizada
   → dashboard web autenticado
 ```
 
-O MVP mede desempenho **do ambiente**. Não mede desempenho de funcionários e não
-infere atenção, distração, emoção, produtividade ou jornada. Também não usa
-reconhecimento facial, embeddings, áudio, gravação contínua ou decisão disciplinar
-automatizada.
+O projeto futuramente estimará estados visuais como `trabalho aparente`, `pausa
+aparente` ou `inconclusivo`. Isso não mede intenção nem produtividade real: a mesma ação
+pode ter significados diferentes conforme o trabalho. Não haverá reconhecimento facial,
+áudio, gravação contínua, ranking ou decisão disciplinar automatizada.
 
 Mesmo uma contagem sem nome pode permitir inferências em ambientes pequenos. Por
 isso, “sem identificação” não significa automaticamente “anônimo”: granularidade,
@@ -57,9 +57,9 @@ retenção e acesso serão avaliados antes de dados reais.
 ## Próximas etapas
 
 1. **SE-01 — Rebaseline:** concluída, somente documentação.
-2. **SE-02 — Domínio, dados e Supabase seguro:** próxima, ainda não autorizada.
-3. **SE-03 — Captura confiável de uma webcam.**
-4. **SE-04 — Detecção e ocupação sem identificação.**
+2. **SE-02 — Câmera e detecção local de pessoas:** em andamento.
+3. **SE-03 — Domínio, dados e Supabase seguro.**
+4. **SE-04 — Ocupação e atividade observável.**
 5. **SE-05 — API, outbox e sincronização.**
 6. **SE-06 — Dashboard web MVP.**
 7. **SE-07 — Vertical ponta a ponta e piloto controlado.**
@@ -69,8 +69,8 @@ retenção e acesso serão avaliados antes de dados reais.
 11. **SE-11 — Múltiplas câmeras e ESP32.**
 12. **SE-12 — Automação controlada, hardening e entrega do TCC.**
 
-Nada após SE-01 foi iniciado automaticamente. Consulte `.planning/ROADMAP.md` para
-entregas, critérios de aceite e itens fora de cada etapa.
+Consulte `.planning/ROADMAP.md` para entregas, critérios de aceite e itens fora de
+cada etapa.
 
 ## Pré-requisitos da fundação existente
 
@@ -86,6 +86,22 @@ uv sync --locked --extra dev --cache-dir .uv-cache
 .\.venv\Scripts\python.exe -m app doctor --json
 .\.venv\Scripts\python.exe -m pytest -q
 ```
+
+Para abrir a câmera e ver as caixas localmente, use `Q` ou `Esc` para encerrar:
+
+```powershell
+.\.venv\Scripts\multicam.exe camera
+```
+
+Para um teste invisível e obrigatoriamente limitado a 30 frames:
+
+```powershell
+.\.venv\Scripts\multicam.exe camera --no-display --max-frames 30
+```
+
+É possível selecionar outra câmera com `--index 1` e escolher explicitamente
+`--backend dshow`, `msmf` ou `any`. O modo automático tenta os backends adequados ao
+sistema e sempre libera o dispositivo ao sair.
 
 Gates completos:
 
@@ -108,26 +124,30 @@ uv sync --locked --extra dev --cache-dir .uv-cache
 
 ## Webcam atual
 
-Um smoke autorizado em 2026-07-17 tentou MSMF e abriu a webcam `USB2.0 HD UVC
-WebCam` por DirectShow. Foi lido um frame 640×480 somente em memória, o array recebido
-foi sobrescrito best-effort e o dispositivo foi liberado. Nenhuma imagem ou arquivo
-novo apareceu em `data/` durante esse teste.
+Em 2026-08-14, o protótipo abriu a webcam por DirectShow e processou 30 frames em
+memória antes de liberar o dispositivo. O resultado foi zero detecções nessa amostra;
+portanto, o acesso à câmera está validado, mas a qualidade para uma pessoa sentada e
+parcialmente enquadrada ainda não está. A contagem de arquivos em `data/` permaneceu
+5 antes e depois das tentativas inspecionadas.
 
-Essa evidência confirma acesso básico naquele computador. Não confirma captura
-contínua, backend portátil, índice fixo, detector ou ausência de escrita fora do escopo
-observado. OpenCV foi usado em ambiente efêmero e ainda não está no lock principal.
+O baseline HOG incluído no OpenCV é simples e mais adequado a corpo inteiro. Ele foi
+mantido atrás de um contrato substituível para que o próximo incremento possa avaliar
+um detector de corpo parcial sem reescrever a captura. A evidência não confirma
+qualidade de produção nem ausência de escrita fora dos caminhos e APIs inspecionados.
+OpenCV 4.13.0 e NumPy 2.3.5 estão fixados no lock principal.
 
 ## Estrutura
 
 ```text
 .
-├── app/                         # fundação Python; módulos funcionais são futuros
+├── app/                         # fundação, câmera e detecção local
 ├── data/                        # runtime ignorado; pastas antigas não são baseline
-├── tests/                       # 28 testes da fundação
+├── tests/                       # 44 testes automatizados
 └── .planning/
     ├── phases/01-foundation/    # evidência histórica preservada
     ├── phases/02-database/      # plano antigo explicitamente superado
-    ├── phases/se-01-replanning/ # checkpoint atual
+    ├── phases/se-01-replanning/ # rebaseline concluído
+    ├── phases/se-02-person-detection/ # implementação e evidências atuais
     ├── research/
     └── debugging/
 ```
@@ -135,6 +155,6 @@ observado. OpenCV foi usado em ambiente efêmero e ainda não está no lock prin
 ## Como continuar
 
 Leia `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`,
-`.planning/DECISIONS.md` e `.planning/STATE.md`. A próxima etapa só começa após
-autorização explícita; sua primeira tarefa é definir finalidades, dados e responsáveis,
-antes de criar schema ou conectar o Supabase.
+`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento da SE-02 é
+avaliar a qualidade do detector para uma pessoa sentada, ainda sem Supabase ou
+classificação de trabalho/relaxamento.

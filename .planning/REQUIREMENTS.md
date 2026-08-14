@@ -18,13 +18,14 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 
 ## Governança e escopo
 
-### GOV-001 — Finalidade operacional e MVP sem identificação
+### GOV-001 — Finalidade operacional e atividade sem decisão automática
 
-- **Descrição:** limitar o MVP a ocupação, sustentabilidade, recursos e patrimônio,
-  sem avaliação individual.
+- **Descrição:** limitar o MVP a ocupação, sustentabilidade, recursos, patrimônio e
+  estimativa de atividade observável, sem medir intenção ou produtividade real.
 - **Fase:** SE-01 | **Prioridade:** crítico | **Dependências:** nenhuma.
-- **Aceite:** documentos ativos excluem reconhecimento facial, distração, emoção,
-  produtividade individual, ranking e decisão disciplinar automatizada.
+- **Aceite:** documentos ativos excluem reconhecimento facial, emoção, intenção,
+  produtividade real, ranking, controle de ponto e decisão disciplinar automatizada;
+  estados de atividade são estimativas configuráveis e incluem `inconclusivo`.
 - **Status:** concluído no rebaseline documental; implementação ainda inexistente.
 
 ### GOV-002 — Matriz de finalidades e dados
@@ -66,43 +67,47 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 ### CAM-001 — Fonte real e fonte simulada
 
 - **Descrição:** definir `CameraSource` substituível para uma webcam e para testes.
-- **Fase:** SE-03 | **Prioridade:** crítico | **Dependências:** DATA-001.
+- **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** PRIV-004.
 - **Aceite:** ambas entregam o mesmo contrato; testes não dependem de hardware real.
-- **Status:** pendente; somente smoke efêmero da webcam foi executado.
+- **Status:** implementado; fonte real e doubles simulados usam o mesmo contrato.
 
 ### CAM-002 — Lifecycle e liberação segura
 
 - **Descrição:** abrir, ler, interromper, reiniciar e liberar a câmera sem handle órfão.
-- **Fase:** SE-03 | **Prioridade:** crítico | **Dependências:** CAM-001.
+- **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-001.
 - **Aceite:** ciclos repetidos, timeout, erro e cancelamento são testados; falha não
   encerra o processo nem trava o dispositivo.
-- **Status:** pendente.
+- **Status:** em andamento; abertura, erro, cancelamento/exceção e liberação foram
+  cobertos, mas timeout e ciclos repetidos ainda serão ampliados.
 
 ### CAM-003 — Frames transitórios
 
 - **Descrição:** manter frames somente em buffers de memória limitados no baseline.
-- **Fase:** SE-03 | **Prioridade:** crítico | **Dependências:** CAM-001, PRIV-001.
+- **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-001, PRIV-001.
 - **Aceite:** nenhum frame/recorte entra em banco, rede, arquivo, log, cache ou crash
   dump do aplicativo; buffer é descartado após uso.
-- **Status:** pendente.
+- **Status:** implementado no caminho atual de um frame por vez; nenhuma API de
+  arquivo/rede foi adicionada. Crash dump e inspeção sistêmica permanecem fora desta prova.
 
 ### CAM-004 — Saúde e estado desconhecido
 
 - **Descrição:** distinguir ambiente vazio de câmera/modelo indisponível.
-- **Fase:** SE-03 | **Prioridade:** alto | **Dependências:** CAM-002.
+- **Fase:** SE-02 | **Prioridade:** alto | **Dependências:** CAM-002.
 - **Aceite:** health, último sucesso e erro tipado são expostos; falha gera `unknown`,
   nunca `empty` por presunção.
-- **Status:** pendente.
+- **Status:** em andamento; erros são tipados e não viram contagem vazia, mas health e
+  último sucesso ainda não são expostos.
 
 ## Ocupação sem identificação
 
 ### OCC-001 — Detecção de pessoas 0/1/N
 
 - **Descrição:** detectar pessoas presentes sem classificar identidade.
-- **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** CAM-003.
+- **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-003.
 - **Aceite:** conjunto sintético/autorizado mede 0, 1 e N pessoas, oclusão, iluminação,
   falsos positivos e falsos negativos; modelo/pesos/licenças são registrados.
-- **Status:** pendente; detector `unspecified`.
+- **Status:** em andamento; HOG/OpenCV está implementado e 0/1/N passam com doubles,
+  mas a amostra real de corpo parcial resultou em zero e a avaliação é pendente.
 
 ### OCC-002 — Agregação temporal e espacial
 
@@ -120,14 +125,51 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
   `unknown`; métricas e limitações aparecem no relatório de validação.
 - **Status:** pendente.
 
-### OCC-004 — Proibição de inferência individual
+### OCC-004 — Limites da inferência individual
 
-- **Descrição:** não derivar atenção, emoção, distração, produtividade, jornada, nome,
-  matrícula ou trajetória persistente.
+- **Descrição:** permitir somente estado de atividade observável e impedir emoção,
+  intenção, produtividade real, jornada, nome, matrícula ou trajetória persistente.
 - **Fase:** transversal | **Prioridade:** crítico | **Dependências:** GOV-001.
-- **Aceite:** schema, eventos, API, UI, logs e testes não possuem esses campos/saídas;
-  revisão automatizada e humana confirma a fronteira.
+- **Aceite:** schema, eventos, API, UI e logs não possuem campos proibidos; estado de
+  atividade é rotulado como estimativa, inclui `inconclusivo` e não gera sanção automática.
 - **Status:** gate definido; verificação acompanha cada fase.
+
+## Atividade observável
+
+### ACT-001 — Estados observáveis e inconclusivo
+
+- **Descrição:** estimar `trabalho_aparente`, `pausa_aparente` ou `inconclusivo` a partir
+  de sinais visuais definidos, sem afirmar intenção ou produtividade.
+- **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** OCC-001, OCC-003.
+- **Aceite:** critérios são explícitos e testáveis; baixa confiança ou atividade ambígua
+  resulta em `inconclusivo`; a UI usa linguagem de estimativa.
+- **Status:** pendente.
+
+### ACT-002 — Regras por contexto de trabalho
+
+- **Descrição:** configurar sinais permitidos por tipo de ambiente e função, pois
+  celular, conversa ou imobilidade podem representar trabalho legítimo.
+- **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** GOV-002, ACT-001.
+- **Aceite:** não existe regra universal oculta; versão, autor, justificativa e período
+  de validade da configuração são auditáveis.
+- **Status:** pendente.
+
+### ACT-003 — Rastreamento efêmero por sessão
+
+- **Descrição:** associar observações à mesma caixa apenas pelo tempo mínimo da sessão,
+  sem reconhecimento facial ou reidentificação entre câmeras.
+- **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** OCC-001, PRIV-003.
+- **Aceite:** identificadores são voláteis, reiniciam com o processo e não entram em
+  banco/log/exportação; múltiplas pessoas não misturam estados silenciosamente.
+- **Status:** pendente.
+
+### ACT-004 — Supervisão humana e uso não punitivo
+
+- **Descrição:** impedir que uma estimativa visual seja a única base de decisão adversa.
+- **Fase:** SE-04/transversal | **Prioridade:** crítico | **Dependências:** ACT-001, GOV-004.
+- **Aceite:** nenhum alerta aplica sanção, ranking ou controle de ponto; revisão,
+  correção, contestação e limitações ficam visíveis.
+- **Status:** regra aceita; implementação pendente.
 
 ## Dados e Supabase
 
@@ -358,7 +400,7 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 ### PRIV-002 — Descarte verificável de frames
 
 - **Descrição:** provar que buffers não viram persistência acidental.
-- **Fase:** SE-03/SE-04 | **Prioridade:** crítico | **Dependências:** CAM-003.
+- **Fase:** SE-02/SE-04 | **Prioridade:** crítico | **Dependências:** CAM-003.
 - **Aceite:** testes cobrem arquivos, banco, rede, logs, cache e falha; preview de
   calibração é local, temporário, sinalizado e desligado fora do modo autorizado.
 - **Status:** pendente.
@@ -376,7 +418,7 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 
 - **Descrição:** autorizar local, enquadramento e pessoas antes de qualquer teste real;
   ampliar transparência, horários, retenção e canal antes do piloto.
-- **Fase:** SE-03/SE-07 | **Prioridade:** crítico | **Dependências:** GOV-003.
+- **Fase:** SE-02/SE-07 | **Prioridade:** crítico | **Dependências:** GOV-003.
 - **Aceite:** em SE-03, teste real ocorre em cenário controlado, vazio ou apenas com o
   próprio responsável informado, áudio desligado e sem terceiros incidentais; qualquer
   outra pessoa aguarda o gate completo. Antes de SE-07, aviso e sinalização, finalidade,
@@ -481,14 +523,15 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 ### TEST-002 — Câmera simulada e contratos
 
 - **Descrição:** testar captura/erros sem câmera real.
-- **Fase:** SE-03 | **Prioridade:** crítico | **Dependências:** CAM-001.
+- **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-001.
 - **Aceite:** frames válidos/inválidos, timeout, EOF, falha e ciclos passam deterministicamente.
-- **Status:** pendente.
+- **Status:** em andamento; contratos principais passam deterministicamente, mas timeout
+  explícito ainda precisa de implementação e teste.
 
 ### TEST-003 — Avaliação de ocupação
 
 - **Descrição:** medir detector/agregador em conjunto representativo e autorizado.
-- **Fase:** SE-04/SE-07 | **Prioridade:** crítico | **Dependências:** OCC-003.
+- **Fase:** SE-02/SE-04/SE-07 | **Prioridade:** crítico | **Dependências:** OCC-003.
 - **Aceite:** métricas, amostra, condições, limitações e regressão são versionadas; não
   há alegação genérica de acurácia.
 - **Status:** pendente.
