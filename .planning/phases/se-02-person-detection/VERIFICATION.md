@@ -68,3 +68,18 @@ No Conda passaram Ruff, format-check (21 arquivos), mypy (21 arquivos), pytest e
 unittest (44 testes), compileall, doctor, build sem isolamento, `pip check` e
 `git diff --check`. O smoke Conda de 30 frames abriu via DirectShow, atingiu contagem
 máxima de uma pessoa e manteve `data/` em 5 → 5 arquivos.
+
+## Incremento de corpo parcial — 2026-08-14
+
+- `HybridPersonDetector` combina HOG de corpo inteiro e cascade de parte superior;
+- a entrada do cascade é cinza/equalizada e o tamanho mínimo é 24 × 24 pixels;
+- caixas sobrepostas são deduplicadas e a origem é visível apenas na anotação local;
+- nenhum pacote, peso externo, writer, cliente de rede ou persistência foi adicionado.
+
+No Conda, pytest e unittest passaram com 48 testes; Ruff, format-check e mypy strict
+passaram em 21 arquivos. Também passaram `compileall`, `doctor`, build sem isolamento,
+`pip check` e `git diff --check`.
+O smoke limitado processou 30 frames via DirectShow, encerrou por `frame_limit`, terminou
+com uma pessoa e observou máximo de duas. `data/` permaneceu em 5 → 5 arquivos. O teste
+confirma presença e lifecycle, não precisão: o pico pode representar detecção duplicada
+ou falso positivo e permanece como risco a medir.

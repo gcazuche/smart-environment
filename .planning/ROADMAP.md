@@ -2,7 +2,7 @@
 
 Versão: 1.0
 Atualizado em: 2026-08-11
-Status global: primeiro incremento da SE-02 concluído; qualidade do detector pendente
+Status global: detector híbrido da SE-02 implementado; avaliação representativa pendente
 
 ## Como ler este roadmap
 
@@ -62,7 +62,8 @@ individual não fazem parte do MVP; código, dependências, câmera e serviços 
 **Objetivo:** provar primeiro o fluxo visual local usando a webcam do próprio computador.
 
 **Entregas:** contrato de câmera, fonte simulada, adaptador OpenCV com fallback de
-backend, detector de pessoas substituível, caixas, contagem, CLI local e encerramento seguro.
+backend, detector híbrido substituível para corpo inteiro/parte superior, caixas,
+contagem, CLI local e encerramento seguro.
 
 **Aceite:** testes simulados cobrem abertura/leitura/falha/liberação e detecção 0/1/N;
 a webcam autorizada abre e fecha em ciclo limitado; a interface exibe caixas e contagem;

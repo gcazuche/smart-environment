@@ -1,5 +1,14 @@
 # Changelog GSD
 
+## 2026-08-14 — Detecção de corpo parcial retomada
+
+- Detector híbrido combina HOG de corpo inteiro e cascade upper-body do OpenCV.
+- Equalização em cinza, origem visual das caixas e deduplicação foram adicionadas.
+- 48 testes passaram; smoke de 30 frames terminou com uma pessoa e máximo observado de
+  duas, mantendo `data/` em 5 → 5 arquivos.
+- O resultado confirma presença e lifecycle, não precisão; falsos sinais e latência
+  ainda precisam de dataset autorizado/sintético.
+
 ## 2026-08-14 — Dashboard privado publicado
 
 - Primeira versão do dashboard Smart Environment publicada com acesso privado.

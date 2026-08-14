@@ -71,7 +71,7 @@ def _run_camera_command(args: argparse.Namespace) -> int:
 
     from app.cameras import CameraError, OpenCVCamera
     from app.live_detection import NullDisplay, OpenCVDisplay, run_person_detection
-    from app.vision import HogPersonDetector
+    from app.vision import HybridPersonDetector
 
     if args.no_display and args.max_frames is None:
         print("erro: --no-display exige --max-frames", file=sys.stderr)
@@ -82,7 +82,7 @@ def _run_camera_command(args: argparse.Namespace) -> int:
     try:
         summary = run_person_detection(
             camera,
-            HogPersonDetector(),
+            HybridPersonDetector(),
             display,
             max_frames=args.max_frames,
         )

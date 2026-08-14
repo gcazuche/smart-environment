@@ -1,7 +1,7 @@
 # SE-02 — Plano atômico
 
 Data: 2026-08-14
-Status: primeiro incremento concluído; avaliação de qualidade pendente
+Status: detector híbrido concluído; avaliação representativa pendente
 
 | ID | Tarefa | Prioridade | Risco | Estado |
 |---|---|---|---|---|
@@ -13,9 +13,9 @@ Status: primeiro incremento concluído; avaliação de qualidade pendente
 | SE-02-06 | executar smoke autorizado e gates | P0 | alto | concluída com ressalva de qualidade |
 | SE-02-07 | revisar, documentar e criar checkpoint | P1 | médio | concluída |
 
-Próximo incremento: SEB-017, avaliar um detector adequado a corpo parcial. O HOG não
-detectou a pessoa na amostra real de 30 frames e não deve ser promovido a detector de
-produção com base apenas nos testes simulados.
+O primeiro incremento de SEB-017 adicionou um classificador de parte superior ao HOG.
+O smoke detectou presença, mas o baseline híbrido não deve ser promovido a produção
+sem conjunto autorizado/sintético, falsos sinais, latência e CPU medidos.
 
 ## Contrato esperado
 

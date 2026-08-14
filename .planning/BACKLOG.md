@@ -31,10 +31,10 @@ Atualizado em: 2026-08-14
 | SEB-011 | Implementar contrato e fonte simulada | SE-02 | CAM-001, TEST-002 | concluída |
 | SEB-012 | Integrar OpenCV e lifecycle da webcam em cenário controlado | SE-02 | CAM-002, CAM-004, PRIV-004 | concluída |
 | SEB-013 | Implementar buffer transitório e descarte de frames | SE-02 | CAM-003, OPS-001, PRIV-002 | concluída no loop de um frame por vez |
-| SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — HOG/OpenCV como baseline substituível |
-| SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída em testes simulados; qualidade real pendente |
+| SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — híbrido HOG + upper-body distribuído pelo OpenCV |
+| SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída em testes simulados; smoke real detectou presença |
 | SEB-016 | Implementar estados observáveis e tracking efêmero | SE-04 | ACT-001 a ACT-003, OCC-002, OCC-004 | pendente |
-| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | pendente |
+| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | em andamento — corpo parcial implementado; dataset/métricas pendentes |
 | SEB-018 | Implementar ingestão autenticada | SE-05 | API-001, SEC-003 | pendente |
 | SEB-019 | Implementar outbox, retry e idempotência | SE-05 | API-002, API-003 | pendente |
 | SEB-020 | Instrumentar logs e métricas minimizados | SE-05 | API-004, SEC-004 | pendente |
@@ -82,6 +82,6 @@ retorno exige nova autorização, finalidade e gate de risco.
 
 ## Próxima tarefa recomendada
 
-Revisar visualmente o dashboard antecipado com o usuário. Após aprovação, retomar
-`SEB-017`: avaliar qualidade e detector adequado a corpo parcial. Não conectar dados
-reais, Supabase ou classificação de atividade sem etapa própria.
+Concluir `SEB-017` com amostras autorizadas/sintéticas e métricas de falso positivo,
+falso negativo e latência. Não conectar dados reais, Supabase ou classificação de
+atividade sem etapa própria.

@@ -5,14 +5,14 @@ Atualizado em: 2026-08-14
 - **Repositório:** `C:\Users\angel\OneDrive\Documents\Multicam`
 - **Branch no início de SE-01:** `main`
 - **Fundação técnica histórica:** concluída; código preservado
-- **Checkpoint funcional atual:** dashboard visual antecipado implementado
+- **Checkpoint funcional atual:** detector híbrido de corpo inteiro/parte superior implementado
 
 ## Posição atual
 
 - **Etapa concluída:** SE-01 — Rebaseline Smart Environment
-- **Etapa atual:** protótipo antecipado da SE-06 — Dashboard web
-- **Plano atual:** `.planning/phases/se-02-dashboard-prototype/PLAN.md`
-- **Tarefa atual:** revisão visual do dashboard; depois retomar SEB-017
+- **Etapa atual:** SE-02 — Câmera e detecção local de pessoas
+- **Plano atual:** `.planning/phases/se-02-person-detection/PLAN.md`
+- **Tarefa atual:** concluir SEB-017 com dataset autorizado/sintético e métricas
 - **Autorização:** webcam e detecção local autorizadas pelo usuário em 2026-08-14
 - **Plano antigo:** `.planning/phases/02-database/` superado e somente histórico
 
@@ -41,10 +41,10 @@ Atualizado em: 2026-08-14
 - Ambiente Conda isolado `smart-environment` com Python 3.12.13 e `environment.yml`;
   nenhum comando de instalação desta migração foi direcionado ao `base`.
 - Configuração mínima, comando `doctor`, logging JSON seguro e tratamento de exceções.
-- OpenCV/NumPy fixados no lock; câmera com fallback, CLI, loop local, caixas e contagem.
-- 44 testes aprovados em Python 3.12, junto com Ruff, mypy e compilação.
-- Webcam abriu por DirectShow em smoke autorizado pelo Conda, processou 30 frames em
-  memória, atingiu máximo de uma pessoa e foi liberada; qualidade ampla segue pendente.
+- OpenCV/NumPy fixados; câmera com fallback, CLI, loop e detector híbrido HOG/upper-body.
+- 48 testes aprovados em Python 3.12, junto com Ruff e mypy strict.
+- O novo smoke via DirectShow processou 30 frames em memória, terminou com uma pessoa,
+  observou máximo de duas e liberou a câmera; qualidade ampla segue pendente.
 - A contagem inspecionada em `data/` permaneceu 5 antes e depois.
 - Dashboard responsivo em `dashboard/`, com visão geral, todas as câmeras, detalhe da
   webcam, ambientes, indicadores e alertas usando somente dados simulados.
@@ -56,7 +56,7 @@ Atualizado em: 2026-08-14
 
 - Schema, migrações, projeto Supabase, Auth, RLS ou conexão PostgreSQL.
 - Outbox SQLite, API, sincronização ou autenticação da aplicação.
-- Detector validado para pessoa sentada/corpo parcial, agregador ou métricas de qualidade.
+- Dataset representativo, métricas de falso sinal/latência e detector aprovado para produção.
 - Integração do dashboard com câmera/API/Supabase, autenticação e dados persistentes.
 - Alertas, múltiplas câmeras, ESP32, automação ou piloto.
 
@@ -81,12 +81,11 @@ Atualizado em: 2026-08-14
 ## Como retomar
 
 1. Ler `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `DECISIONS.md` e este arquivo.
-2. Revisar o protótipo em `dashboard/` e registrar ajustes objetivos.
-3. Após aprovação visual, retomar `se-02-person-detection`, item SEB-017.
+2. Preparar amostras autorizadas/sintéticas para 0/1/N, posição sentada e corpo parcial.
+3. Medir falso positivo, falso negativo e latência do detector híbrido no item SEB-017.
 4. Não conectar dados reais, Supabase ou classificar atividade sem autorização própria.
 
 ## Prompt de retomada sugerido
 
-> Revise o protótipo visual do dashboard. Se estiver aprovado, retome somente o item
-> SEB-017 de detecção de corpo parcial, sem salvar frames, conectar Supabase ou
-> classificar trabalho/relaxamento ainda.
+> Continue somente o item SEB-017: avalie o detector híbrido em amostras autorizadas ou
+> sintéticas, sem salvar frames da webcam, conectar Supabase ou classificar atividade.

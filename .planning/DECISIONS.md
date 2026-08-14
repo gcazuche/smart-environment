@@ -5,6 +5,17 @@ Atualizado em: 2026-08-11
 Decisões preservam história e podem ser revistas por evidência. `Supersedida` significa
 que a decisão não orienta mais o produto ativo; não apaga o registro anterior.
 
+## ADR-020 — Detector híbrido local para corpo parcial
+
+- **Status:** aceita para PoC em 2026-08-14; não aprovada para produção.
+- **Decisão:** combinar o HOG de corpo inteiro com `haarcascade_upperbody.xml`, ambos
+  distribuídos pelo OpenCV, normalizar iluminação e remover caixas sobrepostas.
+- **Justificativa:** melhora o caso sentado/parcial sem nova dependência, download de
+  pesos ou processamento em rede; o arquivo upper-body inclui licença permissiva
+  BSD-like com requisitos de atribuição.
+- **Consequência:** o smoke detectou presença, mas um pico de duas detecções ainda exige
+  dataset autorizado, medição de falsos sinais e comparação antes de uso comercial.
+
 ## ADR-019 — Antecipar o protótipo visual do dashboard
 
 - **Status:** aceita em 2026-08-14.

@@ -96,7 +96,13 @@ class LiveDetectionTests(TestCase):
     def test_annotation_does_not_modify_original(self) -> None:
         frame = np.zeros((80, 120, 3), dtype=np.uint8)
 
-        annotated = annotate_frame(frame, (Detection(10, 10, 30, 40, 0.8),))
+        annotated = annotate_frame(
+            frame,
+            (
+                Detection(10, 10, 30, 40, 0.8),
+                Detection(60, 10, 25, 25, 0.5, "upper_body"),
+            ),
+        )
 
         self.assertFalse(np.array_equal(annotated, frame))
         self.assertEqual(int(frame.sum()), 0)

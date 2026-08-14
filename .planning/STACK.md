@@ -15,7 +15,7 @@ tratada como instalada, segura ou compatível sem evidência.
 | Framework web | Vinext/Vite no Sites | selecionado para protótipo | build, compatibilidade Cloudflare e revisão antes de integrar dados |
 | API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
 | Captura | OpenCV `4.13.0.92`, CPU-first | selecionada para SE-02 | fonte simulada, lifecycle e matriz Windows |
-| Detecção de pessoas | HOG padrão do OpenCV atrás de adaptador | baseline de PoC | Apache 2.0; validar limitação em pessoas sentadas/parciais |
+| Detecção de pessoas | HOG + cascade upper-body do OpenCV atrás de adaptador | baseline híbrido de PoC | arquivo upper-body traz licença BSD-like; medir falsos sinais e corpo parcial |
 | Persistência central | Supabase/PostgreSQL | preferencial, não validada | Auth, RLS, região, quota, custo, backup e restore |
 | ORM/migrações | SQLAlchemy + Alembic | candidatas | schema mínimo, upgrade/downgrade e transações |
 | Outbox local | SQLite | candidata | confinamento, limites, retenção e idempotência |
@@ -27,9 +27,9 @@ tratada como instalada, segura ou compatível sem evidência.
 
 ## Dependências existentes
 
-O código atual usa apenas a fundação Python necessária para configuração, diagnóstico,
-logging e testes. OpenCV foi usado em um ambiente efêmero para o smoke autorizado da
-webcam e ainda não pertence ao lock principal.
+O código atual usa a fundação Python, OpenCV e NumPy fixados em `pyproject.toml`; o
+Conda oficial instala o projeto editável por `environment.yml`. O cascade upper-body
+é fornecido dentro do pacote OpenCV e não cria download ou peso separado.
 
 ## Itens retirados do baseline
 
@@ -68,7 +68,7 @@ uma nova decisão, justificativa proporcional, licença e gate de privacidade.
 ## Decisões ainda abertas
 
 - framework web, biblioteca de gráficos e estratégia Realtime;
-- detector de pessoas e runtime de inferência;
+- detector de produção e possível runtime de inferência após medir o baseline híbrido;
 - versões de FastAPI, OpenCV, SQLAlchemy, Alembic e SDKs;
 - região/plano do Supabase e requisitos de residência/restore;
 - empacotamento da borda e implantação do backend;

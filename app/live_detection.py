@@ -67,7 +67,19 @@ def annotate_frame(frame: Frame, detections: tuple[Detection, ...]) -> Frame:
     for detection in detections:
         top_left = (detection.x, detection.y)
         bottom_right = (detection.x + detection.width, detection.y + detection.height)
-        cv2.rectangle(annotated, top_left, bottom_right, (40, 220, 40), 2)
+        color = (0, 180, 255) if detection.source == "upper_body" else (40, 220, 40)
+        label = "parte superior" if detection.source == "upper_body" else "pessoa"
+        cv2.rectangle(annotated, top_left, bottom_right, color, 2)
+        cv2.putText(
+            annotated,
+            label,
+            (detection.x, max(14, detection.y - 6)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            color,
+            1,
+            cv2.LINE_AA,
+        )
     cv2.putText(
         annotated,
         f"Pessoas detectadas: {len(detections)}",

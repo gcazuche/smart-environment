@@ -30,6 +30,15 @@ ONNX e decoder adicional, então não entra antes de medir o baseline:
 
 - <https://github.com/opencv/opencv_zoo/tree/main/models/person_detection_mediapipe>
 
+## Incremento híbrido executado
+
+O wheel instalado também distribui `haarcascade_upperbody.xml`, classificador 22×18
+para parte superior. O cabeçalho do próprio arquivo concede redistribuição e uso em
+fonte/binário com ou sem modificação, sob condições de atribuição e não endosso
+(licença BSD-like). O protótipo combina esse cascade com o HOG, equaliza o frame em
+cinza e deduplica caixas sobrepostas. Isso evita dependência/download novo, mas não
+substitui avaliação de falso positivo, falso negativo, latência e CPU.
+
 ## Threat model resumido
 
 - **Ativo:** frames da webcam e privacidade da pessoa observada.

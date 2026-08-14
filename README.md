@@ -6,17 +6,16 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
-O primeiro protótipo de câmera está pausado após provar captura e detecção local. Por
-decisão do usuário, foi antecipado um **protótipo visual do dashboard**, com dados
-simulados e sem conexão com câmera, API ou Supabase. Depois da revisão visual,
-retomaremos a melhoria do detector de pessoas.
+O protótipo local combina detecção de corpo inteiro e parte superior; o dashboard visual
+continua com dados simulados e sem conexão com câmera, API ou Supabase. A avaliação
+representativa de qualidade ainda está pendente.
 
 A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
 - ambiente Conda isolado e recriável com `environment.yml`;
-- 44 testes aprovados no checkpoint atual em Python 3.12;
+- 48 testes aprovados no checkpoint atual em Python 3.12;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
 O pacote, a CLI e as variáveis ainda usam o nome técnico legado `multicam` /
@@ -171,11 +170,11 @@ revalidação no ambiente Conda detectou no máximo uma pessoa. Isso comprova o 
 básico, mas ainda não mede qualidade para diferentes posições, oclusões e iluminações.
 A contagem de arquivos em `data/` permaneceu 5 antes e depois.
 
-O baseline HOG incluído no OpenCV é simples e mais adequado a corpo inteiro. Ele foi
-mantido atrás de um contrato substituível para que o próximo incremento possa avaliar
-um detector de corpo parcial sem reescrever a captura. A evidência não confirma
-qualidade de produção nem ausência de escrita fora dos caminhos e APIs inspecionados.
-OpenCV 4.13.0 e NumPy 2.3.5 estão fixados no lock principal.
+O baseline agora combina o HOG de corpo inteiro com o classificador de parte superior
+distribuído pelo OpenCV. No smoke de 30 frames ele terminou com uma pessoa detectada e
+máximo observado de duas; isso não prova precisão e pode incluir falso positivo ou
+duplicata. O contrato continua substituível, e OpenCV 4.13.0 e NumPy 2.3.5 permanecem
+fixados.
 
 ## Estrutura
 
@@ -183,7 +182,7 @@ OpenCV 4.13.0 e NumPy 2.3.5 estão fixados no lock principal.
 .
 ├── app/                         # fundação, câmera e detecção local
 ├── data/                        # runtime ignorado; pastas antigas não são baseline
-├── tests/                       # 44 testes automatizados
+├── tests/                       # 48 testes automatizados
 └── .planning/
     ├── phases/01-foundation/    # evidência histórica preservada
     ├── phases/02-database/      # plano antigo explicitamente superado
@@ -196,6 +195,6 @@ OpenCV 4.13.0 e NumPy 2.3.5 estão fixados no lock principal.
 ## Como continuar
 
 Leia `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`,
-`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento da SE-02 é
-avaliar a qualidade do detector para uma pessoa sentada, ainda sem Supabase ou
+`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento da SE-02 é medir
+o detector híbrido em amostras autorizadas/sintéticas, ainda sem Supabase ou
 classificação de trabalho/relaxamento.

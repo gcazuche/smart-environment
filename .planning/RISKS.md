@@ -8,7 +8,7 @@ Postura: alto risco por câmeras em ambiente de trabalho; redução antes de exp
 | R-001 | Ocupação ser convertida em vigilância comportamental ou punição | crítico | excluir distração/produtividade do MVP; GOV-002/GOV-004; revisão humana | mitigado no plano; controle técnico pendente |
 | R-002 | Biometria ser reintroduzida sem necessidade | crítico | schema sem identidade; novo projeto/RIPD/aprovação para qualquer mudança | mitigado no plano |
 | R-003 | Eventos agregados permitirem reidentificação por horário/zona vazia | alto | granularidade mínima, limiar de grupo, restrição de consulta/exportação | aberto; parâmetros unspecified |
-| R-004 | Frames vazarem por arquivo, log, cache, trace ou rede | crítico | buffers limitados; invariant e regressões de zero persistência | aberto; implementação pendente |
+| R-004 | Frames vazarem por arquivo, log, cache, trace ou rede | crítico | buffers limitados; invariant e regressões de zero persistência | caminho local sem writer/rede; auditoria ampla pendente |
 | R-005 | Câmera falhar e sistema declarar ambiente vazio | alto | estado `unknown`, health e último sucesso; nunca inferir vazio da falha | aberto |
 | R-006 | Contagem errada orientar decisões inadequadas | alto | medir FP/FN por cenário, confiança, aviso e revisão humana | aberto |
 | R-007 | Alerta patrimonial gerar acusação injusta | alto | linguagem não acusatória, correção e revisão auditada | mitigado no escopo; implementação pendente |
@@ -19,7 +19,7 @@ Postura: alto risco por câmeras em ambiente de trabalho; redução antes de exp
 | R-012 | Backup existir mas não restaurar ou não eliminar dado vencido | alto | restore descartável; RPO/RTO; política para réplicas e backups | aberto |
 | R-013 | Monitoramento oculto ou em área sensível | crítico | aviso, autorização, zones permitidas; proibir áreas privadas e áudio | contido no plano; piloto bloqueado |
 | R-014 | Captura incidental de visitantes ou menores | alto | sinalização, enquadramento, horários; escolas/menores fora do primeiro piloto | aberto |
-| R-015 | Modelo/pesos incompatíveis com uso comercial | alto | validar licença de código, pesos e dataset antes de baixar/adotar | aberto; detector unspecified |
+| R-015 | Modelo/pesos incompatíveis com uso comercial | alto | validar licença de código, pesos e dataset antes de baixar/adotar | baseline OpenCV/upper-body permissivo; detector de produção aberto |
 | R-016 | Viés/baixa qualidade por luz, oclusão ou densidade | alto | dataset representativo autorizado, métricas segmentadas e fallback `unknown` | aberto |
 | R-017 | Dependência vulnerável ou atualização quebrar runtime nativo | alto | pin, lock, SCA, smoke e rollback; CPU baseline | baseline parcial |
 | R-018 | Supabase exceder custo/quota ou região não atender requisitos | alto | PoC, orçamento, quotas, residência e alternativa documentada | aberto |

@@ -8,7 +8,7 @@ from unittest import TestCase
 import numpy as np
 
 from app.cameras.opencv_source import Frame
-from app.vision import Detection, HogPersonDetector
+from app.vision import Detection, HogPersonDetector, HybridPersonDetector
 
 
 class FakeHog:
@@ -31,6 +31,29 @@ class FakeHog:
         del image
         self.arguments = winStride, padding, scale
         return self.boxes, self.weights
+
+
+class FakeUpperBody:
+    def __init__(self, boxes: Sequence[Sequence[int]], *, is_empty: bool = False) -> None:
+        self.boxes = boxes
+        self.is_empty = is_empty
+        self.image_shape: tuple[int, ...] | None = None
+        self.arguments: tuple[float, int, tuple[int, int]] | None = None
+
+    def empty(self) -> bool:
+        return self.is_empty
+
+    def detectMultiScale(  # noqa: N802
+        self,
+        image: Frame,
+        *,
+        scaleFactor: float,
+        minNeighbors: int,
+        minSize: tuple[int, int],
+    ) -> Sequence[Sequence[int]]:
+        self.image_shape = image.shape
+        self.arguments = scaleFactor, minNeighbors, minSize
+        return self.boxes
 
 
 class PersonDetectionTests(TestCase):
@@ -65,3 +88,44 @@ class PersonDetectionTests(TestCase):
 
         with self.assertRaises(ValueError):
             detector.detect(np.zeros((10, 10), dtype=np.uint8))
+
+    def test_hybrid_detects_upper_body_when_full_body_is_absent(self) -> None:
+        upper_body = FakeUpperBody([(12, 8, 30, 40)])
+        detector = HybridPersonDetector(
+            hog_factory=lambda: FakeHog([], []),
+            upper_body_factory=lambda: upper_body,
+        )
+
+        detections = detector.detect(np.zeros((100, 120, 3), dtype=np.uint8))
+
+        self.assertEqual(detections, (Detection(12, 8, 30, 40, 0.5, "upper_body"),))
+        self.assertEqual(upper_body.image_shape, (100, 120))
+        self.assertEqual(upper_body.arguments, (1.05, 4, (24, 24)))
+
+    def test_hybrid_deduplicates_upper_body_inside_full_body(self) -> None:
+        detector = HybridPersonDetector(
+            hog_factory=lambda: FakeHog([(0, 0, 80, 100)], [0.7]),
+            upper_body_factory=lambda: FakeUpperBody([(10, 8, 50, 45)]),
+        )
+
+        detections = detector.detect(np.zeros((120, 120, 3), dtype=np.uint8))
+
+        self.assertEqual(detections, (Detection(0, 0, 80, 100, 0.7),))
+
+    def test_hybrid_keeps_spatially_separate_candidates(self) -> None:
+        detector = HybridPersonDetector(
+            hog_factory=lambda: FakeHog([(0, 0, 30, 60)], [0.6]),
+            upper_body_factory=lambda: FakeUpperBody([(70, 10, 25, 30)]),
+        )
+
+        detections = detector.detect(np.zeros((100, 120, 3), dtype=np.uint8))
+
+        self.assertEqual(len(detections), 2)
+        self.assertEqual({item.source for item in detections}, {"full_body", "upper_body"})
+
+    def test_hybrid_rejects_an_empty_upper_body_classifier(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "parte superior indisponível"):
+            HybridPersonDetector(
+                hog_factory=lambda: FakeHog([], []),
+                upper_body_factory=lambda: FakeUpperBody([], is_empty=True),
+            )
