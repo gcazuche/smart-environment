@@ -11,8 +11,8 @@ tratada como instalada, segura ou compatível sem evidência.
 | Camada | Direção | Estado | Gate antes de adotar |
 |---|---|---|---|
 | Linguagem | Python `>=3.11,<3.13` | fundação validada em 3.11/3.12 | manter matriz e lock reproduzível |
-| Interface | HTML, CSS e JavaScript | planejada | UX responsiva, acessibilidade e política de sessão |
-| Framework web | sem escolha final | `unspecified` | PoC mínima; evitar framework sem necessidade |
+| Interface | React 19 + TypeScript, HTML/CSS gerados | protótipo visual ativo | UX responsiva, acessibilidade e política de sessão |
+| Framework web | Vinext/Vite no Sites | selecionado para protótipo | build, compatibilidade Cloudflare e revisão antes de integrar dados |
 | API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
 | Captura | OpenCV `4.13.0.92`, CPU-first | selecionada para SE-02 | fonte simulada, lifecycle e matriz Windows |
 | Detecção de pessoas | HOG padrão do OpenCV atrás de adaptador | baseline de PoC | Apache 2.0; validar limitação em pessoas sentadas/parciais |

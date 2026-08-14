@@ -38,9 +38,9 @@ Atualizado em: 2026-08-14
 | SEB-018 | Implementar ingestão autenticada | SE-05 | API-001, SEC-003 | pendente |
 | SEB-019 | Implementar outbox, retry e idempotência | SE-05 | API-002, API-003 | pendente |
 | SEB-020 | Instrumentar logs e métricas minimizados | SE-05 | API-004, SEC-004 | pendente |
-| SEB-021 | Construir shell web e autenticação | SE-06 | WEB-001, AUTH-001 | pendente |
-| SEB-022 | Entregar histórico, gráficos e filtros | SE-06 | WEB-002 | pendente |
-| SEB-023 | Validar responsividade, acessibilidade e ausência de vídeo | SE-06 | WEB-003, WEB-004 | pendente |
+| SEB-021 | Construir shell web e autenticação | SE-06 | WEB-001, AUTH-001 | shell visual concluído; autenticação pendente |
+| SEB-022 | Entregar histórico, gráficos e filtros | SE-06 | WEB-002 | protótipo simulado concluído; dados reais pendentes |
+| SEB-023 | Validar responsividade, acessibilidade e ausência de vídeo | SE-06 | WEB-003, WEB-004 | código/lint aprovados; QA visual pendente |
 | SEB-024 | Executar vertical E2E autorizada | SE-07 | TEST-004 | pendente |
 | SEB-025 | Executar piloto de uma webcam e registrar métricas | SE-07 | PRIV-004, PRIV-005, OPS-005 | bloqueada até governança/autorização |
 
@@ -82,6 +82,6 @@ retorno exige nova autorização, finalidade e gate de risco.
 
 ## Próxima tarefa recomendada
 
-Continuar por `SEB-017`: avaliar qualidade e um detector adequado a corpo parcial,
-somente no protótipo local. Não iniciar Supabase, persistência ou classificação de
-atividade nesta etapa.
+Revisar visualmente o dashboard antecipado com o usuário. Após aprovação, retomar
+`SEB-017`: avaliar qualidade e detector adequado a corpo parcial. Não conectar dados
+reais, Supabase ou classificação de atividade sem etapa própria.

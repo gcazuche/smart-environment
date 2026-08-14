@@ -5,14 +5,14 @@ Atualizado em: 2026-08-14
 - **Repositório:** `C:\Users\angel\OneDrive\Documents\Multicam`
 - **Branch no início de SE-01:** `main`
 - **Fundação técnica histórica:** concluída; código preservado
-- **Checkpoint funcional atual:** primeiro incremento de SE-02 implementado
+- **Checkpoint funcional atual:** dashboard visual antecipado implementado
 
 ## Posição atual
 
 - **Etapa concluída:** SE-01 — Rebaseline Smart Environment
-- **Etapa atual:** SE-02 — Câmera e detecção local de pessoas
-- **Plano atual:** `.planning/phases/se-02-person-detection/PLAN.md`
-- **Tarefa atual:** SEB-017 — avaliar qualidade e detector de corpo parcial
+- **Etapa atual:** protótipo antecipado da SE-06 — Dashboard web
+- **Plano atual:** `.planning/phases/se-02-dashboard-prototype/PLAN.md`
+- **Tarefa atual:** revisão visual do dashboard; depois retomar SEB-017
 - **Autorização:** webcam e detecção local autorizadas pelo usuário em 2026-08-14
 - **Plano antigo:** `.planning/phases/02-database/` superado e somente histórico
 
@@ -33,6 +33,8 @@ Atualizado em: 2026-08-14
 - A primeira implementação foi antecipada para webcam e detecção de pessoas antes de
   Supabase; atividade observável permanece para SE-04.
 - A classificação terá estado `inconclusivo`, regras por contexto e uso não punitivo.
+- Por decisão do usuário, a melhoria do detector foi pausada após o primeiro protótipo;
+  o dashboard visual foi antecipado e a detecção será retomada depois.
 
 ## O que funciona hoje
 
@@ -44,13 +46,16 @@ Atualizado em: 2026-08-14
 - Webcam abriu por DirectShow em smoke autorizado pelo Conda, processou 30 frames em
   memória, atingiu máximo de uma pessoa e foi liberada; qualidade ampla segue pendente.
 - A contagem inspecionada em `data/` permaneceu 5 antes e depois.
+- Dashboard responsivo em `dashboard/`, com visão geral, todas as câmeras, detalhe da
+  webcam, ambientes, indicadores e alertas usando somente dados simulados.
+- Build Vinext, lint ESLint e dois testes de renderização aprovados.
 
 ## O que não existe
 
 - Schema, migrações, projeto Supabase, Auth, RLS ou conexão PostgreSQL.
 - Outbox SQLite, API, sincronização ou autenticação da aplicação.
 - Detector validado para pessoa sentada/corpo parcial, agregador ou métricas de qualidade.
-- HTML/CSS/JavaScript do dashboard, gráficos, sustentabilidade ou patrimônio.
+- Integração do dashboard com câmera/API/Supabase, autenticação e dados persistentes.
 - Alertas, múltiplas câmeras, ESP32, automação ou piloto.
 
 ## Bloqueios antes de dados reais
@@ -74,12 +79,12 @@ Atualizado em: 2026-08-14
 ## Como retomar
 
 1. Ler `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `DECISIONS.md` e este arquivo.
-2. Continuar somente pelo plano `se-02-person-detection`, item SEB-017.
-3. Avaliar detector de corpo parcial com licença comercial compatível e material autorizado.
-4. Não criar schema, conectar Supabase ou classificar atividade nesta etapa.
+2. Revisar o protótipo em `dashboard/` e registrar ajustes objetivos.
+3. Após aprovação visual, retomar `se-02-person-detection`, item SEB-017.
+4. Não conectar dados reais, Supabase ou classificar atividade sem autorização própria.
 
 ## Prompt de retomada sugerido
 
-> Continue somente pela Etapa SE-02 de câmera e detecção local. Implemente o próximo
-> item do plano com fonte simulada e webcam autorizada, sem salvar frames, sem Supabase
-> e sem classificar trabalho/relaxamento ainda.
+> Revise o protótipo visual do dashboard. Se estiver aprovado, retome somente o item
+> SEB-017 de detecção de corpo parcial, sem salvar frames, conectar Supabase ou
+> classificar trabalho/relaxamento ainda.

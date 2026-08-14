@@ -5,6 +5,17 @@ Atualizado em: 2026-08-11
 Decisões preservam história e podem ser revistas por evidência. `Supersedida` significa
 que a decisão não orienta mais o produto ativo; não apaga o registro anterior.
 
+## ADR-019 — Antecipar o protótipo visual do dashboard
+
+- **Status:** aceita em 2026-08-14.
+- **Decisão:** pausar SEB-017 e antecipar somente a camada visual da SE-06 com dados
+  simulados; depois da revisão do usuário, retomar a detecção de corpo parcial.
+- **Tecnologia:** React 19/TypeScript com Vinext/Vite e CSS responsivo. TypeScript é
+  compilado para JavaScript e não altera o contrato web HTML/CSS/JavaScript do produto.
+- **Limites:** nenhum Auth, banco, API, câmera real, stream ou armazenamento nesta fatia.
+- **Consequência:** o protótipo não encerra a SE-06; componentes serão conectados apenas
+  quando contratos e autorização de dados existirem.
+
 ## ADR-018 — Conda isolado como ambiente oficial
 
 - **Status:** aceita em 2026-08-14.

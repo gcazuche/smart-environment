@@ -275,7 +275,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-06 | **Prioridade:** crítico | **Dependências:** API-001, AUTH-003.
 - **Aceite:** loading, empty, stale, unknown e error são distintos; dado vencido não é
   apresentado como atual.
-- **Status:** pendente.
+- **Status:** protótipo visual concluído com dados simulados; integração, autenticação e
+  estados de falha reais permanecem pendentes.
 
 ### WEB-002 — Histórico, filtros e gráficos
 
@@ -283,7 +284,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-06 | **Prioridade:** alto | **Dependências:** WEB-001.
 - **Aceite:** timezone, paginação, filtro e dataset vazio são testados; números da UI
   reconciliam com a API.
-- **Status:** pendente.
+- **Status:** protótipo inclui busca, filtro e gráficos simulados; API, paginação,
+  timezone e reconciliação permanecem pendentes.
 
 ### WEB-003 — Responsividade e acessibilidade
 
@@ -291,7 +293,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-06 | **Prioridade:** alto | **Dependências:** WEB-001.
 - **Aceite:** navegação por teclado, foco, labels, zoom e tamanhos alvo têm verificação;
   informação não depende somente de cor.
-- **Status:** pendente.
+- **Status:** layout responsivo, semântica e lint de acessibilidade implementados;
+  verificação visual de zoom, contraste e tamanhos-alvo permanece pendente.
 
 ### WEB-004 — Nenhum vídeo exposto
 
@@ -299,7 +302,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-06 | **Prioridade:** crítico | **Dependências:** CAM-003.
 - **Aceite:** rotas, bundle, respostas e armazenamento do navegador não contêm pixels
   ou endpoints de streaming no MVP.
-- **Status:** pendente.
+- **Status:** atendido no protótipo visual: apenas ilustração CSS e dados simulados,
+  sem stream, frame, URL de câmera ou cliente de rede; revalidar na integração.
 
 ## Sustentabilidade
 

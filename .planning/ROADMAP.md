@@ -124,7 +124,7 @@ captura; payload inválido é recusado; segredos não chegam a cliente/log.
 
 ## SE-06 — Dashboard web MVP
 
-**Status:** planejada
+**Status:** protótipo visual com dados simulados antecipado em 2026-08-14; integração planejada
 **Objetivo:** exibir ocupação atual e histórica de forma simples, responsiva e autorizada.
 
 **Entregas:** shell HTML/CSS/JS, login, cards de ocupação/saúde, histórico, gráficos,
@@ -132,6 +132,10 @@ filtros, estados loading/empty/error e acessibilidade básica.
 
 **Aceite:** navegador mostra somente ambientes permitidos; desktop e mobile funcionam;
 sessão/erros são seguros; nenhum stream ou URL de câmera é exposto.
+
+**Checkpoint antecipado:** shell navegável em React/TypeScript com visão geral, lista
+de câmeras, detalhe da webcam, ambientes, indicadores e alertas. Não possui Auth, API,
+Supabase ou dados reais e não encerra os critérios de aceite da SE-06.
 
 ---
 

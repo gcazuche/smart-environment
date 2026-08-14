@@ -1,5 +1,16 @@
 # Changelog GSD
 
+## 2026-08-14 — Dashboard visual antecipado
+
+- Melhoria do detector pausada por decisão do usuário para antecipar a experiência web.
+- Dashboard responsivo criado em React/TypeScript com visão geral, lista de todas as
+  câmeras, detalhe da webcam, ambientes, indicadores e alertas.
+- Inclusão de busca/filtro de câmera, modal de novos dispositivos e estados futuros
+  para câmera IP e gateway ESP32.
+- Dados, gráficos, eventos e prévia visual são simulados; nenhum frame, API, Auth,
+  Supabase ou persistência foi conectado.
+- Build Vinext, ESLint e dois testes de renderização aprovados; QA visual humana pendente.
+
 ## 2026-08-14 — Ambiente oficial migrado para Conda
 
 - Ambiente isolado `smart-environment` criado com Python 3.12.13; nenhum comando de

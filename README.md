@@ -6,9 +6,10 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
-A **Etapa SE-02 — Câmera e detecção local** possui um primeiro protótipo executável.
-Ele abre a webcam, procura pessoas, desenha caixas e mostra a contagem, sem gravar
-frames. Supabase, API, dashboard e classificação de atividade ainda não entram.
+O primeiro protótipo de câmera está pausado após provar captura e detecção local. Por
+decisão do usuário, foi antecipado um **protótipo visual do dashboard**, com dados
+simulados e sem conexão com câmera, API ou Supabase. Depois da revisão visual,
+retomaremos a melhoria do detector de pessoas.
 
 A fundação técnica anterior foi preservada:
 
@@ -71,6 +72,33 @@ retenção e acesso serão avaliados antes de dados reais.
 
 Consulte `.planning/ROADMAP.md` para entregas, critérios de aceite e itens fora de
 cada etapa.
+
+## Dashboard visual
+
+O protótipo fica em `dashboard/` e inclui:
+
+- visão geral com ocupação, saúde e atividade recente;
+- área **Câmeras** com todos os dispositivos cadastrados;
+- detalhes da webcam principal;
+- opções futuras para webcam, câmera IP e gateway ESP32;
+- ambientes, indicadores, sustentabilidade e alertas;
+- navegação responsiva para computador e celular.
+
+Todos os números, estados e gráficos estão claramente marcados como simulados. A
+prévia da câmera é uma ilustração CSS, não um frame real.
+
+```powershell
+cd dashboard
+npm install
+npm run dev
+```
+
+Abra `http://localhost:3000`. Para validar:
+
+```powershell
+npm run lint
+npm test
+```
 
 ## Ambiente Conda oficial do projeto
 
