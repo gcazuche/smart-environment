@@ -1,5 +1,12 @@
 # Changelog GSD
 
+## 2026-08-14 — Dashboard privado publicado
+
+- Primeira versão do dashboard Smart Environment publicada com acesso privado.
+- A publicação reúne visão geral, todas as câmeras, detalhe da webcam, ambientes,
+  indicadores e alertas com dados explicitamente simulados.
+- Nenhuma webcam, stream, API ou instância Supabase foi conectada nesta entrega.
+
 ## 2026-08-14 — Dashboard visual antecipado
 
 - Melhoria do detector pausada por decisão do usuário para antecipar a experiência web.

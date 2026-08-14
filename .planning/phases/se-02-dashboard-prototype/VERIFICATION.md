@@ -33,3 +33,9 @@ simulados, ausência do starter e existência do cartão social.
 Não foi realizada inspeção visual automatizada, captura de tela, teste manual em vários
 navegadores, zoom ou leitor de tela. Esses itens permanecem no gate de revisão humana.
 O dashboard ainda não possui autenticação nem autorização e não deve receber dados reais.
+
+## Publicação
+
+- versão privada publicada com sucesso em 2026-08-14;
+- URL: `https://smart-environment-monitor.angel-of-the-night16.chatgpt.site`;
+- a publicação contém somente a interface com dados simulados.

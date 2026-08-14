@@ -49,6 +49,8 @@ Atualizado em: 2026-08-14
 - Dashboard responsivo em `dashboard/`, com visão geral, todas as câmeras, detalhe da
   webcam, ambientes, indicadores e alertas usando somente dados simulados.
 - Build Vinext, lint ESLint e dois testes de renderização aprovados.
+- Primeira versão privada publicada em
+  `https://smart-environment-monitor.angel-of-the-night16.chatgpt.site`.
 
 ## O que não existe
 
