@@ -5,6 +5,17 @@ Atualizado em: 2026-08-11
 Decisões preservam história e podem ser revistas por evidência. `Supersedida` significa
 que a decisão não orienta mais o produto ativo; não apaga o registro anterior.
 
+## ADR-018 — Conda isolado como ambiente oficial
+
+- **Status:** aceita em 2026-08-14.
+- **Decisão:** usar exclusivamente o ambiente `smart-environment`, criado por
+  `environment.yml`, para desenvolvimento, testes, câmera e build. Nunca instalar
+  dependências do projeto no `base`.
+- **Operação:** pessoas podem ativar o ambiente; automações e o Codex usam
+  `conda run -n smart-environment` para evitar dependência do estado do shell.
+- **Consequência:** o lock e a `.venv` anteriores são históricos. Mudanças futuras de
+  dependência devem atualizar `environment.yml` e ser verificadas dentro do Conda.
+
 ## ADR-001 — Monólito modular com borda e serviço central
 
 - **Data:** 2026-07-17; emendada em 2026-08-11

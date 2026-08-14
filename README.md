@@ -14,7 +14,7 @@ A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
-- ambiente recriável com `uv.lock` e gates de qualidade;
+- ambiente Conda isolado e recriável com `environment.yml`;
 - 44 testes aprovados no checkpoint atual em Python 3.12;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
@@ -72,31 +72,45 @@ retenção e acesso serão avaliados antes de dados reais.
 Consulte `.planning/ROADMAP.md` para entregas, critérios de aceite e itens fora de
 cada etapa.
 
-## Pré-requisitos da fundação existente
+## Ambiente Conda oficial do projeto
 
-- Python 3.11 ou 3.12;
-- `uv` 0.11.17 instalado como pré-requisito;
-- Git;
-- internet no primeiro sync apenas se os pacotes não estiverem em cache.
+O ambiente oficial chama-se `smart-environment`. Ele é separado do `base` e contém
+Python 3.12, aplicação, OpenCV, NumPy, testes, coverage, lint, tipagem e build.
+
+Para criar pela primeira vez no Anaconda Prompt:
+
+```powershell
+conda env create --file environment.yml
+conda activate smart-environment
+```
+
+Para sincronizar depois de uma mudança em `environment.yml`:
+
+```powershell
+conda env update --name smart-environment --file environment.yml --prune
+```
+
+Não instale dependências deste projeto no `base`. O arquivo `uv.lock` permanece apenas
+como evidência do ambiente histórico e não é a fonte ativa de instalação.
 
 ## Diagnóstico e testes no Windows
 
 ```powershell
-uv sync --locked --extra dev --cache-dir .uv-cache
-.\.venv\Scripts\python.exe -m app doctor --json
-.\.venv\Scripts\python.exe -m pytest -q
+conda activate smart-environment
+python -m app doctor --json
+python -m pytest -q
 ```
 
 Para abrir a câmera e ver as caixas localmente, use `Q` ou `Esc` para encerrar:
 
 ```powershell
-.\.venv\Scripts\multicam.exe camera
+multicam camera
 ```
 
 Para um teste invisível e obrigatoriamente limitado a 30 frames:
 
 ```powershell
-.\.venv\Scripts\multicam.exe camera --no-display --max-frames 30
+multicam camera --no-display --max-frames 30
 ```
 
 É possível selecionar outra câmera com `--index 1` e escolher explicitamente
@@ -106,29 +120,28 @@ sistema e sempre libera o dispositivo ao sair.
 Gates completos:
 
 ```powershell
-.\.venv\Scripts\ruff.exe check app main.py tests
-.\.venv\Scripts\ruff.exe format --check app main.py tests
-.\.venv\Scripts\mypy.exe app main.py tests
-.\.venv\Scripts\python.exe -m compileall -q app main.py tests
-uv build --offline --cache-dir .uv-cache
-uv --cache-dir .uv-cache pip check --python .\.venv\Scripts\python.exe
+ruff check app main.py tests
+ruff format --check app main.py tests
+mypy app main.py tests
+python -m compileall -q app main.py tests
+python -m build
+python -m pip check
 ```
 
-## Diagnóstico e testes no Linux
+Para automação sem ativar o shell, inclusive nas próximas execuções do Codex:
 
-```bash
-uv sync --locked --extra dev --cache-dir .uv-cache
-.venv/bin/python -m app doctor --json
-.venv/bin/python -m pytest -q
+```powershell
+conda run -n smart-environment python -m pytest -q
+conda run -n smart-environment multicam camera --no-display --max-frames 30
 ```
 
 ## Webcam atual
 
 Em 2026-08-14, o protótipo abriu a webcam por DirectShow e processou 30 frames em
-memória antes de liberar o dispositivo. O resultado foi zero detecções nessa amostra;
-portanto, o acesso à câmera está validado, mas a qualidade para uma pessoa sentada e
-parcialmente enquadrada ainda não está. A contagem de arquivos em `data/` permaneceu
-5 antes e depois das tentativas inspecionadas.
+memória antes de liberar o dispositivo. A primeira amostra teve zero detecções; a
+revalidação no ambiente Conda detectou no máximo uma pessoa. Isso comprova o fluxo
+básico, mas ainda não mede qualidade para diferentes posições, oclusões e iluminações.
+A contagem de arquivos em `data/` permaneceu 5 antes e depois.
 
 O baseline HOG incluído no OpenCV é simples e mais adequado a corpo inteiro. Ele foi
 mantido atrás de um contrato substituível para que o próximo incremento possa avaliar

@@ -29,7 +29,7 @@ CameraSource.open()
 
 ## Arquivos alvo
 
-- `pyproject.toml`, `uv.lock`;
+- `pyproject.toml`, `environment.yml` e lock histórico `uv.lock`;
 - `app/cameras/`, `app/vision/`, `app/live_detection.py`, `app/__main__.py`;
 - `tests/test_camera.py`, `tests/test_person_detection.py`, `tests/test_live_detection.py`,
   `tests/test_cli.py`;

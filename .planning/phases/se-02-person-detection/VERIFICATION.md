@@ -51,3 +51,20 @@ tentativas permaneceu 5 antes e 5 depois; não é uma alegação sobre outros ca
 Antes de encerrar SE-02, comparar um detector de corpo parcial com licença compatível,
 registrar um conjunto autorizado/sintético e métricas simples de acerto, falso positivo,
 latência e CPU. Não iniciar classificação de atividade nessa avaliação.
+
+## Migração do ambiente — 2026-08-14
+
+O ambiente ativo passou a ser o Conda isolado `smart-environment`, em
+`C:\Users\angel\anaconda3\envs\smart-environment`. Nenhum comando de instalação foi
+direcionado ao `base`; sua inspeção mostrou pacotes gerais preexistentes, mas não o
+projeto nem OpenCV. `environment.yml` instala Python 3.12, o projeto editável e versões
+fixadas de build, mypy, pytest, pytest-cov e Ruff; OpenCV/NumPy permanecem fixados no
+projeto.
+
+Os comandos anteriores com `.venv` permanecem acima somente como evidência histórica
+da execução original. Toda nova validação usa `conda run -n smart-environment`.
+
+No Conda passaram Ruff, format-check (21 arquivos), mypy (21 arquivos), pytest e
+unittest (44 testes), compileall, doctor, build sem isolamento, `pip check` e
+`git diff --check`. O smoke Conda de 30 frames abriu via DirectShow, atingiu contagem
+máxima de uma pessoa e manteve `data/` em 5 → 5 arquivos.

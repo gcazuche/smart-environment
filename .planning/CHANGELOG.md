@@ -1,5 +1,16 @@
 # Changelog GSD
 
+## 2026-08-14 — Ambiente oficial migrado para Conda
+
+- Ambiente isolado `smart-environment` criado com Python 3.12.13; nenhum comando de
+  instalação ou atualização desta migração foi direcionado ao `base`.
+- `environment.yml` tornou-se a fonte ativa de criação/sincronização do ambiente.
+- OpenCV, NumPy, pytest, coverage, Ruff, mypy e build foram instalados no novo ambiente.
+- Comandos ativos do README e da estratégia de testes passaram a usar Conda; `.venv` e
+  `uv.lock` permanecem apenas como evidência histórica, não como workflow atual.
+- Todos os gates passaram no Conda; smoke de 30 frames detectou no máximo uma pessoa
+  e manteve a contagem inspecionada em `data/` em 5 → 5.
+
 ## 2026-08-14 — Primeiro protótipo de câmera e detecção (SE-02)
 
 - OpenCV 4.13.0 e NumPy 2.3.5 adicionados ao lock.

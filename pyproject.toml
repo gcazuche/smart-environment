@@ -32,9 +32,6 @@ include = ["app*"]
 addopts = "-ra --strict-config --strict-markers -p no:cacheprovider"
 testpaths = ["tests"]
 
-[tool.uv]
-required-version = "==0.11.17"
-
 [tool.ruff]
 line-length = 100
 target-version = "py311"

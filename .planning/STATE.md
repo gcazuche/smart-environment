@@ -36,12 +36,13 @@ Atualizado em: 2026-08-14
 
 ## O que funciona hoje
 
-- Ambiente reproduzível com `uv.lock` e Python 3.11/3.12.
+- Ambiente Conda isolado `smart-environment` com Python 3.12.13 e `environment.yml`;
+  nenhum comando de instalação desta migração foi direcionado ao `base`.
 - Configuração mínima, comando `doctor`, logging JSON seguro e tratamento de exceções.
 - OpenCV/NumPy fixados no lock; câmera com fallback, CLI, loop local, caixas e contagem.
 - 44 testes aprovados em Python 3.12, junto com Ruff, mypy e compilação.
-- Webcam abriu por DirectShow em smoke autorizado, processou 30 frames em memória e
-  foi liberada. A amostra teve zero detecções; qualidade para corpo parcial está pendente.
+- Webcam abriu por DirectShow em smoke autorizado pelo Conda, processou 30 frames em
+  memória, atingiu máximo de uma pessoa e foi liberada; qualidade ampla segue pendente.
 - A contagem inspecionada em `data/` permaneceu 5 antes e depois.
 
 ## O que não existe

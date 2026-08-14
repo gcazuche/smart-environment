@@ -1,6 +1,6 @@
 # Estratégia de testes — Smart Environment
 
-Atualizado em: 2026-08-11
+Atualizado em: 2026-08-14
 
 ## Princípios
 
@@ -28,17 +28,17 @@ Atualizado em: 2026-08-11
 ## Gates existentes da fundação
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\ruff.exe check app main.py tests
-.\.venv\Scripts\ruff.exe format --check app main.py tests
-.\.venv\Scripts\mypy.exe app main.py tests
-.\.venv\Scripts\python.exe -m compileall -q app main.py tests
-uv build --offline --cache-dir .uv-cache
-uv --cache-dir .uv-cache pip check --python .\.venv\Scripts\python.exe
+conda run -n smart-environment python -m pytest -q
+conda run -n smart-environment ruff check app main.py tests
+conda run -n smart-environment ruff format --check app main.py tests
+conda run -n smart-environment mypy app main.py tests
+conda run -n smart-environment python -m compileall -q app main.py tests
+conda run -n smart-environment python -m build
+conda run -n smart-environment python -m pip check
 ```
 
-Esses comandos validam a fundação atual. Ainda não validam OpenCV, detector,
-Supabase, API, interface ou qualquer requisito Smart Environment funcional.
+Esses comandos validam a fundação e os contratos simulados de câmera/detector atuais.
+Ainda não medem qualidade visual representativa nem validam Supabase, API ou interface.
 
 ## Suítes obrigatórias por etapa
 

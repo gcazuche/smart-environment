@@ -1,9 +1,10 @@
 # Stack técnica — Smart Environment
 
-Atualizado em: 2026-08-11
+Atualizado em: 2026-08-14
 
-Versões entram no `uv.lock` somente quando uma fase realmente usa a dependência. Uma
-biblioteca candidata não é tratada como instalada, segura ou compatível sem evidência.
+O ambiente ativo é recriado por `environment.yml` no Conda `smart-environment`.
+`uv.lock` permanece somente como evidência histórica. Uma biblioteca candidata não é
+tratada como instalada, segura ou compatível sem evidência.
 
 ## Stack ativa e planejada
 
