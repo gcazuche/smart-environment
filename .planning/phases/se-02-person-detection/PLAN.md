@@ -1,7 +1,7 @@
 # SE-02 — Plano atômico
 
 Data: 2026-08-14
-Status: detector híbrido concluído; avaliação representativa pendente
+Status: NanoDet integrado; avaliação representativa pendente
 
 | ID | Tarefa | Prioridade | Risco | Estado |
 |---|---|---|---|---|
@@ -13,9 +13,9 @@ Status: detector híbrido concluído; avaliação representativa pendente
 | SE-02-06 | executar smoke autorizado e gates | P0 | alto | concluída com ressalva de qualidade |
 | SE-02-07 | revisar, documentar e criar checkpoint | P1 | médio | concluída |
 
-O primeiro incremento de SEB-017 adicionou um classificador de parte superior ao HOG.
-O smoke detectou presença, mas o baseline híbrido não deve ser promovido a produção
-sem conjunto autorizado/sintético, falsos sinais, latência e CPU medidos.
+SEB-017 substituiu o padrão da CLI por NanoDet ONNX oficial, capaz de múltiplas pessoas
+e corpos parciais. O smoke detectou presença, mas o modelo não deve ser promovido a
+produção sem conjunto autorizado/sintético, falsos sinais, latência e CPU medidos.
 
 ## Contrato esperado
 

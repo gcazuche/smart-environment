@@ -31,10 +31,10 @@ Atualizado em: 2026-08-14
 | SEB-011 | Implementar contrato e fonte simulada | SE-02 | CAM-001, TEST-002 | concluída |
 | SEB-012 | Integrar OpenCV e lifecycle da webcam em cenário controlado | SE-02 | CAM-002, CAM-004, PRIV-004 | concluída |
 | SEB-013 | Implementar buffer transitório e descarte de frames | SE-02 | CAM-003, OPS-001, PRIV-002 | concluída no loop de um frame por vez |
-| SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — híbrido HOG + upper-body distribuído pelo OpenCV |
-| SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída em testes simulados; smoke real detectou presença |
+| SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — NanoDet OpenCV/HF, Apache-2.0, revisão/hash fixados |
+| SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída com NanoDet em testes; smoke real detectou presença |
 | SEB-016 | Implementar estados observáveis e tracking efêmero | SE-04 | ACT-001 a ACT-003, OCC-002, OCC-004 | pendente |
-| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | em andamento — corpo parcial implementado; dataset/métricas pendentes |
+| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | em andamento — NanoDet integrado; dataset/métricas pendentes |
 | SEB-018 | Implementar ingestão autenticada | SE-05 | API-001, SEC-003 | pendente |
 | SEB-019 | Implementar outbox, retry e idempotência | SE-05 | API-002, API-003 | pendente |
 | SEB-020 | Instrumentar logs e métricas minimizados | SE-05 | API-004, SEC-004 | pendente |

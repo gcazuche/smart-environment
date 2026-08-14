@@ -1,5 +1,13 @@
 # Changelog GSD
 
+## 2026-08-14 — NanoDet oficial integrado
+
+- NanoDet-m-plus-1.5x do OpenCV/Hugging Face substitui HOG/cascade como padrão da CLI.
+- Peso e licença têm revisão e SHA-256 fixados; download reprodutível foi adicionado.
+- Inferência roda localmente em OpenCV DNN/CPU e descarta classes diferentes de pessoa.
+- Limiar 0,35 foi mantido; 0,30 e 0,25 geraram mais caixas e foram rejeitados.
+- Frames permaneceram em memória e o dashboard/Supabase não foram conectados.
+
 ## 2026-08-14 — Detecção de corpo parcial retomada
 
 - Detector híbrido combina HOG de corpo inteiro e cascade upper-body do OpenCV.

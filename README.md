@@ -6,16 +6,16 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
-O protótipo local combina detecção de corpo inteiro e parte superior; o dashboard visual
-continua com dados simulados e sem conexão com câmera, API ou Supabase. A avaliação
-representativa de qualidade ainda está pendente.
+O protótipo local agora usa NanoDet/ONNX para detectar pessoas inteiras ou parcialmente
+visíveis, inclusive múltiplas pessoas. O dashboard continua com dados simulados e sem
+conexão com câmera, API ou Supabase. A avaliação representativa ainda está pendente.
 
 A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
 - ambiente Conda isolado e recriável com `environment.yml`;
-- 48 testes aprovados no checkpoint atual em Python 3.12;
+- 54 testes aprovados no checkpoint atual em Python 3.12;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
 O pacote, a CLI e as variáveis ainda usam o nome técnico legado `multicam` /
@@ -120,6 +120,15 @@ conda env update --name smart-environment --file environment.yml --prune
 Não instale dependências deste projeto no `base`. O arquivo `uv.lock` permanece apenas
 como evidência do ambiente histórico e não é a fonte ativa de instalação.
 
+Baixe o peso NanoDet oficial do OpenCV/Hugging Face com revisão e SHA-256 fixados:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/download_nanodet.ps1
+```
+
+O peso fica em `models/nanodet/`, fora do Git. Origem e licença estão registradas em
+`THIRD_PARTY_NOTICES.md`.
+
 ## Diagnóstico e testes no Windows
 
 ```powershell
@@ -170,11 +179,11 @@ revalidação no ambiente Conda detectou no máximo uma pessoa. Isso comprova o 
 básico, mas ainda não mede qualidade para diferentes posições, oclusões e iluminações.
 A contagem de arquivos em `data/` permaneceu 5 antes e depois.
 
-O baseline agora combina o HOG de corpo inteiro com o classificador de parte superior
-distribuído pelo OpenCV. No smoke de 30 frames ele terminou com uma pessoa detectada e
-máximo observado de duas; isso não prova precisão e pode incluir falso positivo ou
-duplicata. O contrato continua substituível, e OpenCV 4.13.0 e NumPy 2.3.5 permanecem
-fixados.
+O baseline ativo é NanoDet-m-plus-1.5x/ONNX do OpenCV Zoo, filtrado somente para a classe
+`person`. O peso FP32 de 3,8 MB veio do Hugging Face oficial, está fixado por revisão e
+SHA-256 e roda localmente em OpenCV DNN/CPU. No smoke de 30 frames com limiar oficial
+0,35, detectou no máximo uma pessoa; limiares 0,30 e 0,25 aumentaram falsos sinais e
+foram rejeitados. Isso ainda não prova precisão nem prontidão comercial.
 
 ## Estrutura
 
@@ -182,7 +191,7 @@ fixados.
 .
 ├── app/                         # fundação, câmera e detecção local
 ├── data/                        # runtime ignorado; pastas antigas não são baseline
-├── tests/                       # 48 testes automatizados
+├── tests/                       # 54 testes automatizados
 └── .planning/
     ├── phases/01-foundation/    # evidência histórica preservada
     ├── phases/02-database/      # plano antigo explicitamente superado
@@ -196,5 +205,5 @@ fixados.
 
 Leia `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`,
 `.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento da SE-02 é medir
-o detector híbrido em amostras autorizadas/sintéticas, ainda sem Supabase ou
+o NanoDet em amostras autorizadas/sintéticas, ainda sem Supabase ou
 classificação de trabalho/relaxamento.

@@ -71,7 +71,7 @@ def _run_camera_command(args: argparse.Namespace) -> int:
 
     from app.cameras import CameraError, OpenCVCamera
     from app.live_detection import NullDisplay, OpenCVDisplay, run_person_detection
-    from app.vision import HybridPersonDetector
+    from app.vision import NanoDetModelError, NanoDetPersonDetector
 
     if args.no_display and args.max_frames is None:
         print("erro: --no-display exige --max-frames", file=sys.stderr)
@@ -82,13 +82,16 @@ def _run_camera_command(args: argparse.Namespace) -> int:
     try:
         summary = run_person_detection(
             camera,
-            HybridPersonDetector(),
+            NanoDetPersonDetector(),
             display,
             max_frames=args.max_frames,
         )
     except CameraError as exc:
         print(f"erro de câmera: {exc}", file=sys.stderr)
         return 3
+    except NanoDetModelError as exc:
+        print(f"erro de modelo: {exc}", file=sys.stderr)
+        return 4
     except KeyboardInterrupt:
         print("operação cancelada", file=sys.stderr)
         return 130

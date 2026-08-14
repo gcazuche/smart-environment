@@ -39,6 +39,25 @@ fonte/binário com ou sem modificação, sob condições de atribuição e não 
 cinza e deduplica caixas sobrepostas. Isso evita dependência/download novo, mas não
 substitui avaliação de falso positivo, falso negativo, latência e CPU.
 
+## NanoDet selecionado no Hugging Face
+
+O baseline ativo passou para `opencv/object_detection_nanodet`, mantido pela Open
+Source Vision Foundation no Hugging Face. A model card identifica NanoDet-m-plus-1.5x
+com entrada 416 × 416, AP50 de 67,5 e mAP de 41,8 para `person` no COCO 2017 val. Esses
+números são apenas referência do modelo, não resultado deste projeto.
+
+- revisão: `5bfd47077350a726ad440dd7bd1e1e35e8ebcfb2`;
+- peso FP32: 3.800.954 bytes;
+- SHA-256: `4b82da9944b88577175ee23a459dce2e26e6e4be573def65b1055dc2d9720186`;
+- licença declarada para todos os arquivos do diretório: Apache-2.0;
+- runtime: OpenCV DNN/CPU já instalado, sem PyTorch ou serviço de inferência.
+
+O MP-PersonDet também foi analisado: é menor e mais rápido, mas o exemplo oficial avisa
+que normalmente apenas uma pessoa oferece bom desempenho. Como o produto precisa
+contar várias pessoas, NanoDet foi preferido. YOLOX é maior e mais lento nos benchmarks
+oficiais do mesmo Zoo. Imagens aleatórias da internet não foram incorporadas: o próximo
+gate usará amostras autorizadas/sintéticas com origem e licença registradas.
+
 ## Threat model resumido
 
 - **Ativo:** frames da webcam e privacidade da pessoa observada.

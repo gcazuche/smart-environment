@@ -106,8 +106,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-003.
 - **Aceite:** conjunto sintético/autorizado mede 0, 1 e N pessoas, oclusão, iluminação,
   falsos positivos e falsos negativos; modelo/pesos/licenças são registrados.
-- **Status:** em andamento; o híbrido HOG + upper-body/OpenCV passa 0/1/N com doubles
-  e detectou presença no smoke real, mas dataset autorizado, falsos sinais e métricas
+- **Status:** em andamento; NanoDet/OpenCV DNN passa 0/1/N com doubles e detectou
+  presença no smoke real, mas dataset autorizado, falsos sinais e métricas
   representativas continuam pendentes.
 
 ### OCC-002 — Agregação temporal e espacial

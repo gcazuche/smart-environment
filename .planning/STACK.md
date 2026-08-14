@@ -15,7 +15,7 @@ tratada como instalada, segura ou compatível sem evidência.
 | Framework web | Vinext/Vite no Sites | selecionado para protótipo | build, compatibilidade Cloudflare e revisão antes de integrar dados |
 | API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
 | Captura | OpenCV `4.13.0.92`, CPU-first | selecionada para SE-02 | fonte simulada, lifecycle e matriz Windows |
-| Detecção de pessoas | HOG + cascade upper-body do OpenCV atrás de adaptador | baseline híbrido de PoC | arquivo upper-body traz licença BSD-like; medir falsos sinais e corpo parcial |
+| Detecção de pessoas | NanoDet-m-plus-1.5x ONNX via OpenCV DNN/CPU | baseline ativo de PoC | Apache-2.0, revisão/hash fixados; medir falsos sinais e latência |
 | Persistência central | Supabase/PostgreSQL | preferencial, não validada | Auth, RLS, região, quota, custo, backup e restore |
 | ORM/migrações | SQLAlchemy + Alembic | candidatas | schema mínimo, upgrade/downgrade e transações |
 | Outbox local | SQLite | candidata | confinamento, limites, retenção e idempotência |
@@ -28,8 +28,8 @@ tratada como instalada, segura ou compatível sem evidência.
 ## Dependências existentes
 
 O código atual usa a fundação Python, OpenCV e NumPy fixados em `pyproject.toml`; o
-Conda oficial instala o projeto editável por `environment.yml`. O cascade upper-body
-é fornecido dentro do pacote OpenCV e não cria download ou peso separado.
+Conda oficial instala o projeto editável por `environment.yml`. O NanoDet é baixado
+separadamente do Hugging Face por script com revisão e SHA-256 fixados.
 
 ## Itens retirados do baseline
 
@@ -68,7 +68,7 @@ uma nova decisão, justificativa proporcional, licença e gate de privacidade.
 ## Decisões ainda abertas
 
 - framework web, biblioteca de gráficos e estratégia Realtime;
-- detector de produção e possível runtime de inferência após medir o baseline híbrido;
+- detector de produção após medir o baseline NanoDet e comparar alternativas;
 - versões de FastAPI, OpenCV, SQLAlchemy, Alembic e SDKs;
 - região/plano do Supabase e requisitos de residência/restore;
 - empacotamento da borda e implantação do backend;

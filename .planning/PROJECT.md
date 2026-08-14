@@ -141,8 +141,8 @@ o mesmo gate reforçado de identificação individual.
 
 - Python 3.11 ou 3.12; CPU precisa ser suportada; GPU é opcional e não validada.
 - HTML, CSS e JavaScript formam a interface; o protótipo usa React/TypeScript e Vinext.
-- Python, OpenCV e banco de dados compõem o backend; o baseline híbrido HOG/upper-body
-  ainda será comparado por desempenho e qualidade em dados autorizados.
+- Python, OpenCV e banco de dados compõem o backend; o baseline NanoDet ainda será
+  comparado por desempenho e qualidade em dados autorizados.
 - Internet é o meio preferencial, mas captura e agregação não podem parar por uma
   indisponibilidade transitória; a estratégia offline será implementada em fase própria.
 - Modelos de câmera futuros, protocolos ESP32, volume, metas de FPS/latência, número

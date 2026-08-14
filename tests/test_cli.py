@@ -36,14 +36,29 @@ class CliTests(TestCase):
 
         stdout = StringIO()
         summary = RunSummary(3, 1, 2, "dshow", "frame_limit")
-        with patch("app.live_detection.run_person_detection", return_value=summary):
-            with redirect_stdout(stdout):
-                exit_code = main(["camera", "--no-display", "--max-frames", "3"])
+        with patch("app.vision.NanoDetPersonDetector"):
+            with patch("app.live_detection.run_person_detection", return_value=summary):
+                with redirect_stdout(stdout):
+                    exit_code = main(["camera", "--no-display", "--max-frames", "3"])
 
         self.assertEqual(exit_code, 0)
         self.assertIn("frames=3", stdout.getvalue())
         self.assertIn("pessoas_agora=1", stdout.getvalue())
         self.assertNotIn("frame_data", stdout.getvalue())
+
+    def test_camera_reports_missing_model_safely(self) -> None:
+        from app.vision import NanoDetModelError
+
+        stderr = StringIO()
+        with patch(
+            "app.vision.NanoDetPersonDetector",
+            side_effect=NanoDetModelError("modelo NanoDet ausente"),
+        ):
+            with redirect_stderr(stderr):
+                exit_code = main(["camera", "--no-display", "--max-frames", "3"])
+
+        self.assertEqual(exit_code, 4)
+        self.assertEqual(stderr.getvalue().strip(), "erro de modelo: modelo NanoDet ausente")
 
     def test_doctor_json_is_parseable_and_returns_zero(self) -> None:
         with TemporaryDirectory() as temp_dir:

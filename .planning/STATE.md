@@ -5,7 +5,7 @@ Atualizado em: 2026-08-14
 - **Repositório:** `C:\Users\angel\OneDrive\Documents\Multicam`
 - **Branch no início de SE-01:** `main`
 - **Fundação técnica histórica:** concluída; código preservado
-- **Checkpoint funcional atual:** detector híbrido de corpo inteiro/parte superior implementado
+- **Checkpoint funcional atual:** NanoDet ONNX integrado e executando localmente
 
 ## Posição atual
 
@@ -41,10 +41,10 @@ Atualizado em: 2026-08-14
 - Ambiente Conda isolado `smart-environment` com Python 3.12.13 e `environment.yml`;
   nenhum comando de instalação desta migração foi direcionado ao `base`.
 - Configuração mínima, comando `doctor`, logging JSON seguro e tratamento de exceções.
-- OpenCV/NumPy fixados; câmera com fallback, CLI, loop e detector híbrido HOG/upper-body.
-- 48 testes aprovados em Python 3.12, junto com Ruff e mypy strict.
-- O novo smoke via DirectShow processou 30 frames em memória, terminou com uma pessoa,
-  observou máximo de duas e liberou a câmera; qualidade ampla segue pendente.
+- OpenCV/NumPy fixados; câmera com fallback, CLI, loop e NanoDet ONNX/OpenCV DNN.
+- 54 testes aprovados em Python 3.12, junto com Ruff e mypy strict.
+- O smoke NanoDet via DirectShow processou 30 frames em memória, observou máximo de uma
+  pessoa e liberou a câmera; qualidade ampla e estabilidade temporal seguem pendentes.
 - A contagem inspecionada em `data/` permaneceu 5 antes e depois.
 - Dashboard responsivo em `dashboard/`, com visão geral, todas as câmeras, detalhe da
   webcam, ambientes, indicadores e alertas usando somente dados simulados.
@@ -71,7 +71,7 @@ Atualizado em: 2026-08-14
 ## Decisões abertas
 
 - framework web e biblioteca de gráficos;
-- detector de pessoas e runtime de inferência;
+- aprovação do NanoDet ou detector alternativo após métricas representativas;
 - granularidade temporal/espacial do evento;
 - estratégia Realtime versus polling;
 - metas de FPS, latência, capacidade e custo;
@@ -82,10 +82,10 @@ Atualizado em: 2026-08-14
 
 1. Ler `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `DECISIONS.md` e este arquivo.
 2. Preparar amostras autorizadas/sintéticas para 0/1/N, posição sentada e corpo parcial.
-3. Medir falso positivo, falso negativo e latência do detector híbrido no item SEB-017.
+3. Medir falso positivo, falso negativo, estabilidade e latência do NanoDet no SEB-017.
 4. Não conectar dados reais, Supabase ou classificar atividade sem autorização própria.
 
 ## Prompt de retomada sugerido
 
-> Continue somente o item SEB-017: avalie o detector híbrido em amostras autorizadas ou
+> Continue somente o item SEB-017: avalie o NanoDet em amostras autorizadas ou
 > sintéticas, sem salvar frames da webcam, conectar Supabase ou classificar atividade.

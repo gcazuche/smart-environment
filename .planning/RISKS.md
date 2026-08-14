@@ -19,7 +19,7 @@ Postura: alto risco por câmeras em ambiente de trabalho; redução antes de exp
 | R-012 | Backup existir mas não restaurar ou não eliminar dado vencido | alto | restore descartável; RPO/RTO; política para réplicas e backups | aberto |
 | R-013 | Monitoramento oculto ou em área sensível | crítico | aviso, autorização, zones permitidas; proibir áreas privadas e áudio | contido no plano; piloto bloqueado |
 | R-014 | Captura incidental de visitantes ou menores | alto | sinalização, enquadramento, horários; escolas/menores fora do primeiro piloto | aberto |
-| R-015 | Modelo/pesos incompatíveis com uso comercial | alto | validar licença de código, pesos e dataset antes de baixar/adotar | baseline OpenCV/upper-body permissivo; detector de produção aberto |
+| R-015 | Modelo/pesos incompatíveis com uso comercial | alto | validar licença de código, pesos e dataset antes de baixar/adotar | NanoDet Apache-2.0 com hash/revisão; direitos do dataset e produção abertos |
 | R-016 | Viés/baixa qualidade por luz, oclusão ou densidade | alto | dataset representativo autorizado, métricas segmentadas e fallback `unknown` | aberto |
 | R-017 | Dependência vulnerável ou atualização quebrar runtime nativo | alto | pin, lock, SCA, smoke e rollback; CPU baseline | baseline parcial |
 | R-018 | Supabase exceder custo/quota ou região não atender requisitos | alto | PoC, orçamento, quotas, residência e alternativa documentada | aberto |

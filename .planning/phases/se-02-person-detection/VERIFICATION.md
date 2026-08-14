@@ -83,3 +83,24 @@ O smoke limitado processou 30 frames via DirectShow, encerrou por `frame_limit`,
 com uma pessoa e observou máximo de duas. `data/` permaneceu em 5 → 5 arquivos. O teste
 confirma presença e lifecycle, não precisão: o pico pode representar detecção duplicada
 ou falso positivo e permanece como risco a medir.
+
+## Incremento NanoDet/Hugging Face — 2026-08-14
+
+- peso FP32 oficial baixado da revisão fixa e validado pelo SHA-256 publicado;
+- licença Apache-2.0 baixada e validada separadamente;
+- `NanoDetPersonDetector` preserva proporção com letterbox, filtra somente `person`,
+  aplica NMS e converte caixas para as coordenadas originais;
+- peso alterado/ausente e saída inesperada falham de modo explícito e sanitizado;
+- frame sintético preto produziu zero pessoas e inferência inicial de aproximadamente
+  108 ms na CPU local.
+
+No smoke da webcam, limiar 0,35 processou 30 frames via DirectShow, terminou em zero e
+observou máximo de uma pessoa. Em comparações de 30 frames, 0,30 terminou/máximo em duas
+e 0,25 terminou em duas/máximo em quatro; esses limiares foram rejeitados por risco de
+falso positivo. A medição não usou ground truth e não prova acurácia. `data/` permaneceu
+em 5 → 5 no smoke oficial; nenhum frame foi salvo ou enviado.
+
+Após a integração, passaram no Conda: pytest e unittest (54 testes), Ruff, format-check,
+mypy strict (23 arquivos), compileall, doctor, build sem isolamento e `pip check`. O
+script PowerShell foi analisado pelo parser nativo sem erro; hashes locais do peso e da
+licença coincidiram com os valores fixados; `git diff --check` passou.

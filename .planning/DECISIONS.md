@@ -5,9 +5,21 @@ Atualizado em: 2026-08-11
 Decisões preservam história e podem ser revistas por evidência. `Supersedida` significa
 que a decisão não orienta mais o produto ativo; não apaga o registro anterior.
 
+## ADR-021 — NanoDet oficial como detector ativo do PoC
+
+- **Status:** aceita para PoC em 2026-08-14; produção ainda não aprovada.
+- **Decisão:** usar NanoDet-m-plus-1.5x ONNX do repositório oficial OpenCV no Hugging
+  Face, filtrar somente `person` antes do NMS e executar localmente via OpenCV DNN/CPU.
+- **Supply chain:** revisão `5bfd47077350a726ad440dd7bd1e1e35e8ebcfb2`, SHA-256
+  `4b82da9944b88577175ee23a459dce2e26e6e4be573def65b1055dc2d9720186` e licença
+  Apache-2.0 registrados; peso fica fora do Git e tem download verificável.
+- **Consequência:** substitui o híbrido HOG/cascade como padrão da CLI. Limiar 0,35 foi
+  mantido porque 0,30/0,25 aumentaram falsos sinais no smoke; dataset e métricas seguem
+  obrigatórios antes de qualquer alegação comercial.
+
 ## ADR-020 — Detector híbrido local para corpo parcial
 
-- **Status:** aceita para PoC em 2026-08-14; não aprovada para produção.
+- **Status:** supersedida pela ADR-021 em 2026-08-14; preservada como fallback histórico.
 - **Decisão:** combinar o HOG de corpo inteiro com `haarcascade_upperbody.xml`, ambos
   distribuídos pelo OpenCV, normalizar iluminação e remover caixas sobrepostas.
 - **Justificativa:** melhora o caso sentado/parcial sem nova dependência, download de

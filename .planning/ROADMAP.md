@@ -2,7 +2,7 @@
 
 Versão: 1.0
 Atualizado em: 2026-08-11
-Status global: detector híbrido da SE-02 implementado; avaliação representativa pendente
+Status global: NanoDet da SE-02 integrado; avaliação representativa pendente
 
 ## Como ler este roadmap
 
@@ -62,7 +62,7 @@ individual não fazem parte do MVP; código, dependências, câmera e serviços 
 **Objetivo:** provar primeiro o fluxo visual local usando a webcam do próprio computador.
 
 **Entregas:** contrato de câmera, fonte simulada, adaptador OpenCV com fallback de
-backend, detector híbrido substituível para corpo inteiro/parte superior, caixas,
+backend, NanoDet substituível para corpo inteiro/parcial e múltiplas pessoas, caixas,
 contagem, CLI local e encerramento seguro.
 
 **Aceite:** testes simulados cobrem abertura/leitura/falha/liberação e detecção 0/1/N;
