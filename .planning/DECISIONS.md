@@ -1,9 +1,32 @@
 # Decisões arquiteturais
 
-Atualizado em: 2026-08-11
+Atualizado em: 2026-08-23
 
 Decisões preservam história e podem ser revistas por evidência. `Supersedida` significa
 que a decisão não orienta mais o produto ativo; não apaga o registro anterior.
+
+## ADR-023 — Área de trabalho normalizada e neutra por câmera
+
+- **Data:** 2026-08-22
+- **Status:** aceita e implementada para a Etapa 2 da SE-04.
+- **Decisão:** representar uma região retangular por câmera com coordenadas normalizadas
+  `esquerda,topo,direita,base`; considerar geometricamente na área uma caixa com ao menos
+  20% de sobreposição. Até calibração, o padrão cobre o frame inteiro.
+- **Consequências:** a mesma configuração independe da resolução; a prévia local desenha
+  o retângulo e a API expõe somente geometria e contagem agregada. Estar dentro ou fora
+  da área não produz sozinho qualquer estado de trabalho, distração ou produtividade.
+
+## ADR-022 — Intel Person Detection como alternativa acadêmica experimental
+
+- **Status:** aceita para comparação em 2026-08-18; NanoDet continua sendo o padrão.
+- **Decisão:** integrar YOLO26n FP16 via OpenVINO atrás do mesmo contrato e selecionar
+  explicitamente com `--detector intel`.
+- **Supply chain:** referência Intel/Hugging Face fixada na revisão
+  `b86aaa534de9e93aad967fbaf89d93aa0fb4ba94`; fontes, peso e IR têm hashes verificados.
+- **Licença:** avaliação de TCC aberto sob AGPL-3.0; uso fechado/comercial não está
+  aprovado e exigiria nova análise ou licença Enterprise da Ultralytics.
+- **Evidência inicial:** duas pessoas e 32,1 ms médios na amostra indicada pela Intel,
+  contra três caixas e 90,1 ms do NanoDet; uma amostra não decide a escolha final.
 
 ## ADR-021 — NanoDet oficial como detector ativo do PoC
 
@@ -202,8 +225,48 @@ que a decisão não orienta mais o produto ativo; não apaga o registro anterior
 ## ADR-017 — Atividade observável, não produtividade real
 
 - **Data:** 2026-08-14
-- **Status:** aceita como direção para SE-04.
-- **Decisão:** no futuro estimar `trabalho_aparente`, `pausa_aparente` ou `inconclusivo`,
-  com regras por contexto e tracking efêmero.
+- **Status:** aceita; contrato inicial implementado em 2026-08-22.
+- **Decisão:** estimar `atividade_compativel`, `uso_celular_aparente`,
+  `pausa_aparente`, `ausente` ou `inconclusivo`, com regras por contexto e tracking
+  efêmero. No contexto inicial `office-computer`, usar janela de 10 s, confiabilidade
+  mínima de 70%, evidência de trabalho em 60%, celular em 80%, ausência após 3 s e
+  pausa após 60 s. Esses valores são hipóteses calibráveis do TCC.
 - **Consequências:** nenhuma inferência de intenção/emoção, identidade, controle de ponto,
-  ranking ou punição automática; resultado sempre é apresentado como estimativa.
+  ranking ou punição automática; uso de celular não recebe automaticamente o rótulo de
+  distração e o resultado sempre é apresentado como estimativa.
+
+## ADR-024 — Referências reais pequenas antes do detector de objetos
+
+- **Data:** 2026-08-22
+- **Status:** aceita para o TCC não comercial; não aprovada para produto.
+- **Decisão:** usar as três imagens revisadas do dataset de estações abertas somente como
+  referência qualitativa e smoke. Fixar origem, licença, metadados e SHA-256; manter pixels
+  fora do Git. Rejeitar amostras automáticas que apenas coincidem por rótulos, mas não
+  mostram uma estação de trabalho real.
+- **Consequências:** a integração de objetos pode começar com evidência visual concreta,
+  mas treinamento e métricas permanecem bloqueados por falta de volume, diversidade,
+  classes negativas e licença comercial. Nenhuma imagem recebe rótulo de produtividade,
+  distração, postura ou intenção.
+
+## ADR-025 — Reutilizar YOLO26 com classes de objetos explicitamente permitidas
+
+- **Data:** 2026-08-22
+- **Status:** aceita somente para smoke acadêmico offline.
+- **Decisão:** reutilizar o artefato YOLO26/OpenVINO já verificado e permitir somente as
+  classes COCO `laptop`, `mouse`, `keyboard` e `cell_phone`. Manter o detector de pessoas
+  como adaptador compatível sobre o mesmo núcleo e não adicionar novo peso/dependência.
+- **Consequências:** reduz duplicação e superfície de supply chain, mas herda a licença
+  AGPL-3.0 e as limitações do modelo geral. Dois laptops foram encontrados corretamente;
+  o celular pequeno/ocluído não foi detectado nem em 0,10, portanto esse sinal continua
+  reprovado até teste controlado e comparação técnica.
+
+## ADR-026 — Usar referências sintéticas como ponte, não como validação real
+
+- **Data:** 2026-08-23
+- **Status:** aceita para o smoke acadêmico provisório.
+- **Decisão:** gerar seis cenas independentes, sem rostos ou pessoas reais, com laptop,
+  celular, ausência de objetos e uma combinação ambígua. Fixar pixels por hash e manter
+  dados e derivados fora do Git.
+- **Consequências:** elimina a necessidade de autorização de imagem nesta fatia e melhora
+  a observação do celular próximo, mas introduz diferença de domínio. Treinamento,
+  métricas e conclusão sobre câmeras reais continuam bloqueados até material autorizado.

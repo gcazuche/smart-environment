@@ -6,16 +6,20 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
-O protótipo local agora usa NanoDet/ONNX para detectar pessoas inteiras ou parcialmente
-visíveis, inclusive múltiplas pessoas. O dashboard continua com dados simulados e sem
-conexão com câmera, API ou Supabase. A avaliação representativa ainda está pendente.
+O protótipo local oferece NanoDet/ONNX e Intel YOLO26/OpenVINO para detectar pessoas
+inteiras ou parcialmente visíveis, inclusive múltiplas pessoas. Um agente local pode
+processar simultaneamente a webcam do computador e o celular como câmera de rede. O
+dashboard local mostra o JPEG anotado mais recente de cada câmera, com os retângulos do
+detector e da área de trabalho configurada, sem gravar frames ou enviá-los à internet.
+Os gráficos históricos continuam
+simulados e a avaliação representativa ainda está pendente.
 
 A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
 - ambiente Conda isolado e recriável com `environment.yml`;
-- 54 testes aprovados no checkpoint atual em Python 3.12;
+- 99 testes e 11 subtestes aprovados no checkpoint atual em Python 3.12;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
 O pacote, a CLI e as variáveis ainda usam o nome técnico legado `multicam` /
@@ -78,13 +82,15 @@ O protótipo fica em `dashboard/` e inclui:
 
 - visão geral com ocupação, saúde e atividade recente;
 - área **Câmeras** com todos os dispositivos cadastrados;
-- detalhes da webcam principal;
-- opções futuras para webcam, câmera IP e gateway ESP32;
+- detalhes da webcam do computador e da câmera do celular;
+- conexão local disponível para webcam e câmera IP; gateway ESP32 permanece futuro;
 - ambientes, indicadores, sustentabilidade e alertas;
 - navegação responsiva para computador e celular.
 
-Todos os números, estados e gráficos estão claramente marcados como simulados. A
-prévia da câmera é uma ilustração CSS, não um frame real.
+As contagens, o estado e a imagem anotada das duas câmeras podem vir do agente local. Os
+gráficos históricos ainda são demonstrações. A área de câmera mostra vídeo somente em
+`localhost`; mantém um JPEG limitado por câmera em memória e não grava nem publica o
+vídeo na internet.
 
 ```powershell
 cd dashboard
@@ -98,6 +104,40 @@ Abra `http://localhost:3000`. Para validar:
 npm run lint
 npm test
 ```
+
+### Teste com a câmera do computador e a do celular
+
+Conecte os dois aparelhos à mesma rede privada e configure no celular um aplicativo
+que disponibilize vídeo por MJPEG ou RTSP. Copie a URL local fornecida pelo aplicativo,
+por exemplo `http://192.168.1.50:8080/video`, e execute em um terminal:
+
+```powershell
+conda run -n smart-environment multicam monitor --phone-url "http://192.168.1.50:8080/video" --detector intel
+```
+
+Por segurança, a área inicial de cada câmera cobre o frame inteiro. Para calibrar uma
+região diferente por câmera, use coordenadas proporcionais entre `0` e `1` no formato
+`esquerda,topo,direita,base`:
+
+```powershell
+conda run -n smart-environment multicam monitor --phone-url "http://192.168.1.50:8080/video" --detector intel --pc-work-zone "0.10,0.20,0.90,1.00" --phone-work-zone "0.05,0.15,0.95,1.00"
+```
+
+O retângulo aparece na prévia local. Uma pessoa é contabilizada na região quando ao
+menos 20% da caixa detectada se sobrepõe a ela; isso não classifica trabalho ou distração.
+
+Em outro terminal, abra o dashboard:
+
+```powershell
+cd dashboard
+npm run dev
+```
+
+Ao acessar `http://localhost:3000`, o selo muda para **Agente local conectado** e a
+área **Câmeras** mostra os dois vídeos com as caixas de detecção. A URL do celular deve
+ser um IP privado ou nome `.local`; credenciais embutidas e endereços públicos são
+rejeitados. O agente escuta apenas em `127.0.0.1:8765`, valida a origem da página e não
+expõe a API na rede.
 
 ## Ambiente Conda oficial do projeto
 
@@ -129,6 +169,59 @@ powershell -ExecutionPolicy Bypass -File scripts/download_nanodet.ps1
 O peso fica em `models/nanodet/`, fora do Git. Origem e licença estão registradas em
 `THIRD_PARTY_NOTICES.md`.
 
+Para instalar o detector experimental Intel Person Detection/YOLO26 em OpenVINO:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/download_intel_person_detection.ps1
+```
+
+O script usa somente o Conda `smart-environment`, fixa a revisão do Hugging Face e
+verifica os hashes dos pesos e dos artefatos OpenVINO. Os arquivos ficam fora do Git.
+
+### Referências de estações de trabalho
+
+O TCC usa três imagens revisadas do dataset
+`shangzx/Open-Office-Workstation-Usage-Detection-Dataset` como referência qualitativa
+de escritórios ocupados. Para baixá-las e gerar um manifest com licença, origem,
+dimensões e SHA-256:
+
+```powershell
+conda run -n smart-environment python scripts/prepare_workstation_references.py
+```
+
+As imagens ficam em `data/datasets/workstation-references/huggingface/`, fora do Git.
+O conjunto tem licença `CC-BY-NC-SA-4.0`, portanto é restrito ao TCC não comercial.
+São apenas três cenas ocupadas: servem para revisão visual e smoke de detector, não para
+treinar um modelo, medir qualidade representativa ou rotular produtividade/distração.
+
+Para executar somente o smoke offline de `laptop`, `mouse`, `keyboard` e `cell_phone`:
+
+```powershell
+conda run -n smart-environment python scripts/smoke_office_objects.py
+```
+
+O relatório e as prévias anotadas ficam em `data/evaluations/office-object-smoke/`, fora
+do Git. No checkpoint atual, o YOLO26/OpenVINO encontrou corretamente dois laptops nas
+três imagens, com média de 43,2 ms por imagem, mas não encontrou o celular visível nem
+com limiar diagnóstico de 0,10. Portanto, o sinal de computador está apenas demonstrado
+e o de celular ainda não está aprovado.
+
+Como alternativa provisória sem fotografias de pessoas reais, o projeto possui seis
+cenas geradas por IA, todas com rosto oculto, incluindo laptop, celular, ambos, mesa vazia
+e uma cena ambígua. Para validar o manifest e executar o smoke separado:
+
+```powershell
+conda run -n smart-environment python scripts/prepare_synthetic_workstations.py
+conda run -n smart-environment python scripts/smoke_synthetic_office_objects.py
+```
+
+As imagens ficam em `data/datasets/workstation-references/synthetic/` e as saídas em
+`data/evaluations/office-object-smoke-synthetic/`, ambas fora do Git. No limiar 0,25,
+o modelo reconheceu laptop nas 4 cenas esperadas e celular em 3 de 4; a cena ambígua
+perdeu o celular e gerou uma caixa duplicada/falsa de laptop. Em 0,10, o quarto celular
+apareceu, mas vieram novos falsos sinais. O conjunto serve somente para smoke acadêmico:
+não treina o modelo, não mede qualidade real e não classifica comportamento.
+
 ## Diagnóstico e testes no Windows
 
 ```powershell
@@ -149,6 +242,12 @@ Para um teste invisível e obrigatoriamente limitado a 30 frames:
 multicam camera --no-display --max-frames 30
 ```
 
+Para testar o detector Intel sem substituir o NanoDet padrão:
+
+```powershell
+multicam camera --detector intel
+```
+
 É possível selecionar outra câmera com `--index 1` e escolher explicitamente
 `--backend dshow`, `msmf` ou `any`. O modo automático tenta os backends adequados ao
 sistema e sempre libera o dispositivo ao sair.
@@ -156,10 +255,10 @@ sistema e sempre libera o dispositivo ao sair.
 Gates completos:
 
 ```powershell
-ruff check app main.py tests
-ruff format --check app main.py tests
-mypy app main.py tests
-python -m compileall -q app main.py tests
+ruff check app tests scripts
+ruff format --check app tests scripts
+mypy app tests
+python -m compileall -q app tests scripts
 python -m build
 python -m pip check
 ```
@@ -185,13 +284,22 @@ SHA-256 e roda localmente em OpenCV DNN/CPU. No smoke de 30 frames com limiar of
 0,35, detectou no máximo uma pessoa; limiares 0,30 e 0,25 aumentaram falsos sinais e
 foram rejeitados. Isso ainda não prova precisão nem prontidão comercial.
 
+Em 2026-08-18, `Intel/person-detection` foi integrado como alternativa experimental
+`--detector intel`. O YOLO26n FP16/OpenVINO detectou as duas pessoas da imagem pública
+indicada pela Intel, com média de 32,1 ms em 20 inferências; o NanoDet retornou três
+caixas e média de 90,1 ms na mesma amostra. Uma imagem não comprova superioridade. A
+webcam estava indisponível nessa primeira tentativa. Depois, o monitor simultâneo abriu
+a webcam por DirectShow e o celular por MJPEG privado; ambas ficaram online e uma
+pessoa foi observada em cada fonte, sem persistência de frames. A comparação
+representativa de qualidade ainda continua pendente.
+
 ## Estrutura
 
 ```text
 .
 ├── app/                         # fundação, câmera e detecção local
 ├── data/                        # runtime ignorado; pastas antigas não são baseline
-├── tests/                       # 54 testes automatizados
+├── tests/                       # 99 testes e 11 subtestes automatizados
 └── .planning/
     ├── phases/01-foundation/    # evidência histórica preservada
     ├── phases/02-database/      # plano antigo explicitamente superado
@@ -204,6 +312,6 @@ foram rejeitados. Isso ainda não prova precisão nem prontidão comercial.
 ## Como continuar
 
 Leia `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`,
-`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento da SE-02 é medir
-o NanoDet em amostras autorizadas/sintéticas, ainda sem Supabase ou
-classificação de trabalho/relaxamento.
+`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento deve criar um
+pequeno teste controlado e aproximado de laptop/celular com a câmera autorizada antes de
+qualquer integração em tempo real, ainda sem Supabase ou classificação de atividade.

@@ -7,6 +7,7 @@ from typing import Protocol
 
 import cv2
 
+from app.activity import NormalizedWorkZone, detections_in_work_zone
 from app.cameras.opencv_source import Frame
 from app.vision import Detection, PersonDetector
 
@@ -60,15 +61,57 @@ class RunSummary:
     stopped_by: str
 
 
-def annotate_frame(frame: Frame, detections: tuple[Detection, ...]) -> Frame:
+def annotate_frame(
+    frame: Frame,
+    detections: tuple[Detection, ...],
+    *,
+    work_zone: NormalizedWorkZone | None = None,
+    include_exit_hint: bool = True,
+) -> Frame:
     """Return an annotated copy, leaving the camera-owned frame untouched."""
 
     annotated = frame.copy()
+    frame_height, frame_width = frame.shape[:2]
+    detections_in_zone: set[Detection] = set()
+    if work_zone is not None:
+        bounds = work_zone.to_pixel_bounds(
+            frame_width=frame_width,
+            frame_height=frame_height,
+        )
+        detections_in_zone = set(
+            detections_in_work_zone(
+                detections,
+                work_zone,
+                frame_width=frame_width,
+                frame_height=frame_height,
+            )
+        )
+        zone_color = (255, 180, 40)
+        cv2.rectangle(
+            annotated,
+            (bounds.left, bounds.top),
+            (bounds.right - 1, bounds.bottom - 1),
+            zone_color,
+            2,
+        )
+        cv2.putText(
+            annotated,
+            "Area de trabalho",
+            (bounds.left + 6, max(16, bounds.top + 18)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            zone_color,
+            1,
+            cv2.LINE_AA,
+        )
     for detection in detections:
         top_left = (detection.x, detection.y)
         bottom_right = (detection.x + detection.width, detection.y + detection.height)
         color = (0, 180, 255) if detection.source == "upper_body" else (40, 220, 40)
         label = "parte superior" if detection.source == "upper_body" else "pessoa"
+        if work_zone is not None:
+            location = "na area" if detection in detections_in_zone else "fora da area"
+            label = f"{label} - {location}"
         cv2.rectangle(annotated, top_left, bottom_right, color, 2)
         cv2.putText(
             annotated,
@@ -90,16 +133,30 @@ def annotate_frame(frame: Frame, detections: tuple[Detection, ...]) -> Frame:
         2,
         cv2.LINE_AA,
     )
-    cv2.putText(
-        annotated,
-        "Q ou Esc para sair",
-        (12, 54),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.5,
-        (255, 255, 255),
-        1,
-        cv2.LINE_AA,
-    )
+    next_line_y = 54
+    if work_zone is not None:
+        cv2.putText(
+            annotated,
+            f"Na area de trabalho: {len(detections_in_zone)}",
+            (12, next_line_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 180, 40),
+            1,
+            cv2.LINE_AA,
+        )
+        next_line_y += 26
+    if include_exit_hint:
+        cv2.putText(
+            annotated,
+            "Q ou Esc para sair",
+            (12, next_line_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
     return annotated
 
 
@@ -109,6 +166,7 @@ def run_person_detection(
     display: DisplayLike,
     *,
     max_frames: int | None = None,
+    work_zone: NormalizedWorkZone | None = None,
 ) -> RunSummary:
     """Process frames locally and always release camera and display resources."""
 
@@ -127,7 +185,7 @@ def run_person_detection(
             processed += 1
             last_count = len(detections)
             maximum = max(maximum, last_count)
-            if display.show(annotate_frame(frame, detections)):
+            if display.show(annotate_frame(frame, detections, work_zone=work_zone)):
                 stopped_by = "operator"
                 break
             if max_frames is not None and processed >= max_frames:

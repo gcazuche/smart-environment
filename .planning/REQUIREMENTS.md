@@ -80,14 +80,16 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Status:** em andamento; abertura, erro, cancelamento/exceção e liberação foram
   cobertos, mas timeout e ciclos repetidos ainda serão ampliados.
 
-### CAM-003 — Frames transitórios
+### CAM-003 — Frames transitórios e visualização local
 
 - **Descrição:** manter frames somente em buffers de memória limitados no baseline.
 - **Fase:** SE-02 | **Prioridade:** crítico | **Dependências:** CAM-001, PRIV-001.
-- **Aceite:** nenhum frame/recorte entra em banco, rede, arquivo, log, cache ou crash
-  dump do aplicativo; buffer é descartado após uso.
-- **Status:** implementado no caminho atual de um frame por vez; nenhuma API de
-  arquivo/rede foi adicionada. Crash dump e inspeção sistêmica permanecem fora desta prova.
+- **Aceite:** nenhum frame/recorte entra em banco, arquivo, log, cache, crash dump ou
+  internet; somente o JPEG anotado mais recente pode circular em loopback para o
+  dashboard local autorizado e deve ser substituído continuamente em memória.
+- **Status:** implementado com um buffer JPEG limitado por câmera, sem writer; o endpoint
+  usa apenas `127.0.0.1`, `no-store` e valida a origem local. Crash dump e inspeção
+  sistêmica permanecem fora desta prova.
 
 ### CAM-004 — Saúde e estado desconhecido
 
@@ -116,7 +118,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** OCC-001, PRIV-003.
 - **Aceite:** evento possui somente campos permitidos, janela finita e granularidade
   configurada; tracking efêmero não persiste além da janela necessária.
-- **Status:** pendente.
+- **Status:** geometria normalizada e contagem espacial volátil implementadas por câmera;
+  janela temporal, evento e tracking ainda pendentes.
 
 ### OCC-003 — Incerteza e qualidade
 
@@ -139,12 +142,13 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 
 ### ACT-001 — Estados observáveis e inconclusivo
 
-- **Descrição:** estimar `trabalho_aparente`, `pausa_aparente` ou `inconclusivo` a partir
-  de sinais visuais definidos, sem afirmar intenção ou produtividade.
+- **Descrição:** estimar `atividade_compativel`, `uso_celular_aparente`,
+  `pausa_aparente`, `ausente` ou `inconclusivo` a partir de sinais visuais definidos,
+  sem afirmar distração, intenção ou produtividade.
 - **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** OCC-001, OCC-003.
 - **Aceite:** critérios são explícitos e testáveis; baixa confiança ou atividade ambígua
   resulta em `inconclusivo`; a UI usa linguagem de estimativa.
-- **Status:** pendente.
+- **Status:** contrato e política inicial implementados; inferência visual pendente.
 
 ### ACT-002 — Regras por contexto de trabalho
 
@@ -153,7 +157,8 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Fase:** SE-04 | **Prioridade:** crítico | **Dependências:** GOV-002, ACT-001.
 - **Aceite:** não existe regra universal oculta; versão, autor, justificativa e período
   de validade da configuração são auditáveis.
-- **Status:** pendente.
+- **Status:** contexto `office-computer`, versão inicial e área independente por câmera
+  definidos; autoria, justificativa, validade e seleção dinâmica ainda pendentes.
 
 ### ACT-003 — Rastreamento efêmero por sessão
 
@@ -297,14 +302,16 @@ aposentados e não serão reutilizados. O histórico permanece no Git.
 - **Status:** layout responsivo, semântica e lint de acessibilidade implementados;
   verificação visual de zoom, contraste e tamanhos-alvo permanece pendente.
 
-### WEB-004 — Nenhum vídeo exposto
+### WEB-004 — Vídeo local restrito
 
-- **Descrição:** não publicar stream, frame, URL de câmera ou credencial no dashboard.
+- **Descrição:** mostrar frames anotados no dashboard local sem expor stream, URL da
+  câmera ou credencial na internet.
 - **Fase:** SE-06 | **Prioridade:** crítico | **Dependências:** CAM-003.
-- **Aceite:** rotas, bundle, respostas e armazenamento do navegador não contêm pixels
-  ou endpoints de streaming no MVP.
-- **Status:** atendido no protótipo visual: apenas ilustração CSS e dados simulados,
-  sem stream, frame, URL de câmera ou cliente de rede; revalidar na integração.
+- **Aceite:** endpoint de frame limitado a loopback e câmeras cadastradas, acesso aceito
+  somente do dashboard local, `no-store`, nenhum frame persistido e site publicado sem
+  vídeo real até existir backend remoto autenticado.
+- **Status:** implementado no protótipo local com JPEG atualizado e caixas do detector;
+  acesso sem origem local recebe 403 e a versão publicada mantém estado informativo.
 
 ## Sustentabilidade
 

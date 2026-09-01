@@ -1,8 +1,8 @@
 # Roadmap GSD — Smart Environment
 
 Versão: 1.0
-Atualizado em: 2026-08-11
-Status global: NanoDet da SE-02 integrado; avaliação representativa pendente
+Atualizado em: 2026-08-23
+Status global: smoke sintético de objetos concluído; avaliação representativa pendente
 
 ## Como ler este roadmap
 
@@ -59,21 +59,23 @@ individual não fazem parte do MVP; código, dependências, câmera e serviços 
 ## SE-02 — Câmera e detecção local de pessoas
 
 **Status:** em andamento — autorizada em 2026-08-14
-**Objetivo:** provar primeiro o fluxo visual local usando a webcam do próprio computador.
+**Objetivo:** provar o fluxo visual local usando a webcam do computador e um celular
+Android autorizado como câmera de rede privada.
 
 **Entregas:** contrato de câmera, fonte simulada, adaptador OpenCV com fallback de
-backend, NanoDet substituível para corpo inteiro/parcial e múltiplas pessoas, caixas,
-contagem, CLI local e encerramento seguro.
+backend, NanoDet/Intel substituíveis, caixas, contagem, CLI local, JPEG anotado volátil,
+dashboard local com duas câmeras e encerramento seguro.
 
 **Aceite:** testes simulados cobrem abertura/leitura/falha/liberação e detecção 0/1/N;
-a webcam autorizada abre e fecha em ciclo limitado; a interface exibe caixas e contagem;
-nenhum frame é gravado, enviado pela rede ou incluído em logs.
+a webcam e o celular autorizados abrem e fecham em ciclo limitado; a interface local
+exibe vídeo, caixas e contagem; nenhum frame é gravado, enviado à internet ou incluído
+em logs, e o endpoint de imagem permanece em loopback com origem restrita.
 
 **Gate de pessoas:** teste real somente no ambiente controlado do próprio responsável,
 com áudio ausente e sem terceiros incidentais.
 
-**Fora:** classificação trabalhando/relaxando, identidade, Supabase, API, dashboard web,
-armazenamento, várias câmeras e promessa de precisão.
+**Fora:** classificação trabalhando/relaxando, identidade, Supabase, backend remoto,
+armazenamento, mais de duas câmeras e promessa de precisão.
 
 ---
 
@@ -95,11 +97,17 @@ e rollback demonstrados.
 
 ## SE-04 — Ocupação e atividade observável
 
-**Status:** planejada
+**Status:** em andamento — Etapas 1, 2, 3A, 3B e 3C concluídas
 **Objetivo:** transformar detecções em ocupação e estimativas observáveis de atividade.
 
-**Entregas:** tracking curto efêmero; agregação por janela; estados `trabalho aparente`,
-`pausa aparente` e `inconclusivo`; regras configuráveis; métricas de qualidade e limites.
+**Entregas:** tracking curto efêmero; agregação por janela; estados `atividade compatível`,
+`uso aparente de celular`, `pausa aparente`, `ausente` e `inconclusivo`; regras
+configuráveis; métricas de qualidade e limites. O contrato dos estados e os tempos
+iniciais do contexto de escritório estão implementados. A área normalizada por câmera e
+sua contagem espacial volátil também estão prontas; inferência de atividade não começou.
+As referências provisórias incluem três cenas reais não comerciais e seis cenas
+sintéticas sem rosto. O smoke sintético detectou celular em 3/4 cenas esperadas, mas a
+cena ambígua ainda apresentou perda do celular e caixa duplicada/falsa de laptop.
 
 **Aceite:** testes sintéticos/autorizados cobrem cenários normais e adversos; a UI deixa
 claro que o resultado é estimativa; ambiguidade produz `inconclusivo`; nenhuma identidade
@@ -239,6 +247,6 @@ verdes; riscos residuais, licenças e limitações são documentados.
 
 ## Próximo gate
 
-Continuar somente na SE-02 por SEB-017: comparar um detector de corpo parcial com
-licença compatível em material sintético/autorizado e medir acerto, falso positivo,
-latência e CPU. Não iniciar domínio/Supabase nem atividade observável nesse incremento.
+Continuar somente na Etapa 3 de SEB-016: testar laptop, celular e ausência de objeto em
+enquadramento próximo e controlado da câmera autorizada. Não conectar ainda ao monitor
+contínuo nem iniciar pose, tracking, classificador, persistência ou Supabase.

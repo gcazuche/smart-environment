@@ -104,3 +104,17 @@ Após a integração, passaram no Conda: pytest e unittest (54 testes), Ruff, fo
 mypy strict (23 arquivos), compileall, doctor, build sem isolamento e `pip check`. O
 script PowerShell foi analisado pelo parser nativo sem erro; hashes locais do peso e da
 licença coincidiram com os valores fixados; `git diff --check` passou.
+
+## Comparação Intel/OpenVINO — 2026-08-18
+
+- instalador fixado baixou e verificou as fontes Intel e validou peso/IR local;
+- telemetria opcional do OpenVINO foi desativada no ambiente Conda desta máquina;
+- `IntelPersonDetector` passou testes de 0/1/N, filtro de classe, limiar, clipping,
+  frame inválido, hash adulterado, saída inesperada e seleção segura pela CLI;
+- pytest: 60 aprovados; Ruff e mypy strict: aprovados;
+- na imagem `zidane.jpg` indicada pela Intel: Intel detectou 2 pessoas, média 32,1 ms e
+  p95 33,0 ms em 20 inferências; NanoDet retornou 3 caixas, média 90,1 ms e p95 93,3 ms;
+- a webcam 0 não abriu por DirectShow, MSMF ou `any` nesta sessão. Nenhum resultado de
+  webcam Intel é alegado; repetir quando o dispositivo estiver disponível.
+
+A amostra pública é apenas smoke funcional, não dataset nem prova de acurácia.

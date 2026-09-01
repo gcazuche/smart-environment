@@ -1,5 +1,164 @@
 # Changelog GSD
 
+## 2026-08-27 — Dataset autorizado pré-rotulado sem celular
+
+- As 62 fotos autorizadas foram reencodadas localmente com nomes neutros e remoção de
+  metadados; 66 regiões de face, 166 zonas superiores de pessoa e 64 telas foram
+  redigidas, enquanto o ZIP original permaneceu intocado.
+- Auditoria visual separou oito rajadas sem vazamento entre splits e selecionou 33 frames
+  representativos: 22 treino, 5 validação e 6 teste.
+- O mapa YOLO contém somente `person`, `laptop`, `mouse` e `keyboard`; não há celular real,
+  `cell_phone` não aparece no YAML nem nos arquivos de rótulo e ficará para coleta futura.
+- O Intel YOLO26 gerou 27 pré-rótulos de pessoa, 2 de laptop, 12 de mouse e 21 de teclado.
+  A inspeção confirmou omissões e falsos positivos, por isso o dataset segue
+  `ready_for_training=false` e ainda não houve fine-tuning.
+- Fingerprints vinculam a divisão às imagens auditadas; JPEGs, hashes, cenas e IDs foram
+  verificados. O caminho está sob OneDrive, então eventual sincronização do Windows deve
+  ser confirmada antes de alegar que os derivados não saíram do computador.
+- 115 testes e 11 subtestes, Ruff, formatação, mypy e compileall passaram no Conda
+  `smart-environment`.
+
+## 2026-08-27 — Ambientes agrupam seus dispositivos
+
+- A ação **Ver ambiente** deixou de ser decorativa e agora abre uma visão dedicada do
+  ambiente selecionado.
+- A visão reúne todas as câmeras que compartilham o mesmo ambiente, com total de
+  dispositivos, câmeras online e pessoas detectadas no momento.
+- Cada câmera continua com sua prévia anotada e pode ser aberta em seu detalhe individual;
+  a navegação também oferece retorno para a lista de ambientes.
+- Build Vinext, ESLint, testes web e 99 testes Python passaram após o ajuste.
+
+## 2026-08-27 — Marca e linguagem da interface
+
+- A marca do cabeçalho e da tela de acesso deixou de usar o gráfico de barras padrão;
+  agora há um espaço neutro reservado para inserir a logo definitiva.
+- A linguagem visível do dashboard foi revisada para retirar referências a protótipo,
+  contexto acadêmico, demonstração e dados simulados.
+- Build Vinext, ESLint e os testes de renderização passaram após a revisão.
+
+## 2026-08-27 — Visão geral focada em indicadores
+
+- O bloco de prévia “Suas câmeras” foi retirado da página inicial para deixar o resumo
+  mais limpo e coerente.
+- A lista completa, prévias anotadas e detalhes dos dispositivos continuam disponíveis
+  na seção **Câmeras** da navegação.
+- Build Vinext, ESLint e os testes de renderização passaram após o ajuste.
+
+## 2026-08-27 — Acesso demonstrativo e perfil do dashboard
+
+- A rota principal agora inicia em uma tela de login antes de exibir o painel.
+- O protótipo aceita e-mail válido e senha mínima de seis caracteres, guarda somente
+  metadados temporários em `sessionStorage` e nunca persiste a senha.
+- O perfil do administrador deixou de ser decorativo: abre um modal com os dados da
+  sessão e oferece logout; em telas pequenas há um atalho equivalente no cabeçalho.
+- O polling do agente local só é ativado enquanto há sessão, e o logout limpa a sessão e
+  interrompe as leituras do dashboard.
+- Supabase Auth, backend remoto, expiração/revogação e permissões continuam pendentes;
+  esta etapa é exclusivamente um fluxo de UX para o TCC.
+- Build Vinext, ESLint e os dois testes de renderização passaram.
+
+## 2026-08-23 — Referências sintéticas sem rosto
+
+- Seis cenas independentes foram geradas para o TCC com pessoas fictícias vistas de
+  costas ou mesa vazia; nenhum rosto, identidade, marca ou fotografia de terceiro entrou.
+- Contrato fixa hashes, dimensões, proveniência e objetos esperados por cena; pixels,
+  manifest, relatórios e prévias permanecem fora do Git.
+- No limiar 0,25, laptop apareceu em 4/4 cenas esperadas e celular em 3/4; a cena ambígua
+  perdeu o celular e produziu uma caixa duplicada/falsa de laptop. Média: 41,4 ms.
+- Em 0,10, o quarto celular surgiu com falsos sinais adicionais, portanto o limiar oficial
+  não foi reduzido e o sinal ainda não classifica comportamento.
+- Webcam, monitor contínuo, tracking, pose, classificador, dashboard e Supabase não foram
+  abertos ou integrados nesta etapa.
+- 99 testes e 11 subtestes, Ruff, formatação, mypy strict, compileall, build e `pip check`
+  passaram no Conda `smart-environment`.
+
+## 2026-08-22 — Smoke offline de objetos de escritório
+
+- O núcleo YOLO26/OpenVINO foi generalizado com lista explícita de classes, preservando o
+  adaptador de pessoas e sem baixar novo modelo ou dependência.
+- Novo detector permite apenas `laptop`, `mouse`, `keyboard` e `cell_phone`; saídas fora
+  da lista falham fechado e nunca geram rótulo de atividade.
+- Nas três referências públicas, encontrou dois laptops corretos, com média de 43,2 ms;
+  não encontrou o celular visível. O diagnóstico em 0,10 produziu o mesmo resultado.
+- Relatório JSON e três prévias anotadas foram gravados em `data/evaluations/`, fora do
+  Git. Webcam, celular, monitor contínuo, dashboard e Supabase não foram abertos/alterados.
+- 97 testes e 11 subtestes, Ruff, formatação, mypy strict, compileall, build e `pip check`
+  passaram no Conda `smart-environment`.
+
+## 2026-08-22 — Referências reais de estações de trabalho
+
+- Três imagens de escritórios ocupados do dataset específico no Hugging Face foram
+  baixadas, revisadas visualmente e registradas com origem, licença, dimensões e SHA-256.
+- Preparador reproduzível usa HTTPS restrito, download limitado, hashes fixados, validação
+  JPEG e falha fechada; pixels e manifest local permanecem fora do Git.
+- Uma seleção automática por coocorrência do Open Images foi rejeitada e removida depois
+  que a inspeção revelou cenas sem contexto real de estação de trabalho.
+- A licença CC-BY-NC-SA-4.0 limita o material ao TCC não comercial. Três imagens não
+  sustentam treinamento, métrica representativa nem rótulo de produtividade/distração.
+- 92 testes e 11 subtestes, Ruff, formatação, mypy strict, compileall, build e `pip check`
+  passaram no Conda `smart-environment`.
+
+## 2026-08-22 — Área da estação de trabalho por câmera
+
+- Região retangular normalizada e validada adicionada sem dependência nova, funcionando
+  de forma consistente em resoluções diferentes.
+- Webcam e celular aceitam áreas independentes; o padrão neutro cobre o frame inteiro
+  até que cada enquadramento seja calibrado.
+- Prévia local desenha a área e indica pessoas dentro/fora por sobreposição geométrica;
+  a API adiciona somente geometria e contagem agregada volátil.
+- Estar dentro ou fora da área não classifica atividade, distração ou produtividade.
+- 87 testes e 11 subtestes, Ruff, formatação, mypy strict, compileall, build local e
+  `pip check` passaram no Conda `smart-environment`.
+- Dashboard permaneceu compatível: ESLint, build Vinext e 2 testes de renderização passaram.
+
+## 2026-08-22 — Contrato inicial de atividade observável
+
+- Contexto inicial limitado a uma pessoa em estação fixa de escritório com computador.
+- Cinco estados estáveis definidos: atividade compatível, uso aparente de celular, pausa
+  aparente, ausente e inconclusivo.
+- Política `office-computer` versionada registra janela de 10 s e limiares temporais
+  iniciais, todos validáveis e calibráveis sem dependência nova.
+- Contrato proíbe identidade, produtividade real, ranking e punição automática; celular
+  descreve somente o objeto observado e não recebe o rótulo de distração.
+- Etapa não abriu câmera, classificou frames, alterou dashboard ou persistiu eventos.
+- 77 testes e 5 subtestes, Ruff, formatação, mypy strict, compileall, build local e
+  `pip check` passaram no Conda `smart-environment`.
+
+## 2026-08-18 — Vídeo anotado no dashboard local
+
+- O agente mantém somente o JPEG anotado mais recente de cada câmera em memória e o
+  substitui continuamente; nenhum writer de imagem foi adicionado.
+- Endpoints de frame usam loopback, `no-store`, IDs validados e exigem origem ou
+  referência do dashboard local; acesso sem esse contexto recebe 403.
+- Os cartões e detalhes das câmeras agora exibem vídeo real com as caixas verdes do
+  detector quando abertos em `localhost`.
+- Smoke real retornou JPEG para webcam e celular, com ambas as fontes online; a versão
+  publicada continua sem vídeo real até existir backend remoto autenticado.
+
+## 2026-08-18 — Dashboard preparado para computador e celular
+
+- Fonte OpenCV de rede privada adicionada para MJPEG/RTSP do celular, com rejeição de
+  endereços públicos e credenciais embutidas.
+- Agente multicâmera local processa webcam e celular com Intel/OpenVINO e entrega ao
+  dashboard somente contagens, estado, backend e latência; frames não saem do processo.
+- Dashboard passou a listar os dois dispositivos e consultar a API apenas em localhost.
+- 68 testes Python, Ruff, mypy, build Vinext, ESLint e testes web foram aprovados.
+- Terceira versão privada do dashboard publicada após alinhar o contrato da API.
+- No teste físico, webcam/DirectShow e celular/MJPEG ficaram simultaneamente online; a
+  leitura observada indicou uma pessoa em cada fonte e nenhum frame foi persistido.
+
+## 2026-08-18 — Intel Person Detection integrado para comparação
+
+- YOLO26n FP16 via OpenVINO entrou como detector experimental selecionável por
+  `multicam camera --detector intel`; NanoDet permanece como padrão e fallback.
+- Ambiente Conda recebeu versões fixadas de OpenVINO, Ultralytics e cliente Hugging Face.
+- Revisão Intel, fontes, peso e artefatos exportados têm SHA-256 verificados; nada entrou
+  no Git em `models/`.
+- Em uma amostra pública indicada pela Intel, o novo detector retornou duas pessoas e
+  média de 32,1 ms; NanoDet retornou três caixas e 90,1 ms. Não há conclusão de acurácia.
+- 60 testes, Ruff e mypy strict passaram. A webcam não abriu nos backends Windows nesta
+  tentativa; o smoke de hardware deve ser repetido quando o dispositivo estiver livre.
+
 ## 2026-08-14 — NanoDet oficial integrado
 
 - NanoDet-m-plus-1.5x do OpenCV/Hugging Face substitui HOG/cascade como padrão da CLI.

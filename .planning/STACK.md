@@ -1,6 +1,6 @@
 # Stack técnica — Smart Environment
 
-Atualizado em: 2026-08-14
+Atualizado em: 2026-08-22
 
 O ambiente ativo é recriado por `environment.yml` no Conda `smart-environment`.
 `uv.lock` permanece somente como evidência histórica. Uma biblioteca candidata não é
@@ -16,6 +16,9 @@ tratada como instalada, segura ou compatível sem evidência.
 | API | FastAPI + servidor ASGI | candidata | versão pinada, contratos, auth e testes de abuso |
 | Captura | OpenCV `4.13.0.92`, CPU-first | selecionada para SE-02 | fonte simulada, lifecycle e matriz Windows |
 | Detecção de pessoas | NanoDet-m-plus-1.5x ONNX via OpenCV DNN/CPU | baseline ativo de PoC | Apache-2.0, revisão/hash fixados; medir falsos sinais e latência |
+| Detector experimental | Intel Person Detection, YOLO26n FP16 via OpenVINO 2026.2.1 | integrado para comparação acadêmica | revisão/hashes fixados; AGPL-3.0; medir webcam e dataset |
+| Atividade observável | contrato Python tipado + zonas normalizadas + objetos COCO restritos | smoke offline detectou 2 laptops e 0 celulares, sem inferência de atividade | validar celular e negativos em câmera controlada antes de integrar |
+| Referências de estação | 3 JPEGs revisados do Hugging Face, CC-BY-NC-SA-4.0 | smoke qualitativo não comercial, hashes fixados | substituir/complementar antes de treinamento, métricas ou produto |
 | Persistência central | Supabase/PostgreSQL | preferencial, não validada | Auth, RLS, região, quota, custo, backup e restore |
 | ORM/migrações | SQLAlchemy + Alembic | candidatas | schema mínimo, upgrade/downgrade e transações |
 | Outbox local | SQLite | candidata | confinamento, limites, retenção e idempotência |
@@ -30,6 +33,8 @@ tratada como instalada, segura ou compatível sem evidência.
 O código atual usa a fundação Python, OpenCV e NumPy fixados em `pyproject.toml`; o
 Conda oficial instala o projeto editável por `environment.yml`. O NanoDet é baixado
 separadamente do Hugging Face por script com revisão e SHA-256 fixados.
+O Intel Person Detection é opcional, instalado no mesmo Conda e exportado localmente;
+Ultralytics fica restrito à preparação do modelo e OpenVINO executa a inferência.
 
 ## Itens retirados do baseline
 
@@ -68,7 +73,7 @@ uma nova decisão, justificativa proporcional, licença e gate de privacidade.
 ## Decisões ainda abertas
 
 - framework web, biblioteca de gráficos e estratégia Realtime;
-- detector de produção após medir o baseline NanoDet e comparar alternativas;
+- detector final após medir NanoDet e Intel/OpenVINO em amostras representativas;
 - versões de FastAPI, OpenCV, SQLAlchemy, Alembic e SDKs;
 - região/plano do Supabase e requisitos de residência/restore;
 - empacotamento da borda e implantação do backend;

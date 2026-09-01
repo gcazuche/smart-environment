@@ -50,3 +50,4 @@ models/
 
 # Reports that may contain environment-specific details
 reports/private/
+tmp/

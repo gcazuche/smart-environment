@@ -1,6 +1,6 @@
 # SE-02 — Pesquisa técnica
 
-Atualizado em: 2026-08-14
+Atualizado em: 2026-08-18
 
 ## Escolha do primeiro detector
 
@@ -57,6 +57,21 @@ que normalmente apenas uma pessoa oferece bom desempenho. Como o produto precisa
 contar várias pessoas, NanoDet foi preferido. YOLOX é maior e mais lento nos benchmarks
 oficiais do mesmo Zoo. Imagens aleatórias da internet não foram incorporadas: o próximo
 gate usará amostras autorizadas/sintéticas com origem e licença registradas.
+
+## Intel Person Detection para comparação — 2026-08-18
+
+O repositório `Intel/person-detection` descreve YOLO26 filtrado para `person`, exportado
+para OpenVINO em FP32, FP16 ou INT8. Para o primeiro teste foi escolhido YOLO26n FP16:
+INT8 exige calibração representativa e a própria Intel avisa que uma única imagem de
+calibração não basta para produção.
+
+- revisão Intel: `b86aaa534de9e93aad967fbaf89d93aa0fb4ba94`;
+- OpenVINO `2026.2.1`, Ultralytics `8.4.108` e Hugging Face Hub `1.25.1`;
+- entrada 640 × 640; saída `[1, 300, 6]`; filtro COCO `person=0`, limiar 0,4;
+- inferência local; nenhum endpoint Hugging Face e nenhum envio de frame.
+
+A página Intel declara MIT, mas o peso-base Ultralytics é AGPL-3.0 por padrão. O uso
+foi aceito apenas para TCC acadêmico aberto; produto privado/comercial permanece fora.
 
 ## Threat model resumido
 

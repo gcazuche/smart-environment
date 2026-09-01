@@ -1,14 +1,14 @@
 # Registro de riscos — Smart Environment
 
-Atualizado em: 2026-08-11
+Atualizado em: 2026-08-23
 Postura: alto risco por câmeras em ambiente de trabalho; redução antes de expansão
 
 | ID | Risco | Nível | Tratamento/gate | Estado |
 |---|---|---|---|---|
-| R-001 | Ocupação ser convertida em vigilância comportamental ou punição | crítico | excluir distração/produtividade do MVP; GOV-002/GOV-004; revisão humana | mitigado no plano; controle técnico pendente |
+| R-001 | Ocupação ser convertida em vigilância comportamental ou punição | crítico | estados estritamente observáveis; sem rótulo automático de distração, score ou punição; GOV-002/GOV-004; revisão humana | contrato inicial mitigado; controles de UI/API pendentes |
 | R-002 | Biometria ser reintroduzida sem necessidade | crítico | schema sem identidade; novo projeto/RIPD/aprovação para qualquer mudança | mitigado no plano |
 | R-003 | Eventos agregados permitirem reidentificação por horário/zona vazia | alto | granularidade mínima, limiar de grupo, restrição de consulta/exportação | aberto; parâmetros unspecified |
-| R-004 | Frames vazarem por arquivo, log, cache, trace ou rede | crítico | buffers limitados; invariant e regressões de zero persistência | caminho local sem writer/rede; auditoria ampla pendente |
+| R-004 | Frames vazarem por arquivo, log, cache, trace ou internet | crítico | um JPEG volátil por câmera; loopback/origem local/no-store; regressões de zero persistência | visualização local implementada; backend remoto e auditoria ampla pendentes |
 | R-005 | Câmera falhar e sistema declarar ambiente vazio | alto | estado `unknown`, health e último sucesso; nunca inferir vazio da falha | aberto |
 | R-006 | Contagem errada orientar decisões inadequadas | alto | medir FP/FN por cenário, confiança, aviso e revisão humana | aberto |
 | R-007 | Alerta patrimonial gerar acusação injusta | alto | linguagem não acusatória, correção e revisão auditada | mitigado no escopo; implementação pendente |
@@ -29,6 +29,11 @@ Postura: alto risco por câmeras em ambiente de trabalho; redução antes de exp
 | R-022 | Documentos antigos guiarem implementação facial acidental | alto | marcar antiga Fase 2 e pesquisas como legado; STATE aponta somente SE-* | tratado em SE-01 |
 | R-023 | Nome técnico `multicam` causar confusão com a marca Smart Environment | médio | declarar legado; planejar migração sem quebrar CLI/configuração | aceito nesta etapa |
 | R-024 | TCC ser apresentado como produto comercial validado | alto | separar protótipo, piloto e produção; registrar evidências e limitações | aberto até SE-12 |
+| R-025 | Celular, pausa, leitura ou reflexão legítimos serem classificados como mau desempenho | crítico | descrever apenas sinais aparentes, manter `inconclusivo`, regras por contexto, janela temporal, validação e revisão humana | contrato inicial mitigado; classificador ainda inexistente |
+| R-026 | Área mal calibrada excluir pessoas ou produzir contagem espacial enganosa | alto | coordenadas normalizadas validadas, padrão neutro de frame inteiro, sobreposição explícita, prévia visível e calibração por câmera | controles técnicos implementados; calibração física pendente |
+| R-027 | Conjunto pequeno/não comercial ser tratado como base representativa | alto | limitar a referência a smoke qualitativo; exibir licença/limitações; exigir dados próprios autorizados e dataset maior para métricas | três imagens revisadas e manifestadas; avaliação representativa continua aberta |
+| R-028 | Celular pequeno/ocluído não ser detectado e gerar falsa conclusão de trabalho | crítico | objeto ausente na saída significa `sem evidência`, nunca ausência real; testar aproximação/negativos e manter `inconclusivo` | falha nas imagens reais e em 1/4 cenas sintéticas no limiar 0,25; sinal ainda não aprovado |
+| R-029 | Imagens sintéticas superestimarem qualidade em câmeras reais | alto | separar resultados sintéticos, testar compressão/distância/movimento e substituir por material real autorizado antes de métricas | 6 cenas sintéticas servem apenas de ponte; 3/4 celulares em 0,25 e erro na cena ambígua |
 
 ## Riscos aceitos na Etapa SE-01
 

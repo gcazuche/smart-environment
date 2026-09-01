@@ -1,7 +1,7 @@
 # SE-02 — Plano atômico
 
-Data: 2026-08-14
-Status: NanoDet integrado; avaliação representativa pendente
+Data: 2026-08-18
+Status: NanoDet e Intel/OpenVINO integrados; avaliação representativa pendente
 
 | ID | Tarefa | Prioridade | Risco | Estado |
 |---|---|---|---|---|
@@ -12,10 +12,13 @@ Status: NanoDet integrado; avaliação representativa pendente
 | SE-02-05 | integrar CLI e testes de regressão | P0 | médio | concluída |
 | SE-02-06 | executar smoke autorizado e gates | P0 | alto | concluída com ressalva de qualidade |
 | SE-02-07 | revisar, documentar e criar checkpoint | P1 | médio | concluída |
+| SE-02-08 | integrar Intel Person Detection como alternativa | P1 | médio | concluída com smoke de imagem; webcam pendente |
 
 SEB-017 substituiu o padrão da CLI por NanoDet ONNX oficial, capaz de múltiplas pessoas
 e corpos parciais. O smoke detectou presença, mas o modelo não deve ser promovido a
 produção sem conjunto autorizado/sintético, falsos sinais, latência e CPU medidos.
+O Intel YOLO26n/OpenVINO foi adicionado atrás do mesmo contrato para comparação; uma
+amostra pública favoreceu o Intel, mas ainda não existe evidência representativa.
 
 ## Contrato esperado
 

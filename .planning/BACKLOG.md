@@ -33,8 +33,8 @@ Atualizado em: 2026-08-14
 | SEB-013 | Implementar buffer transitório e descarte de frames | SE-02 | CAM-003, OPS-001, PRIV-002 | concluída no loop de um frame por vez |
 | SEB-014 | Selecionar detector CPU-first e registrar licença | SE-02 | OCC-001 | concluída — NanoDet OpenCV/HF, Apache-2.0, revisão/hash fixados |
 | SEB-015 | Implementar detecção 0/1/N, caixas e contagem | SE-02 | OCC-001, OCC-003 | concluída com NanoDet em testes; smoke real detectou presença |
-| SEB-016 | Implementar estados observáveis e tracking efêmero | SE-04 | ACT-001 a ACT-003, OCC-002, OCC-004 | pendente |
-| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | em andamento — NanoDet integrado; dataset/métricas pendentes |
+| SEB-016 | Implementar estados observáveis e tracking efêmero | SE-04 | ACT-001 a ACT-003, OCC-002, OCC-004 | em andamento — Etapa 3D preparou 33 imagens autorizadas de pessoa/laptop/mouse/teclado, sem celular; pré-rótulos e privacidade ainda exigem revisão humana antes de treino, pose, tracking ou classificação |
+| SEB-017 | Avaliar qualidade e zero persistência de pixels | SE-02/SE-04 | TEST-003, PRIV-002 | em andamento — webcam e Android integrados; três imagens qualitativas não substituem dataset representativo |
 | SEB-018 | Implementar ingestão autenticada | SE-05 | API-001, SEC-003 | pendente |
 | SEB-019 | Implementar outbox, retry e idempotência | SE-05 | API-002, API-003 | pendente |
 | SEB-020 | Instrumentar logs e métricas minimizados | SE-05 | API-004, SEC-004 | pendente |
@@ -82,6 +82,7 @@ retorno exige nova autorização, finalidade e gate de risco.
 
 ## Próxima tarefa recomendada
 
-Concluir `SEB-017` com amostras autorizadas/sintéticas e métricas de falso positivo,
-falso negativo e latência. Não conectar dados reais, Supabase ou classificação de
-atividade sem etapa própria.
+Continuar somente a Etapa 3D de `SEB-016`: revisar as 33 imagens pré-rotuladas, corrigir
+falsos positivos e omissões e garantir exemplos de cada classe em treino e avaliação.
+`cell_phone` permanece fora até uma coleta futura própria. Não treinar, integrar ao loop,
+adicionar pose/tracking/classificação, persistir dados ou conectar Supabase antes do gate.

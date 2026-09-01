@@ -5,6 +5,13 @@ from app.cameras.opencv_source import (
     CameraOpenError,
     CameraReadError,
     OpenCVCamera,
+    OpenCVNetworkCamera,
 )
 
-__all__ = ["CameraError", "CameraOpenError", "CameraReadError", "OpenCVCamera"]
+__all__ = [
+    "CameraError",
+    "CameraOpenError",
+    "CameraReadError",
+    "OpenCVCamera",
+    "OpenCVNetworkCamera",
+]

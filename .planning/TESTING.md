@@ -1,6 +1,6 @@
 # Estratégia de testes — Smart Environment
 
-Atualizado em: 2026-08-14
+Atualizado em: 2026-08-23
 
 ## Princípios
 
@@ -64,6 +64,13 @@ Ainda não medem qualidade visual representativa nem validam Supabase, API ou in
 
 ### SE-04 — Ocupação
 
+- enumeração contém exatamente os cinco estados aprovados e valores estáveis;
+- política `office-computer` é versionada, imutável e rejeita limiares incoerentes;
+- área normalizada rejeita valores inválidos e se mantém limitada em diferentes resoluções;
+- associação espacial usa apenas sobreposição geométrica e não cria identidade;
+- falha de câmera remove contagem espacial obsoleta;
+- falha/baixa confiança levam a `inconclusivo`, nunca a `ausente` ou avaliação negativa;
+- uso aparente de celular não é representado como distração ou improdutividade;
 - 0, 1 e N pessoas; parcial/oclusão; luz e densidade;
 - falso positivo, falso negativo e estado `unknown`;
 - agregação de janela, deduplicação e tracking efêmero;
@@ -102,7 +109,8 @@ Antes e depois de um teste controlado, verificar explicitamente:
 
 - arquivos nas áreas de dados/log/cache conhecidas;
 - linhas/objetos gravados no banco e outbox;
-- requisições de rede emitidas pelo processo;
+- requisições de rede emitidas pelo processo, confirmando que o vídeo anotado fica em
+  loopback e que a única entrada externa autorizada é a câmera privada configurada;
 - logs, exceções e artefatos de teste;
 - memória/buffer liberado conforme contrato possível de observar.
 
@@ -116,6 +124,15 @@ arquivo foi criado” quando a evidência verificou apenas um diretório.
 - Não capturar áudio; não testar em banheiros, vestiários, descanso ou áreas privadas.
 - Crianças/adolescentes e escolas ficam fora do primeiro piloto.
 - Não commitar frames, exports, credenciais ou dados reais.
+- As três referências atuais de estações são apenas smoke qualitativo, ficam fora do Git e
+  não contam como dataset representativo nem como ground truth de atividade.
+- As seis referências sintéticas provisórias também ficam fora do Git. Elas cobrem objetos
+  grandes e uma cena ambígua, mas não representam compressão, distância, movimento, luz ou
+  oclusão das câmeras reais e não podem sustentar uma métrica de produção.
+- O smoke de objetos persiste somente prévias derivadas dessas imagens públicas em
+  `data/evaluations/`, também fora do Git. O mesmo vale para as prévias sintéticas. Relatar
+  zero detecções sem baixar o limiar até
+  produzir o resultado desejado; presença de objeto nunca equivale a estado de atividade.
 
 ## Evidência mínima
 

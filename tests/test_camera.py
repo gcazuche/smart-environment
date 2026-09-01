@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from app.cameras import CameraOpenError, CameraReadError, OpenCVCamera
+from app.cameras import CameraOpenError, CameraReadError, OpenCVCamera, OpenCVNetworkCamera
 
 
 class FakeCapture:
@@ -75,3 +75,35 @@ class CameraTests(TestCase):
     def test_negative_index_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             OpenCVCamera(index=-1)
+
+    def test_network_camera_reads_private_mjpeg_source_without_leaking_url(self) -> None:
+        capture = FakeCapture(True)
+        camera = OpenCVNetworkCamera(
+            "http://192.168.1.20:8080/video",
+            capture_factory=lambda url: capture if url else capture,
+        )
+
+        camera.open()
+        self.assertEqual(camera.backend_name, "network")
+        self.assertEqual(camera.read().shape, (20, 30, 3))
+        camera.close()
+        self.assertEqual(capture.releases, 1)
+
+    def test_network_camera_rejects_public_or_credentialed_urls(self) -> None:
+        with self.assertRaisesRegex(ValueError, "rede privada"):
+            OpenCVNetworkCamera("https://example.com/video")
+        with self.assertRaisesRegex(ValueError, "credenciais"):
+            OpenCVNetworkCamera("rtsp://user:secret@192.168.1.20/live")
+
+    def test_network_camera_failure_does_not_disclose_address(self) -> None:
+        capture = FakeCapture(False)
+        camera = OpenCVNetworkCamera(
+            "http://192.168.1.20:8080/video",
+            capture_factory=lambda _url: capture,
+        )
+
+        with self.assertRaises(CameraOpenError) as raised:
+            camera.open()
+
+        self.assertNotIn("192.168.1.20", str(raised.exception))
+        self.assertEqual(capture.releases, 1)

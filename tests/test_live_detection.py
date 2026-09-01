@@ -6,6 +6,7 @@ from unittest import TestCase
 
 import numpy as np
 
+from app.activity import NormalizedWorkZone
 from app.cameras.opencv_source import Frame
 from app.live_detection import annotate_frame, run_person_detection
 from app.vision import Detection
@@ -105,6 +106,19 @@ class LiveDetectionTests(TestCase):
         )
 
         self.assertFalse(np.array_equal(annotated, frame))
+        self.assertEqual(int(frame.sum()), 0)
+
+    def test_annotation_draws_work_zone_without_classifying_activity(self) -> None:
+        frame = np.zeros((80, 120, 3), dtype=np.uint8)
+        zone = NormalizedWorkZone(0.25, 0.25, 0.75, 0.75)
+
+        annotated = annotate_frame(
+            frame,
+            (Detection(35, 25, 20, 30, 0.8),),
+            work_zone=zone,
+        )
+
+        self.assertGreater(int(annotated.sum()), 0)
         self.assertEqual(int(frame.sum()), 0)
 
     def test_non_positive_limit_is_rejected_before_opening(self) -> None:
