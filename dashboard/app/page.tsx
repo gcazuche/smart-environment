@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { clearLocalSession, LoginScreen, ProfileModal, readLocalSession, userInitials, type AuthUser } from "./auth";
+import { BrandLogo } from "./brand-logo";
 
 type Section = "overview" | "cameras" | "environments" | "indicators" | "alerts";
 type CameraStatus = "online" | "offline" | "waiting";
@@ -206,9 +207,9 @@ export default function Home() {
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <button className="brand" type="button" onClick={() => navigate("overview")}>
-          <span className="brand-mark logo-slot" role="img" aria-label="Espaço reservado para a logo" />
-          <span>Smart<br />Environment</span>
+        <button className="brand" type="button" aria-label="Smart Environment — ir para visão geral" onClick={() => navigate("overview")}>
+          <BrandLogo className="brand-full" />
+          <BrandLogo variant="symbol" className="brand-compact" />
         </button>
 
         <nav aria-label="Navegação principal">
@@ -240,9 +241,14 @@ export default function Home() {
 
       <section className="workspace">
         <header className="topbar">
-          <div>
-            <p className="eyebrow">{titles[active].eyebrow}</p>
-            <h1>{selectedCamera ? selectedCamera.name : selectedEnvironment ? environmentLabel(selectedEnvironment) : titles[active].title}</h1>
+          <div className="topbar-heading">
+            <button className="mobile-brand" type="button" aria-label="Smart Environment — ir para visão geral" onClick={() => navigate("overview")}>
+              <BrandLogo variant="symbol" />
+            </button>
+            <div className="topbar-titles">
+              <p className="eyebrow">{titles[active].eyebrow}</p>
+              <h1>{selectedCamera ? selectedCamera.name : selectedEnvironment ? environmentLabel(selectedEnvironment) : titles[active].title}</h1>
+            </div>
           </div>
           <div className="top-actions">
             <span className={`simulation-pill ${agentConnected ? "connected" : ""}`}>{agentConnected ? "Agente local conectado" : "Aguardando agente local"}</span>

@@ -25,6 +25,9 @@ test("server-renders the authentication gate before the dashboard", async () => 
   assert.match(html, /Smart Environment/);
   assert.match(html, /Entrar no painel/);
   assert.match(html, /Acesso ao sistema/);
+  assert.match(html, /src="\/brand\/smart-environment-horizontal\.png"/);
+  assert.match(html, /src="\/brand\/smart-environment-symbol\.png"/);
+  assert.doesNotMatch(html, /logo-slot|Espaço reservado para a logo/);
   assert.doesNotMatch(html, /protótipo|acadêmico|demonstração|simulad|TCC/i);
   assert.doesNotMatch(html, /Suas câmeras/);
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
@@ -51,7 +54,11 @@ test("ships product metadata and removes starter assets", async () => {
   assert.match(auth, /readLocalSession/);
   assert.doesNotMatch(auth, /protótipo|acadêmico|demonstração|simulad|TCC/i);
   assert.match(auth, /Sair do painel/);
-  assert.match(auth, /logo-slot/);
+  assert.match(auth, /BrandLogo/);
+  assert.match(page, /BrandLogo/);
+  assert.match(page, /className="brand-compact"/);
+  assert.match(page, /className="mobile-brand"/);
+  assert.doesNotMatch(`${auth}\n${page}\n${css}`, /logo-slot|Espaço reservado para a logo/);
   assert.match(page, /Adicionar câmera/);
   assert.match(page, /Câmera do celular/);
   assert.match(page, /selectedEnvironment/);
@@ -72,4 +79,19 @@ test("ships product metadata and removes starter assets", async () => {
   await access(new URL("../public/og.png", import.meta.url));
   await assert.rejects(access(new URL("../app/_sites-preview", import.meta.url)));
   await assert.rejects(access(new URL("public/favicon.svg", root)));
+});
+
+test("ships the supplied logo files unchanged and with their original proportions", async () => {
+  const assets = [
+    { name: "smart-environment-horizontal.png", width: 363, height: 154 },
+    { name: "smart-environment-symbol.png", width: 167, height: 137 },
+  ];
+  for (const asset of assets) {
+    const source = await readFile(new URL(`../public/brand/${asset.name}`, import.meta.url));
+    const built = await readFile(new URL(`../dist/client/brand/${asset.name}`, import.meta.url));
+    assert.equal(source.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+    assert.equal(source.readUInt32BE(16), asset.width);
+    assert.equal(source.readUInt32BE(20), asset.height);
+    assert.deepEqual(built, source);
+  }
 });

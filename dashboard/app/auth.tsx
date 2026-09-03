@@ -2,6 +2,7 @@
 
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { BrandLogo } from "./brand-logo";
 
 export type AuthUser = {
   email: string;
@@ -87,8 +88,7 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
     <main className="auth-shell">
       <section className="auth-story" aria-label="Sobre o Smart Environment">
         <div className="auth-brand">
-          <span className="brand-mark auth-brand-mark logo-slot" role="img" aria-label="Espaço reservado para a logo" />
-          <span>Smart<br />Environment</span>
+          <BrandLogo />
         </div>
         <div className="auth-story-copy">
           <span className="auth-kicker">AMBIENTE INTELIGENTE</span>
@@ -106,7 +106,7 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
 
       <section className="auth-panel">
         <div className="auth-card">
-          <div className="auth-card-meta"><span className="auth-mini-mark logo-slot" role="img" aria-label="Espaço reservado para a logo" /><span className="auth-secure-pill"><i /> Acesso ao sistema</span></div>
+          <div className="auth-card-meta"><BrandLogo variant="symbol" className="auth-mini-mark" /><span className="auth-secure-pill"><i /> Acesso ao sistema</span></div>
           <p className="eyebrow">BEM-VINDO DE VOLTA</p>
           <h2>Entrar no painel</h2>
           <p className="auth-lead">Acesse a visão geral do seu ambiente e acompanhe os dispositivos conectados.</p>
