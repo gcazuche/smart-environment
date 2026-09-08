@@ -39,6 +39,8 @@ data/*/*
 *.engine
 *.plan
 models/
+tools/streaming/
+*.tsbuildinfo
 
 # Local databases, queues and logs
 *.db

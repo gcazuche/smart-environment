@@ -1,5 +1,27 @@
 # Avisos de terceiros
 
+## Dashboard e persistência DB-01
+
+- `@supabase/supabase-js` 2.115.0: MIT, conforme manifesto do pacote instalado.
+  SDK de autenticação e consultas ao Supabase; versão fixada no package-lock.
+- `@electric-sql/pglite` 0.5.8: Apache-2.0, conforme manifesto do pacote instalado.
+  PostgreSQL em WebAssembly, usado apenas nos testes locais do banco.
+- Estes avisos não substituem os arquivos LICENSE/NOTICE dos pacotes e de suas
+  dependências, que devem ser preservados em distribuições aplicáveis.
+
+## Transmissão local ST-01
+
+- MediaMTX 1.20.1, executável obtido da release oficial (fora do Git), pacote
+  Windows/Linux AMD64 conferido por SHA-256 em `scripts/streaming.py`.
+  Origem e termos: https://github.com/bluenviron/mediamtx/releases/tag/v1.20.1
+- imageio-ffmpeg 0.6.0: https://pypi.org/project/imageio-ffmpeg/0.6.0/
+  Wrapper BSD-2-Clause; os binários FFmpeg incluídos têm seus próprios termos.
+- A publicação usa FFmpeg com libx264. Os avisos/licenças do build FFmpeg/libx264
+  devem ser preservados em eventual redistribuição. Este repositório não inclui
+  seus executáveis. Consulte o `-L` do FFmpeg instalado e https://ffmpeg.org/legal.html.
+- Cliente WHEP implementado no projeto com APIs nativas, sem copiar o reader.js
+  do MediaMTX. Referências de protocolo: https://mediamtx.org/docs/read/web-browsers.
+
 ## OpenCV Zoo NanoDet
 
 - Repositório: `opencv/object_detection_nanodet` no Hugging Face.

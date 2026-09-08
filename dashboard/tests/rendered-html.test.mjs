@@ -4,13 +4,13 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-async function render() {
+async function render(extraHeaders = {}) {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    new Request("http://localhost/", { headers: { accept: "text/html", ...extraHeaders } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
@@ -33,13 +33,23 @@ test("server-renders the authentication gate before the dashboard", async () => 
   assert.doesNotMatch(html, /codex-preview|SkeletonPreview|react-loading-skeleton/);
 });
 
+test("rendered social metadata does not reflect an unknown Host or forwarded host", async () => {
+  const response = await render({ host: "attacker.invalid", "x-forwarded-host": "forwarded.invalid" });
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.doesNotMatch(html, /https?:\/\/(?:attacker|forwarded)\.invalid\/og\.png/);
+  assert.match(html, /Smart Environment/);
+});
+
 test("ships product metadata and removes starter assets", async () => {
-  const [page, auth, layout, css, packageJson] = await Promise.all([
+  const [page, auth, layout, css, packageJson, forms, panels] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/auth.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/management-forms.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/history-panels.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /type Section = "overview" \| "cameras"/);
@@ -48,8 +58,8 @@ test("ships product metadata and removes starter assets", async () => {
   assert.doesNotMatch(page, /Suas câmeras/);
   assert.doesNotMatch(page, /protótipo|acadêmico|demonstração|simulad|TCC/i);
   assert.match(page, /aria-haspopup="dialog"/);
-  assert.match(page, /clearLocalSession/);
-  assert.match(page, /if \(!authUser\) return/);
+  assert.match(page, /session.logout/);
+  assert.match(page, /!session.ready \|\| !session.user/);
   assert.match(auth, /sessionStorage/);
   assert.match(auth, /readLocalSession/);
   assert.doesNotMatch(auth, /protótipo|acadêmico|demonstração|simulad|TCC/i);
@@ -60,7 +70,7 @@ test("ships product metadata and removes starter assets", async () => {
   assert.match(page, /className="mobile-brand"/);
   assert.doesNotMatch(`${auth}\n${page}\n${css}`, /logo-slot|Espaço reservado para a logo/);
   assert.match(page, /Adicionar câmera/);
-  assert.match(page, /Câmera do celular/);
+  assert.match(forms, /Câmera do celular/);
   assert.match(page, /selectedEnvironment/);
   assert.match(page, /onOpenEnvironment/);
   assert.match(page, /EnvironmentDetails/);
@@ -70,8 +80,8 @@ test("ships product metadata and removes starter assets", async () => {
   assert.match(page, /127\.0\.0\.1:8765\/api\/cameras/);
   assert.match(page, /frame\.jpg/);
   assert.match(page, /crossOrigin="anonymous"/);
-  assert.match(page, /Gateway ESP32/);
-  assert.match(page, /Decisão humana obrigatória/);
+  assert.match(forms, /Gateway ESP32/);
+  assert.match(panels, /Decisão humana obrigatória/);
   assert.match(layout, /generateMetadata/);
   assert.match(layout, /\/og\.png/);
   assert.match(css, /@media \(max-width: 680px\)/);

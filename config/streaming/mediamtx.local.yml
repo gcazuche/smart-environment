@@ -1,0 +1,46 @@
+# MediaMTX v1.20.1. Local-only pilot; NOT a LAN/production configuration.
+logLevel: info
+logDestinations: [stdout]
+dumpPackets: false
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass: ""
+    ips: ["127.0.0.1"]
+    permissions:
+      - action: publish
+        path: camera1
+      - action: read
+        path: camera1
+api: false
+metrics: false
+pprof: false
+playback: false
+rtsp: true
+rtspAddress: "127.0.0.1:8554"
+rtspTransports: [tcp]
+rtspEncryption: "no"
+rtspTrustedProxies: []
+rtmp: false
+hls: false
+srt: false
+moq: false
+webrtc: true
+webrtcAddress: "127.0.0.1:8889"
+webrtcEncryption: false
+webrtcAllowOrigins:
+  - "http://localhost:3000"
+  - "http://127.0.0.1:3000"
+webrtcTrustedProxies: []
+webrtcLocalUDPAddress: "127.0.0.1:8189"
+webrtcLocalTCPAddress: ""
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: ["127.0.0.1"]
+webrtcICEServers2: []
+pathDefaults:
+  record: false
+  alwaysAvailable: false
+paths:
+  camera1:
+    source: publisher
+    overridePublisher: false

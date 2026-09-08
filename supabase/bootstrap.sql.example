@@ -1,0 +1,19 @@
+  -- FUTURE SETUP ONLY. Run in the Supabase SQL editor as project owner,
+  -- after the migration and after creating/confirming the first Auth account.
+  -- Replace the email below; no password or service key belongs in this file.
+  -- Run once. Save the organization UUID emitted by the NOTICE.
+  do $$
+  declare
+    first_admin_email text := 'gcazuchesenai@gmail.com';
+    first_admin uuid;
+    organization uuid;
+  begin
+    select id into first_admin from auth.users where lower(email) = lower(first_admin_email);
+    if first_admin is null then raise exception 'Create the Auth user and replace the email before running this script'; end if;
+    if exists(select 1 from public.organization_members where user_id=first_admin) then
+      raise exception 'User is already linked. Inspect the existing organization_members instead of creating a duplicate';
+    end if;
+    insert into public.organizations(name) values ('Smart Environment') returning id into organization;
+    insert into public.organization_members(organization_id,user_id,role) values (organization,first_admin,'admin');
+    raise notice 'VITE_ORGANIZATION_ID=%', organization;
+  end $$;

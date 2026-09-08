@@ -3,11 +3,13 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { BrandLogo } from "./brand-logo";
+import { DashboardDialog } from "./dashboard-dialog";
 
 export type AuthUser = {
+  id?: string;
   email: string;
   name: string;
-  role: "Administrador";
+  role: "Administrador" | "Visualizador" | "Carregando permissões" | "Permissões indisponíveis" | "Acesso local";
 };
 
 const LOCAL_SESSION_KEY = "smart-environment.local-session";
@@ -34,6 +36,7 @@ export function userInitials(name: string) {
 
 export function readLocalSession(): AuthUser | null {
   if (typeof window === "undefined") return null;
+  if (!["localhost","127.0.0.1"].includes(window.location.hostname)) return null;
 
   try {
     const raw = window.sessionStorage.getItem(LOCAL_SESSION_KEY);
@@ -45,32 +48,34 @@ export function readLocalSession(): AuthUser | null {
       return null;
     }
     const email = parsed.email.trim().toLowerCase();
-    return { email, name: nameFromEmail(email), role: "Administrador" };
+    return { email, name: nameFromEmail(email), role: "Acesso local" };
   } catch {
-    window.sessionStorage.removeItem(LOCAL_SESSION_KEY);
     return null;
   }
 }
 
 function saveLocalSession(email: string): AuthUser {
+  if (!["localhost","127.0.0.1"].includes(window.location.hostname)) throw new Error("Configure o serviço de acesso para usar este endereço.");
   const normalizedEmail = email.trim().toLowerCase();
-  const user: AuthUser = { email: normalizedEmail, name: nameFromEmail(normalizedEmail), role: "Administrador" };
+  const user: AuthUser = { email: normalizedEmail, name: nameFromEmail(normalizedEmail), role: "Acesso local" };
   window.sessionStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify({ ...user, issuedAt: Date.now() }));
   return user;
 }
 
 export function clearLocalSession() {
-  if (typeof window !== "undefined") window.sessionStorage.removeItem(LOCAL_SESSION_KEY);
+  try { if (typeof window !== "undefined") window.sessionStorage.removeItem(LOCAL_SESSION_KEY); } catch { /* Storage may be unavailable; no password or remote token is stored here. */ }
 }
 
-export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) {
+export function LoginScreen({ onLogin, authenticate, configurationError="", ready=true }: { onLogin: (user: AuthUser) => void; authenticate?: (email:string,password:string)=>Promise<void>; configurationError?:string; ready?:boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [busy,setBusy]=useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if(busy||!ready)return;
     const normalizedEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalizedEmail)) {
       setError("Digite um e-mail válido para entrar.");
@@ -81,7 +86,10 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
       return;
     }
     setError("");
-    onLogin(saveLocalSession(normalizedEmail));
+    setBusy(true);
+    try{if(authenticate)await authenticate(normalizedEmail,password);else onLogin(saveLocalSession(normalizedEmail));}
+    catch(reason){setError(reason instanceof Error?reason.message:"Não foi possível entrar.");}
+    finally{setBusy(false);}
   };
 
   return (
@@ -111,7 +119,8 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
           <h2>Entrar no painel</h2>
           <p className="auth-lead">Acesse a visão geral do seu ambiente e acompanhe os dispositivos conectados.</p>
 
-          <form className="auth-form" onSubmit={submit} noValidate>
+          {configurationError&&<p className="auth-error" role="alert">{configurationError}</p>}
+          <form className="auth-form" onSubmit={(event)=>void submit(event)} noValidate>
             <label htmlFor="auth-email">E-mail</label>
             <input
               id="auth-email"
@@ -140,7 +149,7 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
               </button>
             </div>
             {error && <p className="auth-error" role="alert">{error}</p>}
-            <button className="auth-submit" type="submit">Entrar no painel <span>→</span></button>
+            <button className="auth-submit" type="submit" disabled={busy||!ready||!!configurationError}>{busy?"Entrando…":"Entrar no painel"} <span>→</span></button>
           </form>
         </div>
       </section>
@@ -148,20 +157,22 @@ export function LoginScreen({ onLogin }: { onLogin: (user: AuthUser) => void }) 
   );
 }
 
-export function ProfileModal({ user, onClose, onLogout }: { user: AuthUser; onClose: () => void; onLogout: () => void }) {
+export function ProfileModal({ user, onClose, onLogout }: { user: AuthUser; onClose: () => void; onLogout: () => Promise<void> }) {
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState("");
+  const logout=async()=>{if(busy)return;setBusy(true);setError("");try{await onLogout();}catch(reason){setError(reason instanceof Error?reason.message:"Não foi possível sair.");}finally{setBusy(false);}};
+  const close=()=>{if(!busy)onClose();};
   return (
-    <div className="modal-backdrop profile-backdrop">
-      <section className="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
-        <button className="modal-close" type="button" onClick={onClose} aria-label="Fechar perfil">×</button>
+    <DashboardDialog title="Perfil" onClose={close}>
         <div className="profile-identity"><span className="avatar profile-avatar">{userInitials(user.name)}</span><div><p className="eyebrow">CONTA ATIVA</p><h2 id="profile-modal-title">{user.name}</h2><span>{user.role}</span></div></div>
         <div className="profile-details">
           <div><small>E-mail</small><strong>{user.email}</strong></div>
           <div><small>Sessão</small><strong>Ativa neste dispositivo</strong></div>
-          <div><small>Permissão atual</small><strong>Administrador</strong></div>
+          <div><small>Permissão no servidor</small><strong>{user.id?user.role:"Ainda não configurada"}</strong></div>
         </div>
         <div className="profile-notice"><strong>Privacidade</strong><p>Os frames das câmeras permanecem locais e transitórios.</p></div>
-        <div className="modal-actions"><button className="secondary-button" type="button" onClick={onClose}>Fechar</button><button className="danger-button" type="button" onClick={onLogout}>Sair do painel</button></div>
-      </section>
-    </div>
+        {error&&<p className="form-feedback" role="alert">{error}</p>}
+        <div className="modal-actions"><button className="secondary-button" type="button" disabled={busy} onClick={close}>Fechar</button><button className="danger-button" type="button" disabled={busy} onClick={()=>void logout()}>{busy?"Saindo…":"Sair do painel"}</button></div>
+    </DashboardDialog>
   );
 }

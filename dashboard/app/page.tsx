@@ -1,17 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { clearLocalSession, LoginScreen, ProfileModal, readLocalSession, userInitials, type AuthUser } from "./auth";
+import { LoginScreen, ProfileModal, userInitials } from "./auth";
+import { useBackendSession } from "./backend-session";
+import type { CameraRecord, EnvironmentRecord, RuleRecord } from "./data-client";
 import { BrandLogo } from "./brand-logo";
+import { StreamPreview } from "./stream-preview";
+import { DashboardClock } from "./dashboard-clock";
+import { CameraForm, EnvironmentForm, RulesDialog } from "./management-forms";
+import { readingAge } from "./dashboard-model";
+import { HistoryPanel, IndicatorsPanel, AlertsPanel } from "./history-panels";
 
-type Section = "overview" | "cameras" | "environments" | "indicators" | "alerts";
+type Section = "overview" | "cameras" | "environments" | "indicators" | "alerts" | "history";
 type CameraStatus = "online" | "offline" | "waiting";
 
 type CameraState = {
   camera_id: string;
+  monitor_id?: string;
+  environment_id?: string;
   name: string;
   environment: string;
-  source: "webcam" | "mjpeg";
+  source: "webcam" | "mjpeg" | "rtsp";
   status: CameraStatus;
   people_count: number;
   detector: string;
@@ -28,30 +37,27 @@ const waitingCameras: CameraState[] = [
   { camera_id: "phone", name: "Câmera do celular", environment: "Escritório", source: "mjpeg", status: "waiting", people_count: 0, detector: "intel_yolo26", backend: "unknown", latency_ms: null, last_seen_at: null, error_code: null },
 ];
 
-const environmentLabels: Record<string, string> = { Escritório: "Escritório principal" };
-
 function environmentLabel(name: string) {
-  return environmentLabels[name] ?? name;
+  return name;
 }
 
-const navigation: Array<{ key: Section; icon: string; label: string; count?: string }> = [
+const navigation: Array<{ key: Section; icon: string; label: string }> = [
   { key: "overview", icon: "⌂", label: "Visão geral" },
-  { key: "cameras", icon: "▦", label: "Câmeras", count: "2" },
+  { key: "cameras", icon: "▦", label: "Câmeras" },
   { key: "environments", icon: "◇", label: "Ambientes" },
   { key: "indicators", icon: "↗", label: "Indicadores" },
-  { key: "alerts", icon: "!", label: "Alertas", count: "2" },
+  { key: "alerts", icon: "!", label: "Alertas" },
+  { key: "history", icon: "◷", label: "Histórico" },
 ];
 
 const titles: Record<Section, { eyebrow: string; title: string }> = {
-  overview: { eyebrow: "QUINTA-FEIRA, 14 DE AGOSTO", title: "Visão geral" },
+  overview: { eyebrow: "PAINEL DO AMBIENTE", title: "Visão geral" },
   cameras: { eyebrow: "MONITORAMENTO", title: "Câmeras" },
   environments: { eyebrow: "ORGANIZAÇÃO", title: "Ambientes" },
   indicators: { eyebrow: "ANÁLISE", title: "Indicadores" },
   alerts: { eyebrow: "ACOMPANHAMENTO", title: "Alertas" },
+  history: { eyebrow: "REGISTROS", title: "Histórico" },
 };
-
-const occupancyBars = [38, 52, 45, 66, 81, 74, 68, 58, 43, 29];
-const occupancyLabels = ["08h", "09h", "10h", "11h", "12h", "13h", "14h", "15h", "16h", "17h"];
 
 function statusLabel(status: CameraStatus) {
   if (status === "online") return "Online";
@@ -60,9 +66,7 @@ function statusLabel(status: CameraStatus) {
 }
 
 function lastReading(camera: CameraState) {
-  if (!camera.last_seen_at) return "Sem leitura";
-  const elapsed = Math.max(0, Math.round((Date.now() - new Date(camera.last_seen_at).getTime()) / 1000));
-  return elapsed < 2 ? "Agora" : `Há ${elapsed}s`;
+  return readingAge(camera.last_seen_at);
 }
 
 function CameraPreview({ camera, large = false }: { camera: CameraState; large?: boolean }) {
@@ -76,7 +80,7 @@ function CameraPreview({ camera, large = false }: { camera: CameraState; large?:
   }, [camera.status]);
 
   const showLiveFrame = camera.status === "online";
-  const frameUrl = `http://127.0.0.1:8765/api/cameras/${camera.camera_id}/frame.jpg?v=${frameVersion}`;
+  const frameUrl = `http://127.0.0.1:8765/api/cameras/${encodeURIComponent(camera.monitor_id ?? camera.camera_id)}/frame.jpg?v=${frameVersion}`;
   return (
     <div className={`camera-preview ${large ? "large" : ""}`}>
       {showLiveFrame && (
@@ -94,7 +98,7 @@ function CameraPreview({ camera, large = false }: { camera: CameraState; large?:
       <div className="camera-frame aggregate-frame" aria-hidden="true">
         <span className="corner tl" /><span className="corner tr" />
         <span className="corner bl" /><span className="corner br" />
-        <strong>{camera.people_count}</strong>
+        <strong>{camera.status === "online" ? camera.people_count : "—"}</strong>
         <span className="detection-label">{camera.people_count === 1 ? "pessoa" : "pessoas"}</span>
       </div>
       <span className="preview-note">{showLiveFrame ? "Vídeo local com detecções — não gravado" : "Vídeo disponível apenas no dashboard local"}</span>
@@ -107,8 +111,8 @@ function CameraDeviceCard({ camera, onOpen }: { camera: CameraState; onOpen: () 
     <article className="device-card" key={camera.camera_id}>
       <CameraPreview camera={camera} />
       <div className="device-card-body">
-        <div className="camera-title"><span className="device-icon">●</span><div><h3>{camera.name}</h3><p>{environmentLabel(camera.environment)} · {camera.source === "webcam" ? "Computador local" : "Rede local"}</p></div><span className={`small-online status-text-${camera.status}`}><i /> {statusLabel(camera.status)}</span></div>
-        <div className="device-summary"><span><small>Pessoas agora</small><strong>{camera.people_count}</strong></span><span><small>Última leitura</small><strong>{lastReading(camera)}</strong></span><span><small>Origem</small><strong>{camera.source === "webcam" ? "Webcam" : "Celular"}</strong></span></div>
+        <div className="camera-title"><span className="device-icon">●</span><div><h3>{camera.name}</h3><p>{environmentLabel(camera.environment)} · {camera.source === "webcam" ? "Computador local" : "Fonte de rede"}</p></div><span className={`small-online status-text-${camera.status}`}><i /> {statusLabel(camera.status)}</span></div>
+        <div className="device-summary"><span><small>Pessoas agora</small><strong>{camera.status === "online" ? camera.people_count : "—"}</strong></span><span><small>Última leitura</small><strong>{lastReading(camera)}</strong></span><span><small>Origem</small><strong>{camera.source === "webcam" ? "Webcam" : camera.source === "rtsp" ? "Câmera IP / RTSP" : "MJPEG / celular"}</strong></span></div>
         <button className="primary-button" type="button" onClick={onOpen}>Abrir detalhes <span>→</span></button>
       </div>
     </article>
@@ -116,29 +120,42 @@ function CameraDeviceCard({ camera, onOpen }: { camera: CameraState; onOpen: () 
 }
 
 export default function Home() {
-  const [authReady, setAuthReady] = useState(false);
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const session = useBackendSession();
+  if (!session.ready || !session.user) return <LoginScreen ready={session.ready} onLogin={session.localLogin} authenticate={session.configured ? session.login : undefined} configurationError={!session.repository ? session.error : ""} />;
+  return <Dashboard key={session.user.id ?? session.user.email} session={session} />;
+}
+
+function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> }) {
+  const { repository, catalog } = session;
+  const authUser = session.user!;
+  const canEdit = catalog?.role === "admin" && !session.loading;
+  const [notice, setNotice] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [active, setActive] = useState<Section>("overview");
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
   const [addCameraOpen, setAddCameraOpen] = useState(false);
+  const [editCamera, setEditCamera] = useState<CameraRecord | null>(null);
+  const [editEnvironment, setEditEnvironment] = useState<EnvironmentRecord | null>(null);
+  const [addEnvironmentOpen, setAddEnvironmentOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [cameraView, setCameraView] = useState<"stream" | "detection">("stream");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("todas");
-  const [cameras, setCameras] = useState<CameraState[]>(waitingCameras);
+  const [telemetry, setCameras] = useState<CameraState[]>(waitingCameras);
   const [agentConnected, setAgentConnected] = useState(false);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setAuthUser(readLocalSession());
-      setAuthReady(true);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+  const environments: EnvironmentRecord[] = catalog?.environments ?? (session.configured ? [] : Array.from(new Set(telemetry.map(camera => camera.environment))).map(name => ({ id: name, name, organization_id: "", version: 1 })));
+  const cameras: CameraState[] = useMemo(() => session.configured ? (catalog?.cameras ?? []).map(record => {
+    const live = record.enabled ? telemetry.find(camera => camera.camera_id === record.monitor_id) : undefined;
+    return { ...(live ?? waitingCameras[0]), camera_id: record.id, monitor_id: record.monitor_id ?? undefined,
+      name: record.name, source: record.source, environment_id: record.environment_id,
+      environment: catalog?.environments.find(item => item.id === record.environment_id)?.name ?? "Ambiente indisponível",
+      status: live?.status ?? "waiting", people_count: live?.people_count ?? 0, last_seen_at: live?.last_seen_at ?? null };
+  }) : telemetry, [session.configured, catalog, telemetry]);
 
   useEffect(() => {
     if (!(["localhost", "127.0.0.1"].includes(window.location.hostname))) return;
-    if (!authUser) return;
     let activeRequest = true;
     let controller: AbortController | undefined;
 
@@ -154,7 +171,10 @@ export default function Home() {
           setAgentConnected(true);
         }
       } catch (error) {
-        if (activeRequest && !(error instanceof DOMException && error.name === "AbortError")) setAgentConnected(false);
+        if (activeRequest && !(error instanceof DOMException && error.name === "AbortError")) {
+          setAgentConnected(false);
+          setCameras((previous) => previous.map((camera) => ({ ...camera, status: camera.status === "waiting" ? "waiting" : "offline" })));
+        }
       }
     };
 
@@ -165,7 +185,7 @@ export default function Home() {
       controller?.abort();
       window.clearInterval(timer);
     };
-  }, [authUser]);
+  }, []);
 
   const visibleCameras = useMemo(
     () => cameras.filter((camera) => {
@@ -176,8 +196,9 @@ export default function Home() {
     [cameras, search, statusFilter],
   );
   const selectedCamera = cameras.find((camera) => camera.camera_id === selectedCameraId) ?? null;
+  const selectedEnvironmentRecord = environments.find(item => item.id === selectedEnvironment);
   const selectedEnvironmentCameras = selectedEnvironment
-    ? cameras.filter((camera) => camera.environment === selectedEnvironment)
+    ? cameras.filter((camera) => (camera.environment_id ?? camera.environment) === selectedEnvironment)
     : [];
 
   const navigate = (section: Section) => {
@@ -186,23 +207,26 @@ export default function Home() {
     setSelectedEnvironment(null);
   };
 
-  const handleLogin = (user: AuthUser) => {
-    setAuthUser(user);
-    setAuthReady(true);
-  };
-
-  const handleLogout = () => {
-    clearLocalSession();
+  const handleLogout = async () => {
+    await session.logout();
     setProfileOpen(false);
-    setAuthUser(null);
+    setAddCameraOpen(false);
+    setEditCamera(null);
+    setEditEnvironment(null);
+    setAddEnvironmentOpen(false);
+    setRulesOpen(false);
     setActive("overview");
     setSelectedCameraId(null);
     setSelectedEnvironment(null);
     setCameras(waitingCameras);
     setAgentConnected(false);
+    setNotice("");
   };
 
-  if (!authReady || !authUser) return <LoginScreen onLogin={handleLogin} />;
+  const savedCamera = (record: CameraRecord) => { session.commitCatalog(authUser.id ?? "", previous => previous ? ({ ...previous, cameras: [...previous.cameras.filter(item => item.id !== record.id), record] }) : null); setNotice("Câmera salva no cadastro. Configure a origem no servidor para iniciar a transmissão."); };
+  const savedEnvironment = (record: EnvironmentRecord) => { session.commitCatalog(authUser.id ?? "", previous => previous ? ({ ...previous, environments: [...previous.environments.filter(item => item.id !== record.id), record] }) : null); setNotice("Ambiente salvo."); };
+  const savedRule = (record: RuleRecord) => { session.commitCatalog(authUser.id ?? "", previous => previous ? ({ ...previous, rules: [...previous.rules.filter(item => item.id !== record.id), record] }) : null); setNotice("Regra salva. Sua aplicação depende do serviço de análise no servidor."); };
+  const dataProps = { repository: catalog ? repository : null, environments, cameras: catalog?.cameras ?? [] };
 
   return (
     <main className="app-shell">
@@ -220,18 +244,20 @@ export default function Home() {
               key={item.key}
               type="button"
               onClick={() => navigate(item.key)}
+              aria-label={item.label}
+              title={item.label}
               aria-current={active === item.key ? "page" : undefined}
             >
               <span className="nav-icon" aria-hidden="true">{item.icon}</span>
               <span>{item.label}</span>
-              {item.count && <span className="nav-count">{item.count}</span>}
+              {item.key === "cameras" && <span className="nav-count">{cameras.length}</span>}
             </button>
           ))}
         </nav>
 
         <div className="sidebar-foot">
-          <div className="system-health"><span /> Sistema operacional</div>
-          <button className="profile" type="button" aria-label="Abrir perfil do administrador" aria-haspopup="dialog" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
+          <div className={`system-health ${agentConnected ? "" : "health-waiting"}`}><span /> {agentConnected ? "Monitor conectado" : "Monitor desconectado"}</div>
+          <button className="profile" type="button" aria-label="Abrir perfil da conta" aria-haspopup="dialog" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
             <span className="avatar">{userInitials(authUser.name)}</span>
             <span><strong>{authUser.name}</strong><small>{authUser.role}</small></span>
             <b aria-hidden="true">•••</b>
@@ -247,12 +273,13 @@ export default function Home() {
             </button>
             <div className="topbar-titles">
               <p className="eyebrow">{titles[active].eyebrow}</p>
-              <h1>{selectedCamera ? selectedCamera.name : selectedEnvironment ? environmentLabel(selectedEnvironment) : titles[active].title}</h1>
+              <h1>{selectedCamera ? selectedCamera.name : selectedEnvironmentRecord ? selectedEnvironmentRecord.name : titles[active].title}</h1>
+              <DashboardClock />
             </div>
           </div>
           <div className="top-actions">
-            <span className={`simulation-pill ${agentConnected ? "connected" : ""}`}>{agentConnected ? "Agente local conectado" : "Aguardando agente local"}</span>
-            <button className="icon-button" type="button" aria-label="Notificações" onClick={() => navigate("alerts")}>♢<i /></button>
+            <span className={`simulation-pill ${agentConnected ? "connected" : ""}`}>{active === "cameras" && cameraView === "stream" ? "Transmissão independente da IA" : agentConnected ? "Agente local conectado" : "Aguardando agente local"}</span>
+            <button className="icon-button" type="button" aria-label="Notificações" onClick={() => navigate("alerts")}>♢</button>
             <button className="account-button" type="button" aria-label="Abrir perfil" aria-haspopup="dialog" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
               <span className="avatar">{userInitials(authUser.name)}</span>
             </button>
@@ -260,11 +287,21 @@ export default function Home() {
         </header>
 
         <div className="content">
+          {!session.configured && <p className="connection-notice" role="status">Acesso local: banco ainda não configurado. Os cadastros e relatórios usarão o Supabase quando você conectar o projeto.</p>}
+          {session.loading && <p role="status">Carregando cadastros e permissões…</p>}
+          {session.error && <div className="form-feedback" role="alert">{session.error} <button type="button" className="text-button" onClick={session.refresh}>Tentar novamente</button></div>}
+          {notice && <p className="connection-notice" role="status">{notice} <button type="button" className="text-button" onClick={() => setNotice("")}>Dispensar</button></p>}
           {active === "overview" && (
-            <Overview cameras={cameras} agentConnected={agentConnected} />
+            <Overview cameras={cameras} agentConnected={agentConnected} connected={!!catalog} onOpenHistory={() => navigate("history")} />
           )}
 
-          {active === "cameras" && !selectedCamera && (
+          {active === "cameras" && <div className="camera-view-switch" role="group" aria-label="Modo de visualização das câmeras">
+            <button type="button" aria-pressed={cameraView === "stream"} onClick={() => { setCameraView("stream"); setSelectedCameraId(null); }}>Transmissão</button>
+            <button type="button" aria-pressed={cameraView === "detection"} onClick={() => setCameraView("detection")}>Detecção local</button>
+          </div>}
+          {active === "cameras" && cameraView === "stream" && <><div className="stream-management"><button className="secondary-button" type="button" onClick={() => setAddCameraOpen(true)}>Adicionar câmera</button></div><StreamPreview /></>}
+
+          {active === "cameras" && cameraView === "detection" && !selectedCamera && (
             <section className="page-stack">
               <div className="page-intro">
                 <div><p className="eyebrow">DISPOSITIVOS CADASTRADOS</p><h2>Todas as câmeras</h2><span>Gerencie cada ponto de monitoramento em um só lugar.</span></div>
@@ -272,7 +309,7 @@ export default function Home() {
               </div>
               <div className="filter-bar">
                 <label className="search-field"><span aria-hidden="true">⌕</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar câmera ou ambiente" aria-label="Buscar câmera ou ambiente" /></label>
-                <label className="select-field"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="todas">Todas</option><option value="online">Online</option><option value="offline">Offline</option></select></label>
+                <label className="select-field"><span>Status</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="todas">Todas</option><option value="online">Online</option><option value="offline">Offline</option><option value="waiting">Aguardando agente</option></select></label>
               </div>
               <div className="camera-grid">
                 {visibleCameras.map((camera) => (
@@ -286,37 +323,41 @@ export default function Home() {
             </section>
           )}
 
-          {active === "cameras" && selectedCamera && (
-            <CameraDetails camera={selectedCamera} onBack={() => setSelectedCameraId(null)} />
+          {active === "cameras" && cameraView === "detection" && selectedCamera && (
+            <CameraDetails camera={selectedCamera} onBack={() => setSelectedCameraId(null)} onEdit={() => { const record = catalog?.cameras.find(item => item.id === selectedCamera.camera_id); if (record) setEditCamera(record); else setNotice("Conecte o banco e cadastre esta câmera para editar sua configuração."); }} />
           )}
 
-          {active === "environments" && !selectedEnvironment && <Environments cameras={cameras} onOpenEnvironment={setSelectedEnvironment} />}
-          {active === "environments" && selectedEnvironment && <EnvironmentDetails name={environmentLabel(selectedEnvironment)} cameras={selectedEnvironmentCameras} onBack={() => setSelectedEnvironment(null)} onOpenCamera={(cameraId) => { setActive("cameras"); setSelectedEnvironment(null); setSelectedCameraId(cameraId); }} />}
-          {active === "indicators" && <Indicators />}
-          {active === "alerts" && <Alerts />}
+          {active === "environments" && !selectedEnvironment && <Environments environments={environments} cameras={cameras} onOpenEnvironment={setSelectedEnvironment} onAdd={() => setAddEnvironmentOpen(true)} />}
+          {active === "environments" && selectedEnvironmentRecord && <EnvironmentDetails name={selectedEnvironmentRecord.name} cameras={selectedEnvironmentCameras} onEdit={() => { if (catalog) setEditEnvironment(selectedEnvironmentRecord); else setNotice("Conecte o banco para editar ambientes."); }} onBack={() => setSelectedEnvironment(null)} onOpenCamera={(cameraId) => { setActive("cameras"); setCameraView("detection"); setSelectedEnvironment(null); setSelectedCameraId(cameraId); }} />}
+          {active === "indicators" && <IndicatorsPanel {...dataProps} />}
+          {active === "alerts" && <AlertsPanel {...dataProps} canEdit={canEdit} onConfigure={() => setRulesOpen(true)} />}
+          {active === "history" && <HistoryPanel {...dataProps} />}
         </div>
       </section>
 
-      {addCameraOpen && <AddCameraModal onClose={() => setAddCameraOpen(false)} />}
+      {addCameraOpen && <CameraForm repository={repository} canEdit={canEdit} environments={environments} onSaved={savedCamera} onClose={() => setAddCameraOpen(false)} />}
+      {editCamera && <CameraForm repository={repository} canEdit={canEdit} initial={editCamera} environments={environments} onSaved={savedCamera} onClose={() => setEditCamera(null)} />}
+      {addEnvironmentOpen && <EnvironmentForm repository={repository} canEdit={canEdit} environments={environments} onSaved={savedEnvironment} onClose={() => setAddEnvironmentOpen(false)} />}
+      {editEnvironment && <EnvironmentForm repository={repository} canEdit={canEdit} initial={editEnvironment} environments={environments} onSaved={savedEnvironment} onClose={() => setEditEnvironment(null)} />}
+      {rulesOpen && <RulesDialog repository={repository} canEdit={canEdit} rules={catalog?.rules ?? []} environments={environments} onSaved={savedRule} onClose={() => setRulesOpen(false)} />}
       {profileOpen && <ProfileModal user={authUser} onClose={() => setProfileOpen(false)} onLogout={handleLogout} />}
     </main>
   );
 }
 
-function Overview({ cameras, agentConnected }: { cameras: CameraState[]; agentConnected: boolean }) {
+function Overview({ cameras, agentConnected, connected, onOpenHistory }: { cameras: CameraState[]; agentConnected: boolean; connected: boolean; onOpenHistory: () => void }) {
   const onlineCameras = cameras.filter((camera) => camera.status === "online").length;
-  const peopleNow = cameras.reduce((total, camera) => total + camera.people_count, 0);
   const metrics = [
-    { label: "Pessoas agora", value: String(peopleNow), change: agentConnected ? "Leitura agregada em tempo real" : "Aguardando câmeras", tone: "teal" },
+    { label: "Contagem de pessoas", value: "Por câmera", change: "Consulte cada câmera; áreas podem se sobrepor", tone: "teal" },
     { label: "Câmeras online", value: `${onlineCameras}/${cameras.length}`, change: agentConnected ? "Agente local conectado" : "Inicie o monitor local", tone: "blue" },
-    { label: "Ocupação hoje", value: "68%", change: "Média do período", tone: "lime" },
-    { label: "Alertas ativos", value: "2", change: "Acompanhamento atual", tone: "orange" },
+    { label: "Ocupação hoje", value: "—", change: connected ? "Consulte a página Indicadores" : "Histórico ainda não conectado", tone: "lime" },
+    { label: "Alertas ativos", value: "—", change: connected ? "Consulte a central de Alertas" : "Serviço de alertas ainda não conectado", tone: "orange" },
   ];
 
   return (
     <>
       <section className="welcome-card">
-        <div><span className={`live-label ${agentConnected ? "" : "waiting"}`}><i /> {agentConnected ? "MONITORAMENTO LOCAL ATIVO" : "PRONTO PARA DUAS CÂMERAS"}</span><h2>Seu ambiente, em equilíbrio.</h2><p>{agentConnected ? "A câmera do computador e a câmera do celular estão sendo acompanhadas pelo agente local." : "Inicie o agente local para acompanhar a câmera do computador e a câmera do celular neste dashboard."}</p></div>
+        <div><span className={`live-label ${agentConnected ? "" : "waiting"}`}><i /> {agentConnected ? "MONITORAMENTO LOCAL ATIVO" : "AGUARDANDO MONITORAMENTO"}</span><h2>Seu ambiente, em equilíbrio.</h2><p>{agentConnected ? "Consulte os dispositivos para acompanhar as leituras disponíveis." : "A transmissão e a análise de pessoas ficam na página Câmeras. Cada modo informa seu próprio estado de conexão."}</p></div>
         <div className="welcome-visual" aria-hidden="true"><span className="pulse one" /><span className="pulse two" /><div className="building"><i /><i /><i /><i /><i /><i /></div></div>
       </section>
       <section className="metrics-grid" aria-label="Indicadores principais">
@@ -324,75 +365,76 @@ function Overview({ cameras, agentConnected }: { cameras: CameraState[]; agentCo
       </section>
       <section className="dashboard-grid">
         <article className="chart-card">
-          <div className="card-heading"><div><p className="eyebrow">MOVIMENTO HOJE</p><h2>Ocupação por horário</h2></div><span className="trend-up">↗ 8%</span></div>
-          <div className="bar-chart" aria-label="Ocupação por horário">{occupancyBars.map((bar, index) => <div className="bar-column" key={occupancyLabels[index]}><i style={{ height: `${bar}%` }} /><small>{occupancyLabels[index]}</small></div>)}</div>
+          <div className="card-heading"><div><p className="eyebrow">MOVIMENTO HOJE</p><h2>Ocupação por horário</h2></div></div>
+          <div className="data-empty"><h3>{connected ? "Consulte os registros de ocupação" : "Histórico indisponível"}</h3><p>Indicadores e Histórico consultam as observações persistidas por câmera. A leitura ao vivo não cria um histórico por si só.</p></div>
         </article>
-        <article className="activity-card"><p className="eyebrow">ÚLTIMOS EVENTOS</p><h2>Atividade recente</h2><div className="timeline"><div><i className="green" /><span><strong>Pessoa detectada</strong><small>Webcam principal · agora</small></span></div><div><i className="blue" /><span><strong>Câmera conectada</strong><small>DirectShow · há 12 min</small></span></div><div><i className="orange" /><span><strong>Período vazio</strong><small>Escritório · há 1h</small></span></div></div><button className="text-button wide" type="button">Ver histórico completo <span>→</span></button></article>
+        <article className="activity-card"><p className="eyebrow">REGISTROS</p><h2>Histórico do ambiente</h2><div className="data-empty"><p>{connected ? "Filtre as observações por ambiente e período, ou exporte a página consultada em CSV." : "Conecte o banco para consultar os registros. Nenhum evento pode ser confirmado nesta tela."}</p></div><button className="text-button wide" type="button" onClick={onOpenHistory}>Ver histórico completo <span>→</span></button></article>
       </section>
     </>
   );
 }
 
-function CameraDetails({ camera, onBack }: { camera: CameraState; onBack: () => void }) {
+function CameraDetails({ camera, onBack, onEdit }: { camera: CameraState; onBack: () => void; onEdit: () => void }) {
   const healthy = camera.status === "online";
   return (
     <section className="page-stack">
       <button className="back-button" type="button" onClick={onBack}>← Voltar para câmeras</button>
-      <div className="detail-grid"><CameraPreview camera={camera} large /><aside className="health-card"><p className="eyebrow">SAÚDE DO DISPOSITIVO</p><h2>{healthy ? "Operação normal" : statusLabel(camera.status)}</h2><div className="health-score"><strong>{healthy ? "98" : "--"}</strong><span>/ 100<small>Saúde geral</small></span></div><dl><div><dt>Conexão</dt><dd className={healthy ? "good" : ""}>{statusLabel(camera.status)}</dd></div><div><dt>Backend</dt><dd>{camera.backend ?? "Aguardando"}</dd></div><div><dt>Processamento</dt><dd>Intel/OpenVINO local</dd></div><div><dt>Latência</dt><dd>{camera.latency_ms === null ? "--" : `${camera.latency_ms.toFixed(1)} ms`}</dd></div></dl></aside></div>
-      <div className="detail-lower"><article className="info-panel"><p className="eyebrow">CONFIGURAÇÃO</p><h2>Informações da câmera</h2><dl className="info-list"><div><dt>Nome</dt><dd>{camera.name}</dd></div><div><dt>Ambiente</dt><dd>{environmentLabel(camera.environment)}</dd></div><div><dt>Origem</dt><dd>{camera.source === "webcam" ? "Câmera integrada/USB" : "Celular na rede local"}</dd></div><div><dt>Privacidade</dt><dd>Frames transitórios</dd></div></dl><button className="secondary-button" type="button">Editar configurações</button></article><article className="info-panel"><p className="eyebrow">CONTAGEM ATUAL</p><h2>Detecção de pessoas</h2><div className="current-count"><strong>{camera.people_count}</strong><span>{camera.people_count === 1 ? "pessoa detectada" : "pessoas detectadas"}</span></div><div className="mini-legend"><span>{lastReading(camera)}</span><small>Modelo Intel YOLO26</small></div></article></div>
+      <div className="detail-grid"><CameraPreview camera={camera} large /><aside className="health-card"><p className="eyebrow">SAÚDE DO DISPOSITIVO</p><h2>{healthy ? "Recebendo leituras" : statusLabel(camera.status)}</h2><dl><div><dt>Conexão</dt><dd className={healthy ? "good" : ""}>{statusLabel(camera.status)}</dd></div><div><dt>Backend</dt><dd>{healthy ? camera.backend : "Sem leitura atual"}</dd></div><div><dt>Processamento</dt><dd>Intel/OpenVINO local</dd></div><div><dt>Latência</dt><dd>{!healthy || camera.latency_ms === null ? "—" : `${camera.latency_ms.toFixed(1)} ms`}</dd></div></dl></aside></div>
+      <div className="detail-lower"><article className="info-panel"><p className="eyebrow">CONFIGURAÇÃO</p><h2>Informações da câmera</h2><dl className="info-list"><div><dt>Nome</dt><dd>{camera.name}</dd></div><div><dt>Ambiente</dt><dd>{environmentLabel(camera.environment)}</dd></div><div><dt>Origem</dt><dd>{camera.source === "webcam" ? "Câmera integrada/USB" : camera.source === "rtsp" ? "Câmera IP / RTSP" : "MJPEG / celular"}</dd></div><div><dt>Privacidade</dt><dd>Frames transitórios</dd></div></dl><button className="secondary-button" type="button" onClick={onEdit}>Editar configurações</button></article><article className="info-panel"><p className="eyebrow">CONTAGEM ATUAL</p><h2>Detecção de pessoas</h2><div className="current-count"><strong>{healthy ? camera.people_count : "—"}</strong><span>{healthy ? "pessoas detectadas" : "Sem leitura atual"}</span></div><div className="mini-legend"><span>{lastReading(camera)}</span><small>Modelo Intel YOLO26</small></div></article></div>
     </section>
   );
 }
 
-function Environments({ cameras, onOpenEnvironment }: { cameras: CameraState[]; onOpenEnvironment: (environment: string) => void }) {
-  const environmentNames = Array.from(new Set(cameras.map((camera) => camera.environment)));
+function Environments({ cameras, environments, onOpenEnvironment, onAdd }: { cameras: CameraState[]; environments: EnvironmentRecord[]; onOpenEnvironment: (environment: string) => void; onAdd: () => void }) {
 
   return (
     <section className="page-stack">
       <div className="page-intro">
         <div><p className="eyebrow">LOCAIS MONITORADOS</p><h2>Ambientes</h2><span>Organize câmeras, ocupação e recursos por espaço físico.</span></div>
-        <button className="primary-action" type="button">＋ Novo ambiente</button>
+        <button className="primary-action" type="button" onClick={onAdd}>＋ Novo ambiente</button>
       </div>
       <div className="environment-grid">
-        {environmentNames.map((environment) => {
-          const environmentCameras = cameras.filter((camera) => camera.environment === environment);
+        {environments.map((environment) => {
+          const environmentCameras = cameras.filter((camera) => (camera.environment_id ?? camera.environment) === environment.id);
           const onlineCameras = environmentCameras.filter((camera) => camera.status === "online").length;
-          const peopleNow = environmentCameras.reduce((total, camera) => total + camera.people_count, 0);
+          const onlyCamera = environmentCameras.length === 1 && environmentCameras[0].status === "online" ? environmentCameras[0] : null;
           const status = onlineCameras === 0 ? "Aguardando" : onlineCameras === environmentCameras.length ? "Ativo" : "Parcial";
           return (
-            <article className="environment-card featured" key={environment}>
+            <article className="environment-card featured" key={environment.id}>
               <div className="room-art"><span /><span /><i /></div>
               <div>
                 <span className={`small-online environment-status-${status.toLowerCase()}`}><i /> {status}</span>
-                <h3>{environmentLabel(environment)}</h3>
+                <h3>{environment.name}</h3>
                 <p>{environmentCameras.length} {environmentCameras.length === 1 ? "câmera configurada" : "câmeras configuradas"}</p>
-                <div className="room-stats"><span><small>Pessoas agora</small><strong>{peopleNow}</strong></span><span><small>Câmeras online</small><strong>{onlineCameras}/{environmentCameras.length}</strong></span></div>
-                <button className="secondary-button" type="button" aria-label={`Ver ambiente ${environmentLabel(environment)}`} onClick={() => onOpenEnvironment(environment)}>Ver ambiente</button>
+                <div className="room-stats"><span><small>Pessoas agora</small><strong>{onlyCamera ? onlyCamera.people_count : "—"}</strong></span><span><small>Câmeras online</small><strong>{onlineCameras}/{environmentCameras.length}</strong></span></div>
+                {!onlyCamera && <p className="field-help">Consulte as leituras por câmera; sem contagem unificada.</p>}
+                <button className="secondary-button" type="button" aria-label={`Ver ambiente ${environment.name}`} onClick={() => onOpenEnvironment(environment.id)}>Ver ambiente</button>
               </div>
             </article>
           );
         })}
-        {environmentNames.length === 0 && <div className="empty-state"><b>⌂</b><h3>Nenhum ambiente configurado</h3><p>Adicione uma câmera para começar a organizar os locais.</p></div>}
-        <button className="add-environment" type="button"><span>＋</span><strong>Criar outro ambiente</strong><small>Salas, laboratórios ou áreas comuns</small></button>
+        {environments.length === 0 && <div className="empty-state"><b>⌂</b><h3>Nenhum ambiente configurado</h3><p>Cadastre um ambiente e depois associe suas câmeras.</p></div>}
+        <button className="add-environment" type="button" onClick={onAdd}><span>＋</span><strong>Criar outro ambiente</strong><small>Salas, laboratórios ou áreas comuns</small></button>
       </div>
     </section>
   );
 }
 
-function EnvironmentDetails({ name, cameras, onBack, onOpenCamera }: { name: string; cameras: CameraState[]; onBack: () => void; onOpenCamera: (cameraId: string) => void }) {
+function EnvironmentDetails({ name, cameras, onBack, onOpenCamera, onEdit }: { name: string; cameras: CameraState[]; onBack: () => void; onEdit: () => void; onOpenCamera: (cameraId: string) => void }) {
   const onlineCameras = cameras.filter((camera) => camera.status === "online").length;
-  const peopleNow = cameras.reduce((total, camera) => total + camera.people_count, 0);
+  const onlyCamera = cameras.length === 1 && cameras[0].status === "online" ? cameras[0] : null;
 
   return (
     <section className="page-stack environment-detail" aria-labelledby="environment-detail-title">
       <button className="back-button" type="button" onClick={onBack}>← Voltar para ambientes</button>
       <div className="page-intro environment-detail-header">
         <div><p className="eyebrow">AMBIENTE MONITORADO</p><h2 id="environment-detail-title">{name}</h2><span>Todos os dispositivos associados a este ambiente.</span></div>
+        <button className="secondary-button" type="button" onClick={onEdit}>Editar ambiente</button>
       </div>
       <div className="alert-summary environment-detail-summary">
         <span><strong>{cameras.length}</strong><small>{cameras.length === 1 ? "Câmera" : "Câmeras"}</small></span>
         <span><strong>{onlineCameras}/{cameras.length}</strong><small>Online</small></span>
-        <span><strong>{peopleNow}</strong><small>{peopleNow === 1 ? "Pessoa agora" : "Pessoas agora"}</small></span>
+        <span><strong>{onlyCamera ? onlyCamera.people_count : "—"}</strong><small>{onlyCamera ? "Pessoas agora" : "Consulte por câmera"}</small></span>
       </div>
       <div className="section-heading environment-camera-heading"><div><p className="eyebrow">DISPOSITIVOS DO AMBIENTE</p><h2>Câmeras</h2><span>Visualize e abra cada ponto de monitoramento.</span></div></div>
       <div className="camera-grid environment-camera-grid">
@@ -401,16 +443,4 @@ function EnvironmentDetails({ name, cameras, onBack, onOpenCamera }: { name: str
       </div>
     </section>
   );
-}
-
-function Indicators() {
-  return <section className="page-stack"><div className="page-intro"><div><p className="eyebrow">ANÁLISE DO AMBIENTE</p><h2>Indicadores do ambiente</h2><span>Tendências de ocupação e oportunidades de uso consciente.</span></div><label className="period-select"><span>Período</span><select><option>Hoje</option><option>Últimos 7 dias</option><option>Últimos 30 dias</option></select></label></div><section className="metrics-grid indicators"><article className="metric-card"><p>Horas ocupadas</p><strong>6h 12m</strong><small>68% do período monitorado</small></article><article className="metric-card"><p>Tempo vazio</p><strong>2h 14m</strong><small>Oportunidade estimada</small></article><article className="metric-card"><p>Pico de presença</p><strong>2</strong><small>Entre 12h e 13h</small></article><article className="metric-card"><p>Câmera disponível</p><strong>99,2%</strong><small>Últimas 24 horas</small></article></section><div className="dashboard-grid indicators-grid"><article className="chart-card"><div className="card-heading"><div><p className="eyebrow">OCUPAÇÃO</p><h2>Distribuição do dia</h2></div><span className="chart-legend"><i /> Presença estimada</span></div><div className="bar-chart tall">{occupancyBars.map((bar, index) => <div className="bar-column" key={occupancyLabels[index]}><i style={{ height: `${bar}%` }} /><small>{occupancyLabels[index]}</small></div>)}</div></article><article className="recommendation-card"><span className="recommendation-icon">↯</span><p className="eyebrow">SUSTENTABILIDADE</p><h2>Oportunidade observada</h2><p>O escritório ficou vazio por aproximadamente 2h14 hoje. Esse indicador pode apoiar recomendações de iluminação e ventilação.</p><div className="notice">Indicador sujeito a revisão humana. Nenhum equipamento é controlado.</div></article></div></section>;
-}
-
-function Alerts() {
-  return <section className="page-stack"><div className="page-intro"><div><p className="eyebrow">CENTRAL DE ATENÇÃO</p><h2>Alertas e eventos</h2><span>Situações que podem exigir acompanhamento humano.</span></div><button className="secondary-button" type="button">Configurar regras</button></div><div className="alert-summary"><span><strong>2</strong><small>Ativos</small></span><span><strong>1</strong><small>Requer atenção</small></span><span><strong>4</strong><small>Resolvidos hoje</small></span></div><div className="alerts-list"><article className="alert-row high"><span className="alert-symbol">!</span><div><span className="alert-tag">ATENÇÃO</span><h3>Ambiente ocupado fora do horário configurado</h3><p>Escritório principal · detectado há 8 minutos</p></div><button type="button">Revisar</button></article><article className="alert-row medium"><span className="alert-symbol">↯</span><div><span className="alert-tag">OPORTUNIDADE</span><h3>Iluminação pode estar ativa em ambiente vazio</h3><p>Eficiência energética · detectado há 42 minutos</p></div><button type="button">Revisar</button></article><article className="alert-row resolved"><span className="alert-symbol">✓</span><div><span className="alert-tag">RESOLVIDO</span><h3>Câmera voltou a responder normalmente</h3><p>Webcam principal · resolvido há 1 hora</p></div><button type="button">Detalhes</button></article></div><div className="alert-disclaimer"><strong>Decisão humana obrigatória</strong><p>Alertas são indícios para revisão. O sistema não declara culpa, produtividade ou ação disciplinar automaticamente.</p></div></section>;
-}
-
-function AddCameraModal({ onClose }: { onClose: () => void }) {
-  return <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" type="button" onClick={onClose} aria-label="Fechar">×</button><p className="eyebrow">NOVO DISPOSITIVO</p><h2 id="modal-title">Adicionar câmera</h2><p className="modal-lead">Conecte a webcam deste computador ou o celular como câmera IP na mesma rede.</p><div className="connection-options"><button type="button"><span>◉</span><div><strong>Webcam deste computador</strong><small>USB ou câmera integrada</small></div><b>Disponível</b></button><button type="button"><span>⌁</span><div><strong>Câmera do celular</strong><small>MJPEG ou RTSP pela rede privada</small></div><b>Disponível</b></button><button type="button" disabled><span>▣</span><div><strong>Gateway ESP32</strong><small>Dispositivo remoto autenticado</small></div><b>Em breve</b></button></div><div className="modal-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancelar</button><button className="primary-action" type="button" onClick={onClose}>Continuar</button></div></section></div>;
 }
