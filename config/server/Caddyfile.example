@@ -1,0 +1,9 @@
+# Private LAN/VPN example. Install/trust Caddy's CA on each viewing computer.
+# Replace IP, limit firewall to trusted clients; do not expose the dev dashboard.
+https://192.168.1.50 {
+    tls internal
+    request_body {
+        max_size 128KB
+    }
+    reverse_proxy 127.0.0.1:8766
+}

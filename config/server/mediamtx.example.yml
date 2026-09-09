@@ -1,0 +1,46 @@
+# MediaMTX v1.20.1. Copy to mediamtx.local.yml and replace the private/VPN VM IP.
+logLevel: warn
+logDestinations: [stdout]
+api: false
+metrics: false
+pprof: false
+playback: false
+rtmp: false
+hls: false
+srt: false
+moq: false
+rtsp: true
+rtspTransports: [tcp]
+rtspAddress: 127.0.0.1:8554
+webrtc: true
+webrtcAddress: 127.0.0.1:8889
+webrtcEncryption: false
+webrtcAllowOrigins: ["http://localhost:3000"]
+webrtcTrustedProxies: []
+webrtcLocalUDPAddress: 192.168.1.50:8189
+webrtcLocalTCPAddress: ''
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: [192.168.1.50]
+webrtcICEServers2: []
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: [127.0.0.1, '::1']
+    permissions:
+      - action: publish
+        path: camera1
+      - action: read
+        path: camera1
+      - action: read
+        path: camera2
+pathDefaults:
+  record: false
+  overridePublisher: false
+paths:
+  camera1:
+    source: publisher
+  # Native H264 IP camera: no re-encoding. Use its real, verified RTSP endpoint.
+  # camera2:
+  #   source: rtsp://192.168.1.51:554/CAMINHO-REAL
+  #   rtspTransport: tcp

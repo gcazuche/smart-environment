@@ -1,0 +1,11 @@
+# Copy to server.local.toml; use the existing organization and camera UUIDs.
+organization_id = "00000000-0000-0000-0000-000000000001"
+allowed_origins = ["http://localhost:3000"]
+analysis_fps = 2.0
+cpu_threads = 4
+# Relative to THIS TOML directory, outside the dashboard.
+database = "../../data/server/outbox.sqlite3"
+
+[streams]
+"00000000-0000-0000-0000-000000000002" = "camera1"
+# "UUID-DA-SEGUNDA-CAMERA" = "camera2"

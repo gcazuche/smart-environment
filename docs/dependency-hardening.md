@@ -1,5 +1,90 @@
 # SEC-01 — preparação de segurança antes da rede
 
+## Correção complementar em 08/09/2026 — 2 entradas altas residuais
+
+**Resultado: dependência sharp corrigida e compatibilidade local verificada; gate
+global de segurança ainda não aprovado.** O audit completo passou de 6 para 2 entradas
+altas (`image-size` e `vinext`), sem críticas. Não houve deploy, exploração, acesso a
+câmeras, banco remoto ou VM. Todas as execuções usaram Conda `smart-environment`.
+
+### Fronteira e alteração mínima
+
+No Miniflare instalado, `imagesLocalFetcher` e `cfImageLocalFetcher` importam `sharp`
+dinamicamente e decodificam o conteúdo de uma imagem recebida. A configuração atual
+do dashboard não declara binding Images; não foi demonstrada uma entrada remota
+explorável no produto. Ainda assim, o parser vulnerável estava instalado e poderia ser
+usado pelas ferramentas. O invariante adotado é não resolver cópias de sharp anteriores
+à correção e carregar libheif corrigida, mantendo decodificação e transformações válidas.
+
+A consulta ao registro npm confirmou que mesmo `@cloudflare/vite-plugin@1.54.6`,
+`wrangler@4.130.0` e `miniflare@5.20260908.0-alpha` ainda fixam sharp 0.35.2.
+Atualizar apenas os pais não corrigiria este aviso. Foram preservadas as versões dos
+pais e adicionado um override **limitado a `miniflare@5.20260903.0-alpha` → sharp 0.35.4**,
+com regeneração do lock pelo npm. Isto é uma exceção explícita ao pin do fornecedor,
+não uma correção já adotada pelo Miniflare nem uma supressão do audit. A API testada
+permaneceu compatível. Não houve `--force`, downgrade ou edição de `node_modules`.
+
+O [advisory do mantenedor](https://github.com/lovell/sharp/security/advisories/GHSA-rgj7-g3m4-5g8c)
+indica sharp 0.35.4 / libheif 1.23.2 como corrigidos. O npm documenta
+[overrides transitivos e delimitados por versão](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/#overrides).
+Quando o pai passar a exigir uma versão corrigida, remover este override em um novo
+incremento, após conferir toda a árvore e reexecutar os testes; não ampliar o override
+silenciosamente para novas versões. Os changelogs
+[0.35.3](https://sharp.pixelplumbing.com/changelog/v0.35.3/) e
+[0.35.4](https://sharp.pixelplumbing.com/changelog/v0.35.4/) foram consultados.
+
+### Evidência ordenada
+
+- Antes da atualização, os controles de versão no novo `tests/image-runtime.test.mjs`
+  falharam para o lock e a biblioteca carregada; PNG/JPEG/WebP/AVIF legítimos passaram.
+  Isso reproduz a instalação afetada, **não uma exploração do heap**.
+- `npm install --ignore-scripts`: resolveu sharp 0.35.4 e seus binários oficiais;
+  o lock conserva as variantes Windows, Linux glibc e musl. Nenhum pacote alheio à
+  cadeia sharp foi atualizado. `npm ci --ignore-scripts --dry-run` passou, verificando
+  consistência do manifesto/lock, não uma instalação limpa completa.
+- `node --test tests/image-runtime.test.mjs`: **5/5**. Verifica todas as cópias sharp
+  do lock, a versão resolvida a partir do Miniflare, libheif efetivamente carregada,
+  decodificação/redimensionamento dos quatro formatos, rejeição de bytes inválidos e
+  AVIF truncado, além de AVIF → PNG pelo binding Images de um Miniflare temporário em
+  loopback, sem telemetria ou requisição de dados externos. O runtime é encerrado ao final.
+- Revisão local em passe separado conferiu os dois consumidores e cópias transitivas;
+  delegação de revisão ficou indisponível. Não foram encontrados pins antigos adicionais.
+- `npm test`: build + **60/60 testes**. `npm run lint` e `npm exec -- tsc --noEmit`: aprovados.
+- `npm ls sharp miniflare @cloudflare/vite-plugin wrangler --all`: árvore válida,
+  única resolução sharp 0.35.4. `npm audit --json`: saída 1 esperada pelas **2 altas**
+  residuais, sem sharp/miniflare/wrangler/plugin entre os alertas.
+
+A evidência da correção é a versão corrigida no lock **e no código/binário carregado**,
+conforme o advisory; não foi executado exploit nem comprovada segurança geral do parser.
+Execução nativa Ubuntu/Linux e instalação limpa em outra máquina continuam pendentes.
+Não processar arquivos não confiáveis nem expor o servidor publicamente como se todos
+os gates estivessem aprovados. O `image-size/latest` ainda era 2.0.2 no registro em 08/09;
+seus avisos e a análise histórica abaixo continuam abertos.
+
+Arquivos desta correção: `dashboard/package.json`, `dashboard/package-lock.json`,
+`dashboard/tests/image-runtime.test.mjs` e documentos de evidência/continuidade.
+
+## Baseline em 08/09/2026 — 6 entradas altas antes da correção
+
+O `npm audit --json` completo foi reexecutado ao preparar o marco de desenvolvimento
+v0.1.0 e retornou **6 entradas altas, 0 críticas**, sem alteração do manifesto/lock.
+As entradas são `image-size`, `vinext`, `sharp`, `miniflare`, `wrangler` e
+`@cloudflare/vite-plugin`; dependentes propagam um aviso, não representam seis falhas
+independentes comprovadas no produto. O novo aviso é
+[GHSA-rgj7-g3m4-5g8c](https://github.com/advisories/GHSA-rgj7-g3m4-5g8c), incluído na
+base em 08/09. O advisory aponta sharp <0.35.4 e correção em 0.35.4; o lock atual usa
+0.35.2. Atingibilidade/exploração no sistema atual não foi testada nesta rodada.
+
+Naquele baseline ainda não havia atualização. A correção complementar acima substitui
+esse estado; os números deste trecho são históricos. Não aplicar o downgrade automático
+sugerido para Wrangler/plugin nem `audit fix --force`.
+
+É possível guardar este snapshot como marco **interno de código** com limitações
+expressas; isso não aprova deploy, servidor público ou processamento de arquivos não
+confiáveis. Testes funcionais aprovados não anulam o gate de segurança não-zero.
+
+O relatório abaixo preserva a evidência de 07/09 e seus números são históricos.
+
 Data: 07/09/2026. Estado: **correções aplicadas; risco residual não suprimido**.
 
 ## Escopo e sequência

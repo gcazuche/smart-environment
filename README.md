@@ -6,6 +6,32 @@ Supabase e um dashboard web em HTML/CSS/JavaScript.
 
 ## Estado atual
 
+### Modo servidor Ubuntu (implementado, instalação na VM pendente)
+
+O modo opcional de servidor separa MediaMTX/WebRTC (vídeo contínuo) de um único modelo
+OpenVINO CPU (análise configurável, inicialmente 2 FPS por câmera). Até quatro câmeras
+são vinculadas por UUID ao catálogo existente do Supabase. O gateway verifica a sessão
+e o vínculo de organização; a fila SQLite envia agregados por minuto e alertas sem
+gravar imagens. O modo local anterior permanece disponível.
+
+Veja **[como instalar e configurar na VM](docs/server-processing.md)**. O comando é
+`python -m app.server --config config/server/server.local.toml --env-file config/server/.env.server.local`.
+Use o ambiente Conda `smart-environment`, criado na VM com `environment.server.yml`.
+O modelo e os arquivos `.env` não vêm no Git. Nenhum bootstrap precisa ser repetido.
+Para conferir a instalação sem câmera/rede, execute `python -m app.server --preflight`.
+30 FPS é a meta de transmissão, não uma taxa garantida de inferência; VM e câmeras
+físicas ainda precisam de comissionamento. Não exponha os serviços internos à internet.
+
+### Versões do projeto
+
+O primeiro marco proposto é **v0.1.0**, preparado mas ainda não publicado. O histórico
+de versões fica em [CHANGELOG.md](CHANGELOG.md), e os comandos para criar commit e
+tag sem substituir versões anteriores estão no [guia de versionamento](docs/versioning.md).
+Ao fechar um marco testado, informaremos seu conteúdo, limites e comandos; commits,
+tags, pushes e Releases não serão executados automaticamente.
+
+### Histórico do piloto local
+
 O protótipo local oferece NanoDet/ONNX e Intel YOLO26/OpenVINO para detectar pessoas
 inteiras ou parcialmente visíveis, inclusive múltiplas pessoas. Um agente local pode
 processar simultaneamente a webcam do computador e o celular como câmera de rede. O

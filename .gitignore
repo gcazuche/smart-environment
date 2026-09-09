@@ -53,3 +53,8 @@ tools/streaming/
 # Reports that may contain environment-specific details
 reports/private/
 tmp/
+
+# Machine-specific camera sources, server configuration, secrets and TLS material
+config/server/*.local.toml
+config/server/*.local.yml
+config/server/Caddyfile.local

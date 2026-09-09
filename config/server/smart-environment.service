@@ -1,0 +1,25 @@
+[Unit]
+Description=Smart Environment CPU processing and authenticated video gateway
+After=network-online.target smart-environment-media.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=smart-environment
+WorkingDirectory=/opt/smart-environment
+EnvironmentFile=/etc/smart-environment/server.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/conda/envs/smart-environment/bin/python -m app.server --config /etc/smart-environment/server.toml
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/smart-environment
+LimitNOFILE=1024
+
+[Install]
+WantedBy=multi-user.target

@@ -60,6 +60,24 @@ def test_linux_device_and_duration_validation(monkeypatch):
         streaming.publish_args(None, 0)
 
 
+def test_server_publisher_path_and_mjpeg_remain_video_only(monkeypatch):
+    monkeypatch.setattr(streaming, "ffmpeg", lambda: "ffmpeg")
+    assert streaming.publish_args(None, 5, "camera2")[-1].endswith("/camera2")
+    with pytest.raises(ValueError):
+        streaming.publish_args(None, 5, "../../admin")
+    args = streaming.mjpeg_args("http://192.168.1.36:8080/video", "camera2")
+    assert "mpjpeg" in args and "-an" in args and "-r" not in args
+    assert args[-1] == "rtsp://127.0.0.1:8554/camera2"
+    for url in [
+        "http://8.8.8.8/video",
+        "http://user:pass@192.168.1.36/video",
+        "file:///tmp/video",
+        "http://169.254.169.254/video",
+    ]:
+        with pytest.raises(ValueError):
+            streaming.mjpeg_args(url, "camera2")
+
+
 @pytest.mark.parametrize("name", ["Camera:audio=Microphone", "video=Camera", "", " ", "cam\n"])
 def test_directshow_rejects_extra_device_selectors(name):
     with pytest.raises(ValueError):

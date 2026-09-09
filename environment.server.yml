@@ -1,0 +1,8 @@
+name: smart-environment
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12.13
+  - pip=26.1.2
+  - pip:
+      - -e .[intel,stream]

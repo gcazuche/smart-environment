@@ -2,6 +2,62 @@
 
 Atualizado em: 2026-09-08
 
+## VCS-01 / OPS-01 — versões preservadas e diagnóstico de instalação
+
+- Pedido do usuário: continuar pendências e avisar quando um marco justificar nova versão,
+  fornecendo comandos, sem substituir marcos anteriores. Regra permanente documentada em
+  `docs/versioning.md`; não criar commit/tag/push/Release sem nova autorização explícita.
+- Estado verificado: branch main, HEAD 332af86, nenhuma tag local. Trabalho SRV-01 e
+  este incremento ainda no worktree; nenhum commit/tag/push feito. Tags remotas não
+  consultadas; guia exige conferi-las antes de criar a primeira tag proposta v0.1.0.
+- `CHANGELOG.md` registra v0.1.0 como PREPARADO, NÃO PUBLICADO, marco de desenvolvimento.
+  Manifests já estão em 0.1.0. Futuras correções/features deverão ter novas entradas/tags,
+  sem --force, retag ou alteração destrutiva da cópia atual para consultar código antigo.
+- Novo `python -m app.server --preflight [--json]` verifica Conda, Python, dependências,
+  integridade do modelo e presença dos executáveis; --config opcional verifica formato
+  e permissões aparentes. Sem rede/câmera/inferência/subprocessos/criação de SQLite.
+  Não ter falhas não equivale a conectividade, escrita real, segurança ou teste na VM.
+- Corrigidos erros de tipos TOML e inicialização do Runtime que escapavam como traceback;
+  diagnóstico de executável inacessível agora gera falha sanitizada. 19 regressões novas.
+- Python: 341 testes + 11 subtestes; dashboard: build + 60 testes reexecutados. Ruff e
+  Mypy aprovados nos módulos do servidor (9 arquivos). Preflight real no Conda Windows
+  encontrou as dependências/artefatos; configuração remota permaneceu não verificada.
+- Novo aviso de sharp gerou baseline de 6 altas. Correção complementar: override
+  limitado ao Miniflare instalado resolve sharp 0.35.4 e binários; pais preservados.
+  Cinco testes adicionais comprovam versões corrigidas, codecs e integração Images
+  local. Audit final: 2 altas image-size/vinext, nenhuma crítica; exposição pública
+  continua sem aprovação. ESLint/TypeScript/árvore npm e ci dry-run aprovados.
+  Instalação limpa e execução nativa Linux permanecem pendentes. Ver relatório atualizado.
+- Próximos passos: usuário guardar marco v0.1.0 com comandos revisados; resolver/avaliar
+  risco image-size antes de exposição; executar preflight e piloto
+  na VM quando disponível. Fotos/treinamento continuam pausados; não reiniciar bootstrap.
+
+## SRV-01 — processamento Ubuntu implementado; comissionamento pendente
+
+- Arquitetura: MediaMTX 1.20.1 em loopback para RTSP/WHEP, mídia UDP somente LAN/VPN;
+  Caddy HTTPS encaminha para gateway Python autenticado com JWT Supabase e membership.
+  Não houve deploy, acesso à VM, captura real ou escrita no Supabase nesta entrega.
+- `app.server`: 1 modelo OpenVINO CPU compartilhado, até 4 decoders com slot de frame
+  único, análise padrão 2 FPS/câmera (0,2–5 configurável), stale sem contagem fictícia.
+  Catálogo autorizado expira em 30 s sem atualização; fontes somente no mapa local.
+- SQLite persiste minutos, episódios e outbox. Agregação distingue occupied/empty/unknown;
+  entrega idempotente ignore-duplicates, backoff e dead letters preservadas. Fila cheia
+  interrompe ingestão sem descartar dados silenciosamente. Sem pixels ou caixas em disco.
+- Dashboard: `VITE_PROCESSING_SERVER_URL` opcional, várias transmissões autenticadas,
+  caixas recentes com expiração, FPS do vídeo separado do FPS de inferência. Sem a
+  variável, o monitor e piloto local existentes são preservados. `.env.local` intocado.
+- Guia `docs/server-processing.md`, perfil Conda `environment.server.yml`, exemplos
+  TOML/MediaMTX/Caddy/systemd em `config/server/`. Webcam via publicador e túnel SSH;
+  RTSP H264 nativo; MJPEG Android convertido no publicador (CPU adicional).
+- Validação local inicial: Python 322 testes + 11 subtestes; dashboard build + 55 testes,
+  TypeScript e ESLint aprovados. Mypy aprovou os 8 módulos do servidor. Atualizar esta
+  evidência se houver novas alterações. Ruff aprovado; OpenVINO CPU/4 threads carregou
+  e inferiu frame sintético em memória. Testes não comprovam 30 FPS em Hyper-V.
+- Próximo passo COM o usuário: preparar VM/IP privado, instalar perfil, copiar modelo,
+  preencher secret somente no servidor/UUIDs existentes, confiar no TLS e testar padrão
+  sintético. Depois uma câmera real, duas e quatro, medindo CPU/RAM/FPS/latência e ingestão.
+  Alertas de dependências residuais do dashboard continuam sem aprovação de exposição pública.
+
 ## Ativação DB-01 — UUID configurado; primeiro login do dashboard pendente
 
 - Em 08/09/2026, usuário autenticou o navegador integrado no Supabase. Projeto

@@ -7,10 +7,13 @@ import hashlib
 import io
 import os
 import platform
+import re
 import subprocess  # noqa: S404 - fixed executables and argument arrays, never a shell
 import tarfile
 import zipfile
+from ipaddress import IPv4Address, ip_address
 from pathlib import Path
+from urllib.parse import urlsplit
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,7 +100,13 @@ def windows_device(device: str) -> str:
     return f"video={device}"
 
 
-def publish_args(device: str | None, seconds: int | None) -> list[str]:
+def publish_args(
+    device: str | None,
+    seconds: int | None,
+    path: str = "camera1",
+) -> list[str]:
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}", path):
+        raise ValueError("Use um caminho simples de stream, como camera1.")
     args = [ffmpeg(), "-hide_banner"]
     if device is None:
         args += ["-re", "-f", "lavfi", "-i", "testsrc=size=1280x720:rate=30"]
@@ -156,7 +165,7 @@ def publish_args(device: str | None, seconds: int | None) -> list[str]:
         "rtsp",
         "-rtsp_transport",
         "tcp",
-        PUBLISH_URL,
+        f"rtsp://127.0.0.1:8554/{path}",
     ]
     return args
 
@@ -182,6 +191,43 @@ def run(command: list[str], *, local_server: bool = False) -> int:
         return 130
 
 
+def mjpeg_args(url: str, path: str) -> list[str]:
+    """Explicit operator-selected LAN multipart MJPEG to H264; no discovery or inference."""
+    parsed = urlsplit(url)
+    address = ip_address(parsed.hostname or "")
+    if (
+        parsed.scheme != "http"
+        or not isinstance(address, IPv4Address)
+        or not address.is_private
+        or address.is_loopback
+        or address.is_link_local
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or any(char.isspace() or ord(char) < 32 for char in url)
+    ):
+        raise ValueError("Use o HTTP MJPEG de um IP privado, sem credenciais ou parâmetros.")
+    _ = parsed.port
+    output = publish_args(None, None, path)
+    encoding = output[output.index("-map") :]
+    return [
+        ffmpeg(),
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-rw_timeout",
+        "5000000",
+        "-f",
+        "mpjpeg",
+        "-i",
+        url,
+        "-vf",
+        "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2",
+        *encoding,
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -192,9 +238,14 @@ def main() -> int:
     modes.add_argument("--device", required=True)
     test = commands.add_parser("test-pattern", help="publicar padrão sem acessar câmera")
     test.add_argument("--seconds", type=int)
+    test.add_argument("--path", default="camera1")
     camera = commands.add_parser("webcam", help="transmitir webcam explicitamente escolhida")
     camera.add_argument("--device", required=True)
     camera.add_argument("--seconds", type=int)
+    camera.add_argument("--path", default="camera1")
+    relay = commands.add_parser("mjpeg", help="converter MJPEG privado em H264 sem IA")
+    relay.add_argument("--url", required=True)
+    relay.add_argument("--path", default="camera2")
     args = parser.parse_args()
     try:
         if args.command == "setup":
@@ -205,6 +256,8 @@ def main() -> int:
             if not executable.is_file():
                 raise ValueError("Execute primeiro: python scripts/streaming.py setup")
             return run([str(executable), str(CONFIG)], local_server=True)
+        if args.command == "mjpeg":
+            return run(mjpeg_args(args.url, args.path))
         if args.command in {"devices", "modes"}:
             if platform.system() != "Windows":
                 raise ValueError(
@@ -214,7 +267,13 @@ def main() -> int:
             source = "dummy" if args.command == "devices" else windows_device(args.device)
             print("O FFmpeg pode encerrar com código 1 após listar os dispositivos/modos.")
             return run([ffmpeg(), "-hide_banner", option, "true", "-f", "dshow", "-i", source])
-        return run(publish_args(args.device if args.command == "webcam" else None, args.seconds))
+        return run(
+            publish_args(
+                args.device if args.command == "webcam" else None,
+                args.seconds,
+                args.path,
+            )
+        )
     except (OSError, ValueError) as exc:
         print(f"Erro: {exc}")
         return 2

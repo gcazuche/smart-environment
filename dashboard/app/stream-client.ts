@@ -1,5 +1,22 @@
-/** Local-only WHEP receiver. No camera permission, upload, recording or inference. */
+/** WHEP video receiver. No camera permission, upload, recording or inference. */
 export const DEFAULT_STREAM_URL = "http://127.0.0.1:8889/camera1/whep";
+
+export function processingOrigin(value: string): string {
+  const url = new URL(value);
+  const local = ["localhost", "127.0.0.1"].includes(url.hostname);
+  if ((url.protocol !== "https:" && !(local && url.protocol === "http:" && url.port === "8766")) ||
+      url.username || url.password || url.search || url.hash || url.pathname !== "/") {
+    throw new Error("Configure o endereço HTTPS do servidor, sem caminho ou credenciais.");
+  }
+  return url.origin;
+}
+
+export function serverStreamUrl(base: string, cameraId: string): string {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(cameraId)) throw new Error("Câmera inválida.");
+  return `${processingOrigin(base)}/v1/cameras/${cameraId}/whep`;
+}
+
+export type ServerAuthorization = { baseUrl: string; token: () => Promise<string> };
 
 export function validateStreamUrl(value: string, pageOrigin: string): string {
   const local = (host: string) => host === "localhost" || host === "127.0.0.1";
@@ -52,15 +69,18 @@ export class WhepReceiver {
   private location: string | null = null;
   private closed = false;
   private started = false;
+  private authorization?: ServerAuthorization;
 
   constructor(options: {
     onTrack: (event: RTCTrackEvent) => void;
     onState: (state: RTCPeerConnectionState) => void;
     peerFactory?: () => RTCPeerConnection;
     request?: typeof fetch;
+    authorization?: ServerAuthorization;
   }) {
     this.peer = options.peerFactory?.() ?? new RTCPeerConnection({ iceServers: [] });
     this.request = options.request ?? fetch;
+    this.authorization = options.authorization;
     this.peer.ontrack = (event) => { if (!this.closed) options.onTrack(event); };
     this.peer.onconnectionstatechange = () => {
       if (!this.closed) options.onState(this.peer.connectionState);
@@ -73,13 +93,18 @@ export class WhepReceiver {
     this.started = true;
     const timer = setTimeout(() => this.controller.abort(), timeoutMs);
     try {
-      const endpoint = validateStreamUrl(value, pageOrigin);
+      let endpoint: string;
+      if (this.authorization) {
+        const match = new URL(value).pathname.match(/^\/v1\/cameras\/([0-9a-f-]{36})\/whep$/);
+        if (!match || value !== serverStreamUrl(this.authorization.baseUrl, match[1])) throw new Error("Servidor de vídeo inválido.");
+        endpoint = value;
+      } else endpoint = validateStreamUrl(value, pageOrigin);
       const offer = await this.peer.createOffer();
       this.controller.signal.throwIfAborted();
       await this.peer.setLocalDescription(offer);
       await waitForIce(this.peer, this.controller.signal);
       const response = await this.request(endpoint, {
-        method: "POST", headers: { "Content-Type": "application/sdp" },
+        method: "POST", headers: { "Content-Type": "application/sdp", ...await this.authHeaders() },
         body: this.peer.localDescription?.sdp,
         signal: this.controller.signal, credentials: "omit", redirect: "error", cache: "no-store",
       });
@@ -103,6 +128,19 @@ export class WhepReceiver {
 
   getStats(): Promise<RTCStatsReport> { return this.peer.getStats(); }
 
+  private async authHeaders(): Promise<Record<string, string>> {
+    return this.authorization ? { Authorization: `Bearer ${await this.authorization.token()}` } : {};
+  }
+
+  async renew(): Promise<void> {
+    if (!this.authorization || !this.location || this.closed) return;
+    const response = await this.request(`${this.location}/keepalive`, {
+      method: "POST", headers: await this.authHeaders(), credentials: "omit", redirect: "error",
+      signal: AbortSignal.any([this.controller.signal, AbortSignal.timeout(8000)]), cache: "no-store",
+    });
+    if (!response.ok) { this.close(); throw new Error("A autorização de vídeo expirou. Entre novamente ou confira o servidor."); }
+  }
+
   close(): void {
     this.closed = true;
     this.controller.abort();
@@ -115,9 +153,11 @@ export class WhepReceiver {
     if (location) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 2500);
-      void this.request(location, {
-        method: "DELETE", signal: controller.signal, credentials: "omit", redirect: "error", keepalive: true,
-      }).catch(() => undefined).finally(() => clearTimeout(timer));
+      const remove = (headers: Record<string, string>) => this.request(location, {
+        method: "DELETE", headers, signal: controller.signal, credentials: "omit", redirect: "error", keepalive: true,
+      });
+      const cleanup = this.authorization ? this.authHeaders().then(remove) : remove({});
+      void cleanup.catch(() => undefined).finally(() => clearTimeout(timer));
     }
   }
 }

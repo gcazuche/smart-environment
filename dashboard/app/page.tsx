@@ -6,6 +6,7 @@ import { useBackendSession } from "./backend-session";
 import type { CameraRecord, EnvironmentRecord, RuleRecord } from "./data-client";
 import { BrandLogo } from "./brand-logo";
 import { StreamPreview } from "./stream-preview";
+import { processingConfigured, ProcessingContext, ServerCamera, useProcessingServer } from "./processing-server";
 import { DashboardClock } from "./dashboard-clock";
 import { CameraForm, EnvironmentForm, RulesDialog } from "./management-forms";
 import { readingAge } from "./dashboard-model";
@@ -74,10 +75,12 @@ function CameraPreview({ camera, large = false }: { camera: CameraState; large?:
   const [frameLoaded, setFrameLoaded] = useState(false);
 
   useEffect(() => {
-    if (camera.status !== "online") return;
+    if (processingConfigured() || camera.status !== "online") return;
     const timer = window.setInterval(() => setFrameVersion(Date.now()), 350);
     return () => window.clearInterval(timer);
   }, [camera.status]);
+
+  if (processingConfigured()) return <ServerCamera cameraId={camera.camera_id} name={camera.name} />;
 
   const showLiveFrame = camera.status === "online";
   const frameUrl = `http://127.0.0.1:8765/api/cameras/${encodeURIComponent(camera.monitor_id ?? camera.camera_id)}/frame.jpg?v=${frameVersion}`;
@@ -127,6 +130,7 @@ export default function Home() {
 
 function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> }) {
   const { repository, catalog } = session;
+  const processing = useProcessingServer(repository);
   const authUser = session.user!;
   const canEdit = catalog?.role === "admin" && !session.loading;
   const [notice, setNotice] = useState("");
@@ -143,18 +147,20 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("todas");
   const [telemetry, setCameras] = useState<CameraState[]>(waitingCameras);
-  const [agentConnected, setAgentConnected] = useState(false);
+  const [localAgentConnected, setAgentConnected] = useState(false);
+  const agentConnected = processingConfigured() ? processing.connected : localAgentConnected;
 
   const environments: EnvironmentRecord[] = catalog?.environments ?? (session.configured ? [] : Array.from(new Set(telemetry.map(camera => camera.environment))).map(name => ({ id: name, name, organization_id: "", version: 1 })));
   const cameras: CameraState[] = useMemo(() => session.configured ? (catalog?.cameras ?? []).map(record => {
-    const live = record.enabled ? telemetry.find(camera => camera.camera_id === record.monitor_id) : undefined;
+    const live = record.enabled ? (processingConfigured() ? processing.readings.find(camera => camera.camera_id === record.id) : telemetry.find(camera => camera.camera_id === record.monitor_id)) : undefined;
     return { ...(live ?? waitingCameras[0]), camera_id: record.id, monitor_id: record.monitor_id ?? undefined,
       name: record.name, source: record.source, environment_id: record.environment_id,
       environment: catalog?.environments.find(item => item.id === record.environment_id)?.name ?? "Ambiente indisponível",
-      status: live?.status ?? "waiting", people_count: live?.people_count ?? 0, last_seen_at: live?.last_seen_at ?? null };
-  }) : telemetry, [session.configured, catalog, telemetry]);
+      status: live?.status ?? "waiting", people_count: live?.people_count ?? 0, last_seen_at: live?.last_seen_at ?? null, error_code: null };
+  }) : telemetry, [session.configured, catalog, telemetry, processing.readings]);
 
   useEffect(() => {
+    if (processingConfigured()) return;
     if (!(["localhost", "127.0.0.1"].includes(window.location.hostname))) return;
     let activeRequest = true;
     let controller: AbortController | undefined;
@@ -229,7 +235,7 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
   const dataProps = { repository: catalog ? repository : null, environments, cameras: catalog?.cameras ?? [] };
 
   return (
-    <main className="app-shell">
+    <ProcessingContext.Provider value={processing}><main className="app-shell">
       <aside className="sidebar">
         <button className="brand" type="button" aria-label="Smart Environment — ir para visão geral" onClick={() => navigate("overview")}>
           <BrandLogo className="brand-full" />
@@ -278,7 +284,7 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
             </div>
           </div>
           <div className="top-actions">
-            <span className={`simulation-pill ${agentConnected ? "connected" : ""}`}>{active === "cameras" && cameraView === "stream" ? "Transmissão independente da IA" : agentConnected ? "Agente local conectado" : "Aguardando agente local"}</span>
+            <span className={`simulation-pill ${agentConnected ? "connected" : ""}`}>{processingConfigured() ? (agentConnected ? "Servidor conectado" : "Aguardando servidor") : active === "cameras" && cameraView === "stream" ? "Transmissão independente da IA" : agentConnected ? "Agente local conectado" : "Aguardando agente local"}</span>
             <button className="icon-button" type="button" aria-label="Notificações" onClick={() => navigate("alerts")}>♢</button>
             <button className="account-button" type="button" aria-label="Abrir perfil" aria-haspopup="dialog" aria-expanded={profileOpen} onClick={() => setProfileOpen((open) => !open)}>
               <span className="avatar">{userInitials(authUser.name)}</span>
@@ -290,6 +296,7 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
           {!session.configured && <p className="connection-notice" role="status">Acesso local: banco ainda não configurado. Os cadastros e relatórios usarão o Supabase quando você conectar o projeto.</p>}
           {session.loading && <p role="status">Carregando cadastros e permissões…</p>}
           {session.error && <div className="form-feedback" role="alert">{session.error} <button type="button" className="text-button" onClick={session.refresh}>Tentar novamente</button></div>}
+          {processingConfigured() && processing.error && <p className="connection-notice" role="status">{processing.error}</p>}
           {notice && <p className="connection-notice" role="status">{notice} <button type="button" className="text-button" onClick={() => setNotice("")}>Dispensar</button></p>}
           {active === "overview" && (
             <Overview cameras={cameras} agentConnected={agentConnected} connected={!!catalog} onOpenHistory={() => navigate("history")} />
@@ -297,9 +304,9 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
 
           {active === "cameras" && <div className="camera-view-switch" role="group" aria-label="Modo de visualização das câmeras">
             <button type="button" aria-pressed={cameraView === "stream"} onClick={() => { setCameraView("stream"); setSelectedCameraId(null); }}>Transmissão</button>
-            <button type="button" aria-pressed={cameraView === "detection"} onClick={() => setCameraView("detection")}>Detecção local</button>
+            <button type="button" aria-pressed={cameraView === "detection"} onClick={() => setCameraView("detection")}>{processingConfigured() ? "Dispositivos e detecções" : "Detecção local"}</button>
           </div>}
-          {active === "cameras" && cameraView === "stream" && <><div className="stream-management"><button className="secondary-button" type="button" onClick={() => setAddCameraOpen(true)}>Adicionar câmera</button></div><StreamPreview /></>}
+          {active === "cameras" && cameraView === "stream" && <><div className="stream-management"><button className="secondary-button" type="button" onClick={() => setAddCameraOpen(true)}>Adicionar câmera</button></div>{processingConfigured() ? <div className="server-stream-grid">{cameras.map(camera => <ServerCamera key={camera.camera_id} cameraId={camera.camera_id} name={camera.name} />)}{cameras.length === 0 && <p>Cadastre uma câmera e vincule seu UUID ao stream no servidor.</p>}</div> : <StreamPreview />}</>}
 
           {active === "cameras" && cameraView === "detection" && !selectedCamera && (
             <section className="page-stack">
@@ -341,7 +348,7 @@ function Dashboard({ session }: { session: ReturnType<typeof useBackendSession> 
       {editEnvironment && <EnvironmentForm repository={repository} canEdit={canEdit} initial={editEnvironment} environments={environments} onSaved={savedEnvironment} onClose={() => setEditEnvironment(null)} />}
       {rulesOpen && <RulesDialog repository={repository} canEdit={canEdit} rules={catalog?.rules ?? []} environments={environments} onSaved={savedRule} onClose={() => setRulesOpen(false)} />}
       {profileOpen && <ProfileModal user={authUser} onClose={() => setProfileOpen(false)} onLogout={handleLogout} />}
-    </main>
+    </main></ProcessingContext.Provider>
   );
 }
 
@@ -349,7 +356,7 @@ function Overview({ cameras, agentConnected, connected, onOpenHistory }: { camer
   const onlineCameras = cameras.filter((camera) => camera.status === "online").length;
   const metrics = [
     { label: "Contagem de pessoas", value: "Por câmera", change: "Consulte cada câmera; áreas podem se sobrepor", tone: "teal" },
-    { label: "Câmeras online", value: `${onlineCameras}/${cameras.length}`, change: agentConnected ? "Agente local conectado" : "Inicie o monitor local", tone: "blue" },
+    { label: "Câmeras online", value: `${onlineCameras}/${cameras.length}`, change: agentConnected ? "Monitor conectado" : "Aguardando leituras", tone: "blue" },
     { label: "Ocupação hoje", value: "—", change: connected ? "Consulte a página Indicadores" : "Histórico ainda não conectado", tone: "lime" },
     { label: "Alertas ativos", value: "—", change: connected ? "Consulte a central de Alertas" : "Serviço de alertas ainda não conectado", tone: "orange" },
   ];
