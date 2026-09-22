@@ -1,0 +1,52 @@
+name: Validate Smart Environment
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      CI: 'true'
+      DJANGO_SETTINGS_MODULE: app.web.testing
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: OpenCV system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libgl1 libglib2.0-0t64
+      - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3
+        with:
+          miniforge-version: latest
+          environment-file: environment.ci.yml
+          activate-environment: smart-environment
+          auto-activate: false
+          channels: conda-forge
+      - name: Python unit and synthetic integration tests
+        run: python -m pytest -q
+      - name: Django and plain JavaScript checks (hermetic, no remote credentials)
+        run: |
+          python manage.py check
+          python -m ruff check manage.py app/web tests/test_web_*.py
+          python -m ruff format --check manage.py app/web tests/test_web_*.py
+          node --test tests/js/*.test.mjs
+      - name: Python server checks
+        run: |
+          python -m ruff check app/server tests/test_server_*.py
+          python -m mypy app/server

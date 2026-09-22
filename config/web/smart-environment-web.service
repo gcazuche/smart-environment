@@ -1,0 +1,23 @@
+[Unit]
+Description=Smart Environment Django web (single worker, separate from inference)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=smart-environment
+WorkingDirectory=/opt/smart-environment
+EnvironmentFile=/etc/smart-environment/web.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/conda/envs/smart-environment/bin/waitress-serve --listen=127.0.0.1:8000 --threads=8 --connection-limit=100 --max-request-body-size=150000 --trusted-proxy=127.0.0.1 --trusted-proxy-headers=x-forwarded-proto app.web.wsgi:application
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/smart-environment
+
+[Install]
+WantedBy=multi-user.target

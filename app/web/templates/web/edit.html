@@ -1,0 +1,10 @@
+{% extends 'web/dashboard_base.html' %}
+{% block maincontent %}
+<a class="back-link" href="{{ cancel_url }}">← Voltar</a><div class="page-heading"><div><p class="eyebrow">GERENCIAMENTO</p><h1>{{ title }}</h1><p>Alterações são salvas na organização atual.</p></div></div>
+<section class="panel form-panel"><form method="post" data-save-form novalidate>{% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form %}{% if field.is_hidden %}{{ field }}{% if field.errors %}<div class="form-error">{{ field.errors }}</div>{% endif %}{% else %}<div class="form-field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}{% if field.errors %}<div class="form-error" role="alert">{{ field.errors }}</div>{% endif %}</div>{% endif %}{% endfor %}
+  {% if group == 'cameras' %}<p class="notice">Salvar cadastra a câmera. A origem também precisa ser vinculada ao UUID no servidor de processamento; o cadastro não abre o dispositivo.</p>{% elif group == 'rules' %}<p class="notice">A regra é salva no banco. Sua aplicação depende do serviço de análise ativo no servidor. Horários de expediente usam Brasília.</p>{% endif %}
+  <div class="form-actions"><a href="{{ cancel_url }}" class="secondary-button">Cancelar</a><button class="primary-button" type="submit" data-save-button>Salvar alterações</button></div>
+</form></section>
+{% endblock %}

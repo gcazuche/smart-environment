@@ -1,0 +1,54 @@
+name: Validate legacy dashboard (manual only)
+
+# The React/TypeScript source is retained for reference, not the active web runtime.
+# Known npm audit findings are still genuine failures when this workflow is run.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: legacy-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  legacy-offline-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+      WRANGLER_WRITE_LOGS: 'false'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: OpenCV system libraries for the shared Conda profile
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libgl1 libglib2.0-0t64
+      - uses: conda-incubator/setup-miniconda@fc2d68f6413eb2d87b895e92f8584b5b94a10167 # v3
+        with:
+          miniforge-version: latest
+          environment-file: environment.ci.yml
+          activate-environment: smart-environment
+          auto-activate: false
+          channels: conda-forge
+      - name: Install legacy lock without package lifecycle scripts
+        working-directory: dashboard
+        run: npm ci --ignore-scripts
+      - name: Legacy build and offline integration tests
+        working-directory: dashboard
+        run: npm test
+      - name: Legacy code checks
+        working-directory: dashboard
+        run: |
+          npm run lint
+          npm exec -- tsc --noEmit
+      - name: Full dependency gate (known residual findings remain failures)
+        working-directory: dashboard
+        run: npm audit --audit-level=high

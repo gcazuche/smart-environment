@@ -1,10 +1,51 @@
 # Smart Environment
 
 Plataforma de ambiente inteligente para ocupação, sustentabilidade, recursos e
-patrimônio. O projeto usa uma webcam autorizada, processamento local em Python/OpenCV,
-Supabase e um dashboard web em HTML/CSS/JavaScript.
+patrimônio. O projeto usa câmeras autorizadas, processamento separado em Python/OpenCV,
+Supabase e um dashboard Django com HTML/CSS/JavaScript puro.
 
 ## Estado atual
+
+### Django é a aplicação web principal
+
+A transição para **Django + HTML/CSS/JavaScript puro** está implementada em `app/web/`:
+
+- Login Supabase, sessões mantidas no servidor, perfil e logout.
+- URLs reais para visão geral, câmeras, ambientes, indicadores, alertas e histórico.
+- Cadastros de ambientes, câmeras e regras com permissões e controle de versão.
+- Ambientes com todas as suas câmeras, consulta de registros, gráficos por câmera e CSV.
+- Transmissão WebRTC e análise independentes, com controles em JavaScript puro.
+- Prévia JPEG do monitor local por configuração explícita, desabilitada por padrão.
+
+O runtime web não depende de Node, React, TypeScript ou dos pesos de detecção.
+`dashboard/` foi preservado como legado para consulta e reversibilidade, mas não é a
+aplicação nem o caminho de CI principal. Sua existência no repositório não significa
+que TypeScript seja usado para executar o Django.
+
+**Implementação não equivale a aceite operacional:** autenticação e dados no Supabase
+real, instalação na VM e transmissão com câmeras físicas ainda precisam de validação
+no ambiente autorizado. Os testes locais não comprovam 720p/30 FPS no Hyper-V.
+Nenhum bootstrap deve ser repetido; usuários, organização e dados existentes são reutilizados.
+
+Consulte o [guia completo de configuração Django](docs/django-migration.md). O início
+rápido local está na seção **Executar o dashboard Django**, abaixo.
+
+### Avaliação de interação na estação (offline, experimental)
+
+O projeto agora compara o detector atual com uma entrada que preserva as proporções
+da imagem (`letterbox`), usando seis fotos públicas com origem/licença/hash registrados.
+A avaliação detecta pessoa/laptop/mouse/teclado e relata proximidade, não produtividade
+ou intenção. Não houve fine-tuning nem mudança automática no detector das câmeras.
+Veja [como reproduzir a avaliação e seus limites](docs/workstation-evaluation.md).
+Há também um modo de recortes `--include-detail` e duas cenas abertas adicionais:
+ele recuperou propostas de teclados pequenos, mas acrescentou falsos positivos e
+custou cerca de 5,1 vezes mais CPU nos ensaios locais. Continua somente offline,
+sem promoção às câmeras e sem treino ou classificação de trabalho/distração.
+O [editor local de revisão de caixas](docs/workstation-review.md) permite corrigir
+anotações e salvar rascunhos; a comparação de precisão/recall só aceita revisões
+explicitamente concluídas. Os oito exemplos reais continuam pendentes de revisão.
+QA visual no navegador do usuário também está pendente; testes de lógica passaram.
+Para continuar em outro PC, leia também `AGENTS.md` e `.planning/STATE.md`.
 
 ### Modo servidor Ubuntu (implementado, instalação na VM pendente)
 
@@ -24,11 +65,29 @@ físicas ainda precisam de comissionamento. Não exponha os serviços internos �
 
 ### Versões do projeto
 
-O primeiro marco proposto é **v0.1.0**, preparado mas ainda não publicado. O histórico
+Em 20/09/2026, as tags locais **v0.1.0 e v0.2.0** foram novamente verificadas e
+apontam para `f5b1f18`. O novo candidato da migração é **v0.3.0-alpha.1**
+(versão Python `0.3.0a1`), ainda não publicado.
+As mudanças posteriores ainda estão locais; não mova ou recrie essas tags para
+incluí-las. Não houve commit/tag/push automático; publicação remota não foi verificada. O histórico
 de versões fica em [CHANGELOG.md](CHANGELOG.md), e os comandos para criar commit e
 tag sem substituir versões anteriores estão no [guia de versionamento](docs/versioning.md).
 Ao fechar um marco testado, informaremos seu conteúdo, limites e comandos; commits,
 tags, pushes e Releases não serão executados automaticamente.
+
+### Preparação local sem acesso à VM
+
+O painel evita consultas simultâneas e interrompe transmissão e consultas ao ocultar
+a aba; a retomada exige nova ação explícita. Falhas temporárias de telemetria expiram
+contagens/retângulos sem reiniciar o
+vídeo remoto; acesso negado continua removendo a transmissão. A captura do servidor
+reduz cópias de memória e a consulta periódica de fechamento de minutos roda a 1 Hz.
+
+- [Desempenho, evidências e critérios de aceite](docs/performance-and-readiness.md).
+- [Backup, verificação e restore da fila local](docs/server-backup.md).
+- [Validação automática preparada para o GitHub](docs/continuous-integration.md).
+
+O workflow ainda precisa executar no GitHub; não é evidência de instalação Linux.
 
 ### Histórico do piloto local
 
@@ -37,15 +96,16 @@ inteiras ou parcialmente visíveis, inclusive múltiplas pessoas. Um agente loca
 processar simultaneamente a webcam do computador e o celular como câmera de rede. O
 dashboard local mostra o JPEG anotado mais recente de cada câmera, com os retângulos do
 detector e da área de trabalho configurada, sem gravar frames ou enviá-los à internet.
-Os gráficos históricos continuam
-simulados e a avaliação representativa ainda está pendente.
+Nesse piloto anterior, gráficos históricos eram simulados. O painel Django atual
+consulta registros persistidos; não usa esses gráficos de demonstração. A avaliação
+representativa do detector continua pendente.
 
 A fundação técnica anterior foi preservada:
 
 - configuração mínima e comando de diagnóstico;
 - logging JSON seguro e tratamento global de exceções;
 - ambiente Conda isolado e recriável com `environment.yml`;
-- 99 testes e 11 subtestes aprovados no checkpoint atual em Python 3.12;
+- 99 testes e 11 subtestes aprovados no checkpoint histórico da fundação;
 - smoke autorizado da webcam integrada com um frame somente em memória.
 
 O pacote, a CLI e as variáveis ainda usam o nome técnico legado `multicam` /
@@ -102,68 +162,64 @@ retenção e acesso serão avaliados antes de dados reais.
 Consulte `.planning/ROADMAP.md` para entregas, critérios de aceite e itens fora de
 cada etapa.
 
-## Dashboard visual
+## Executar o dashboard Django
 
-O protótipo fica em `dashboard/` e inclui:
-
-- visão geral com ocupação, saúde e atividade recente;
-- área **Câmeras** com todos os dispositivos cadastrados;
-- detalhes da webcam do computador e da câmera do celular;
-- conexão local disponível para webcam e câmera IP; gateway ESP32 permanece futuro;
-- ambientes, indicadores, sustentabilidade e alertas;
-- navegação responsiva para computador e celular.
-
-As contagens, o estado e a imagem anotada das duas câmeras podem vir do agente local. Os
-gráficos históricos ainda são demonstrações. A área de câmera mostra vídeo somente em
-`localhost`; mantém um JPEG limitado por câmera em memória e não grava nem publica o
-vídeo na internet.
+Abra um terminal na raiz do projeto. Se este PC ainda não possui o ambiente
+`smart-environment`, crie o perfil leve da aplicação web uma única vez:
 
 ```powershell
-cd dashboard
-npm install
-npm run dev
+conda env create --file environment.web.yml
 ```
 
-Abra `http://localhost:3000`. Para validar:
+Se o ambiente já existe, preserve-o e atualize somente o extra web. Os comandos
+seguintes usam o Conda correto sem instalar no `base`:
 
 ```powershell
-npm run lint
-npm test
+conda run --no-capture-output -n smart-environment python -m pip install -e ".[web]"
+conda run --no-capture-output -n smart-environment python manage.py prepare_web
 ```
 
-### Teste com a câmera do computador e a do celular
+`prepare_web` cria `config/web/.env.web.local` somente se o arquivo não existir,
+gera o segredo Django e aproveita a configuração local anterior quando disponível.
+Não sobrescreve configurações existentes, não acessa o Supabase e não mostra chaves.
+Em outro PC, preencha o arquivo privado conforme o
+[guia Django](docs/django-migration.md), com o UUID da organização que já existe.
+Não coloque configurações privadas no Git, em capturas de tela ou nos logs.
 
-Conecte os dois aparelhos à mesma rede privada e configure no celular um aplicativo
-que disponibilize vídeo por MJPEG ou RTSP. Copie a URL local fornecida pelo aplicativo,
-por exemplo `http://192.168.1.50:8080/video`, e execute em um terminal:
+Depois de conferir a configuração, execute cada comando separadamente:
 
 ```powershell
-conda run -n smart-environment multicam monitor --phone-url "http://192.168.1.50:8080/video" --detector intel
+conda run --no-capture-output -n smart-environment python manage.py migrate
+conda run --no-capture-output -n smart-environment python manage.py check
+conda run --no-capture-output -n smart-environment python manage.py runserver 127.0.0.1:8000 --insecure --noreload
 ```
 
-Por segurança, a área inicial de cada câmera cobre o frame inteiro. Para calibrar uma
-região diferente por câmera, use coordenadas proporcionais entre `0` e `1` no formato
-`esquerda,topo,direita,base`:
+`migrate` prepara **apenas o banco local de sessões e controle de tentativas de login**.
+Não executa bootstrap nem migração no Supabase. Abra <http://127.0.0.1:8000/> e use
+sua conta Supabase existente. Para encerrar, pressione `Ctrl+C` no terminal.
 
-```powershell
-conda run -n smart-environment multicam monitor --phone-url "http://192.168.1.50:8080/video" --detector intel --pc-work-zone "0.10,0.20,0.90,1.00" --phone-work-zone "0.05,0.15,0.95,1.00"
-```
+Mantenha `DJANGO_DEBUG=false`. Neste comando, `--insecure` habilita os arquivos
+estáticos no servidor de desenvolvimento com DEBUG desligado; **não é uma opção
+de implantação**. Não exponha `runserver` na LAN ou internet. A VM deve usar o serviço
+WSGI e o proxy HTTPS descritos no guia, com hosts e origens configurados corretamente.
 
-O retângulo aparece na prévia local. Uma pessoa é contabilizada na região quando ao
-menos 20% da caixa detectada se sobrepõe a ela; isso não classifica trabalho ou distração.
+### Vídeo no servidor ou monitor local
 
-Em outro terminal, abra o dashboard:
+O caminho principal usa `PROCESSING_SERVER_URL` apontando para o gateway configurado.
+Cadastre ambientes e câmeras e associe seus UUIDs ao mapa do servidor. Na área
+**Câmeras**, clique em **Conectar** para iniciar um stream. Cadastrar não abre uma
+câmera automaticamente. Vídeo FPS e análise FPS são informados separadamente; dados
+indisponíveis ficam desconhecidos, nunca uma contagem fictícia de zero.
 
-```powershell
-cd dashboard
-npm run dev
-```
+Para o piloto local autorizado, existe a opção `LOCAL_MONITOR_ENABLED=true` no
+arquivo privado. Ela é **opt-in**, destinada a quem autorizou o uso das câmeras e
+já mantém o monitor local funcionando. Sem gateway configurado, o Django consulta
+somente o monitor em `127.0.0.1:8765` e associa leituras pelo `monitor_id` cadastrado.
+A prévia é JPEG limitado, sem promessa de 30 FPS. Ativar a opção não inicia o monitor
+nem autoriza capturas; consulte o [guia Django](docs/django-migration.md) antes de usar.
 
-Ao acessar `http://localhost:3000`, o selo muda para **Agente local conectado** e a
-área **Câmeras** mostra os dois vídeos com as caixas de detecção. A URL do celular deve
-ser um IP privado ou nome `.local`; credenciais embutidas e endereços públicos são
-rejeitados. O agente escuta apenas em `127.0.0.1:8765`, valida a origem da página e não
-expõe a API na rede.
+O retângulo de pessoa/região, quando disponível, indica uma detecção espacial.
+Presença ou proximidade de computador não classifica trabalho, distração ou produtividade.
 
 ## Ambiente Conda oficial do projeto
 
@@ -324,8 +380,12 @@ representativa de qualidade ainda continua pendente.
 ```text
 .
 ├── app/                         # fundação, câmera e detecção local
+│   └── web/                     # aplicação Django principal, templates e JS puro
+├── config/web/                  # exemplos públicos e configuração privada ignorada
+├── dashboard/                   # painel TypeScript legado, fora do runtime principal
+├── manage.py                    # entrada dos comandos Django
 ├── data/                        # runtime ignorado; pastas antigas não são baseline
-├── tests/                       # 99 testes e 11 subtestes automatizados
+├── tests/                       # testes locais e integrações sintéticas
 └── .planning/
     ├── phases/01-foundation/    # evidência histórica preservada
     ├── phases/02-database/      # plano antigo explicitamente superado
@@ -338,6 +398,7 @@ representativa de qualidade ainda continua pendente.
 ## Como continuar
 
 Leia `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`,
-`.planning/DECISIONS.md` e `.planning/STATE.md`. O próximo incremento deve criar um
-pequeno teste controlado e aproximado de laptop/celular com a câmera autorizada antes de
-qualquer integração em tempo real, ainda sem Supabase ou classificação de atividade.
+`.planning/DECISIONS.md` e `.planning/STATE.md`. O foco atual é fechar a preparação
+local, validar a aplicação Django com a conta existente, preservar a nova versão e,
+quando houver acesso, comissionar a VM por etapas.
+As fotos e o treinamento permanecem pausados; celular não faz parte do dataset atual.

@@ -1,0 +1,4 @@
+{% extends 'web/dashboard_base.html' %}
+{% block maincontent %}
+<section class="panel error-panel" role="alert"><p class="eyebrow">NÃO FOI POSSÍVEL CONCLUIR</p><h1>Dados indisponíveis</h1><p>{{ error }}</p><p class="muted">Nenhum resultado vazio ou sucesso foi presumido. Verifique a conexão e seu acesso antes de tentar novamente.</p>{% if retry_url %}<a class="secondary-button" href="{{ retry_url }}">Tentar novamente</a>{% endif %}<a class="text-link" href="{% url 'web:overview' %}">Voltar ao início</a></section>
+{% endblock %}

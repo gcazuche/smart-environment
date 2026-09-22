@@ -1,0 +1,18 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Smart Environment — ocupação, recursos e sustentabilidade em um só lugar.">
+    <meta name="referrer" content="same-origin">
+    <title>{% block title %}Smart Environment | Acesso{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'brand/smart-environment-symbol.png' %}">
+    <link rel="stylesheet" href="{% static 'web/login.css' %}">
+    <script src="{% static 'web/login.js' %}" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#access-title">Pular para o acesso</a>
+    {% block content %}{% endblock %}
+  </body>
+</html>

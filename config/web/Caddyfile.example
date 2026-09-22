@@ -1,0 +1,17 @@
+# Merge with existing sites; do not overwrite the gateway Caddy site.
+# Replace this example with your DNS name. Public DNS must point to the server.
+smart.example.com {
+    request_body {
+        max_size 150KB
+    }
+    handle_path /static/* {
+        root * /var/lib/smart-environment/static
+        file_server
+    }
+    handle {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up X-Smart-Client-IP {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+}

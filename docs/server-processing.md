@@ -13,8 +13,11 @@ Câmeras → MediaMTX na VM → WebRTC → navegador
                    └──→ Python/OpenVINO → fila SQLite → Supabase
 ```
 
-O navegador autentica a conexão com sua sessão Supabase pelo gateway Python. O vídeo
-não passa pelo banco e não espera uma inferência para avançar. Os retângulos são a
+O navegador usa uma sessão Django; sinalização WHEP e telemetria passam por endpoints
+da mesma origem. Django encaminha o JWT do usuário ao gateway Python, que verifica
+seu vínculo e a propriedade da sessão de vídeo. Tokens Supabase não ficam no navegador.
+A mídia WebRTC vai diretamente ao navegador, sem passar por Django ou pelo banco,
+e não espera uma inferência para avançar. Os retângulos são a
 detecção recente, não uma análise sincronizada de cada quadro exibido. Imagens ficam
 em memória; este fluxo não grava vídeo, áudio, fotos, rostos ou identidade, nem conclui
 se alguém está trabalhando, distraído ou sendo produtivo.
@@ -73,8 +76,8 @@ de licença existentes. Se os arquivos estiverem ausentes ou alterados, a análi
 
 **A organização atual já existe: não execute novamente bootstrap ou migração inicial.**
 Mantenha a mesma organização e os vínculos de usuários. Cadastre as câmeras e os
-ambientes pelo dashboard com uma conta administradora. No modo servidor, o cartão
-aguardando vínculo mostra o UUID da câmera; ele também pode ser conferido no Supabase.
+ambientes pelo painel com uma conta administradora. O UUID da câmera aparece no
+endereço da página de detalhes (`/cameras/UUID/`) e pode ser conferido no Supabase.
 O cadastro sozinho não instala um transmissor nem autoriza um endereço de câmera na VM.
 
 ```bash
@@ -96,7 +99,7 @@ No TOML, substitua os UUIDs fictícios e mantenha a correspondência explícita:
 
 ```toml
 organization_id = "UUID-REAL-DA-ORGANIZACAO"
-allowed_origins = ["http://localhost:3000"]
+allowed_origins = ["http://localhost:8000", "http://127.0.0.1:8000"]
 analysis_fps = 2.0
 cpu_threads = 4
 database = "../../data/server/outbox.sqlite3"
@@ -106,9 +109,12 @@ database = "../../data/server/outbox.sqlite3"
 "UUID-REAL-DA-CAMERA-DO-CELULAR" = "camera2"
 ```
 
-Use de uma a quatro entradas, caminhos diferentes, simples e sem barras. A origem
-permitida é o endereço **do dashboard**, não da câmera; para outro endereço HTTPS,
-inclua-o explicitamente, sem curingas. O serviço só analisa câmeras habilitadas da
+Use de uma a quatro entradas, caminhos diferentes, simples e sem barras. As origens
+permitidas são endereços explícitos **do painel**, não da câmera; nunca use curingas.
+Na aplicação Django, o navegador não chama diretamente a API do gateway: o proxy
+server-side não encaminha o header `Origin` nem cookies recebidos do cliente. A
+allowlist do gateway permanece restrita para clientes que usem sua API diretamente.
+O serviço só analisa câmeras habilitadas da
 organização que também estejam nesse mapa. Endereços salvos pelo navegador não viram
 automaticamente fontes de captura: o responsável configura as fontes no MediaMTX.
 
@@ -192,24 +198,57 @@ existente: não a sobrescreva se houver outros sites. Na instalação padrão, v
 `sudo caddy validate --config /etc/caddy/Caddyfile` e recarregue com
 `sudo systemctl reload caddy`. Não inicie um segundo Caddy disputando a porta 443.
 
-No **computador do dashboard**, preserve as três variáveis Supabase já existentes em
-`dashboard/.env.local` e acrescente:
+Na máquina que executa **Django**, prepare a configuração privada seguindo
+[django-migration.md](django-migration.md). O arquivo atual é
+`config/web/.env.web.local`, não `dashboard/.env.local`. As mesmas URL, chave
+publicável e organização Supabase continuam válidas; não faça novo bootstrap.
+`prepare_web` pode copiar as variáveis do arquivo legado sem sobrescrevê-lo e gera
+uma chave Django privada. Preserve essa chave entre reinicializações e não a publique.
+
+Se Django e o processamento estiverem **na mesma VM**, acrescente ao arquivo web:
 
 ```dotenv
-VITE_PROCESSING_SERVER_URL=https://192.168.1.50
+PROCESSING_SERVER_URL=http://127.0.0.1:8766
 ```
 
-Reinicie o dashboard ou refaça seu build. No Windows, na raiz do projeto:
+Se Django estiver **em outro computador**, use o HTTPS privado do gateway:
+
+```dotenv
+PROCESSING_SERVER_URL=https://192.168.1.50
+```
+
+Nesse segundo caso, a CA do certificado precisa ser confiável também para o **Python
+na máquina Django**, não apenas para o navegador. Configure o armazenamento de
+certificados/CA do ambiente com o responsável pela rede; não desative a validação
+TLS. O navegador ainda precisa alcançar a mídia WebRTC na VM pela LAN/VPN. A URL
+acima é somente uma origem, sem caminho, parâmetros ou credenciais embutidas.
+
+Depois da preparação inicial da configuração e das migrações **locais de sessão**,
+reinicie Django. Para ver o painel local no Windows, na raiz do projeto:
 
 ```powershell
-conda activate smart-environment
-npm.cmd --prefix dashboard ci
-npm.cmd --prefix dashboard run dev -- --hostname localhost
+conda run --no-capture-output -n smart-environment python manage.py runserver 127.0.0.1:8000 --insecure --noreload
 ```
 
-Entre com uma conta real vinculada à organização. O modo local sem Supabase não
-autentica o servidor. Abra Câmeras e conecte a transmissão; confirme imagem móvel,
-resolução e FPS medidos. O padrão é um teste de transporte, não de acurácia da detecção.
+Abra `http://127.0.0.1:8000`. `DJANGO_DEBUG=false` permanece ativo; `--insecure` apenas
+permite que o servidor de desenvolvimento entregue os arquivos estáticos nesse
+endereço loopback. Não é opção de implantação, não ignora certificados TLS e não
+autoriza expor `runserver` à rede. Não é necessário npm nem build TypeScript.
+
+Entre com uma conta real vinculada à organização. Abra **Câmeras** e clique
+**Conectar** na transmissão desejada; nenhuma câmera é aberta automaticamente.
+Confirme imagem móvel e FPS medidos. Vídeo FPS é separado de Análise FPS; uma falha
+temporária de análise expira contagens/retângulos, mas não reinicia a mídia. Falha de
+acesso encerra a transmissão. Ocultar a aba também a encerra; conecte para retomar.
+O padrão é um teste de transporte, não de acurácia da detecção.
+
+Para hospedar o painel na VM, use o roteiro de implantação Django e os exemplos
+`config/web/smart-environment-web.service` (Waitress, um processo com threads) e
+`config/web/Caddyfile.example` (HTTPS e arquivos estáticos). Eles são separados dos
+serviços MediaMTX/processamento desta página. Integre o site web ao Caddy existente
+sem sobrescrever o gateway nem iniciar outro processo na mesma porta. Hostnames,
+certificados, permissões, caminho do SQLite de sessões e coleta de estáticos exigem
+revisão antes de ativar o serviço; os exemplos não representam uma implantação validada.
 
 ## 5. Conectar fontes reais, uma de cada vez
 
@@ -299,6 +338,14 @@ Os units não automatizam a webcam do PC, o túnel SSH nem o relay MJPEG: esses 
 continuam explícitos nesta etapa. Não execute dois servidores para a mesma câmera/minuto.
 
 ## Operação, diagnóstico e limites
+
+O incremento v0.2.0 acrescenta [backup/verify/restore da outbox](server-backup.md)
+com destino novo, preservando a base original. Consulte também as
+[melhorias locais e o roteiro de medição](performance-and-readiness.md).
+O fechamento periódico dos minutos consulta o SQLite uma vez por segundo, em vez de
+acompanhar o loop de vídeo; observações e alertas continuam sendo persistidos quando
+recebidos. Um minuto encerrado pode levar até cerca de um segundo adicional para
+ser fechado, além do tempo de inferência/entrega. Isso não altera a análise configurada.
 
 - O endpoint autenticado `GET /v1/health` informa disponibilidade do catálogo e estado
   da entrega. Ele exige `Authorization: Bearer` com sessão real de usuário; nunca use

@@ -1,0 +1,15 @@
+{% extends 'web/dashboard_base.html' %}
+{% load static %}
+{% block maincontent %}
+<section class="welcome-card"><div><p class="eyebrow">BEM-VINDO AO SMART ENVIRONMENT</p><h1>Seu ambiente,<br>em equilíbrio.</h1><p>Acompanhe seus espaços, consulte registros e tome decisões com uma visão mais clara do que acontece ao redor.</p><a href="{% url 'web:environments' %}" class="light-button">Explorar ambientes <span aria-hidden="true">→</span></a></div><div class="welcome-wordmark" aria-hidden="true"><img src="{% static 'brand/smart-environment-horizontal.png' %}" alt="" width="363" height="154"><span>Conectar. Observar. Cuidar.</span></div></section>
+<section class="metrics-grid" aria-label="Resumo do cadastro">
+  <article class="metric-card"><span class="metric-marker teal"></span><p>Ambientes</p><strong>{{ catalog.environments|length }}</strong><small>Espaços cadastrados na organização</small></article>
+  <article class="metric-card"><span class="metric-marker blue"></span><p>Câmeras cadastradas</p><strong>{{ catalog.cameras|length }}</strong><small>{{ enabled_count }} habilitada{{ enabled_count|pluralize:'s' }} no cadastro; não indica conexão</small></article>
+  <article class="metric-card"><span class="metric-marker lime"></span><p>Pessoas agora</p><strong class="metric-text">Por câmera</strong><small>Áreas podem se sobrepor; sem soma de pessoas</small></article>
+  <article class="metric-card"><span class="metric-marker orange"></span><p>Registros de ocupação</p><strong class="metric-text">Histórico</strong><small>Consulte os minutos persistidos pelo servidor</small></article>
+</section>
+<section class="two-columns">
+  <article class="panel"><p class="eyebrow">LEITURA DO AMBIENTE</p><h2>Dados que ajudam a decidir</h2><p class="muted">Ocupação, ausência de leitura e períodos vazios permanecem separados. Os indicadores são calculados por câmera para evitar contagens duplicadas.</p><div class="feature-list"><a href="{% url 'web:indicators' %}"><span>Indicadores por período<small>Minutos ocupados, vazios e desconhecidos</small></span><b aria-hidden="true">↗</b></a><a href="{% url 'web:history' %}"><span>Histórico de observações<small>Filtros por ambiente e exportação CSV</small></span><b aria-hidden="true">↗</b></a></div></article>
+  <article class="panel"><p class="eyebrow">ACOMPANHAMENTO</p><h2>Tudo em seu lugar</h2><p class="muted">O vídeo ao vivo fica na área Câmeras. Cada dispositivo informa separadamente o estado da transmissão e da análise.</p><div class="feature-list"><a href="{% url 'web:cameras' %}"><span>Visualizar câmeras<small>Conecte apenas os streams que deseja acompanhar</small></span><b aria-hidden="true">↗</b></a><a href="{% url 'web:alerts' %}"><span>Central de alertas<small>Situações registradas para revisão humana</small></span><b aria-hidden="true">↗</b></a></div></article>
+</section>
+{% endblock %}

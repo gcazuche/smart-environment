@@ -1,0 +1,6 @@
+{% extends 'web/base.html' %}
+{% block content %}<main class="auth-panel"><section class="auth-card">
+<h1 id="access-title">Acesso indisponível</h1><p role="alert">{{ error }}</p>
+<p>Nenhum dado foi substituído por uma leitura fictícia.</p>
+<a href="{% url 'web:login' %}">Voltar ao acesso</a>
+</section></main>{% endblock %}

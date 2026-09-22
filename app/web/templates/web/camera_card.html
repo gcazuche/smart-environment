@@ -1,0 +1,4 @@
+<article class="camera-card">
+  {% include 'web/camera_viewer.html' %}
+  <div class="camera-card-body"><div><span class="badge {% if not camera.enabled %}muted-badge{% endif %}">{% if camera.enabled %}Habilitada{% else %}Desabilitada{% endif %}</span><h2>{{ camera.name }}</h2><p class="muted">{{ camera.environment_name }} · {{ camera.source|upper }}</p></div><a class="text-link" href="{% url 'web:camera_detail' camera.id %}">Abrir detalhes <span aria-hidden="true">↗</span></a></div>
+</article>

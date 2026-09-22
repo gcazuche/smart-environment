@@ -1,0 +1,8 @@
+{% extends 'web/dashboard_base.html' %}
+{% block maincontent %}
+<a class="back-link" href="{% url 'web:environments' %}">← Todos os ambientes</a>
+<div class="page-heading"><div><p class="eyebrow">AMBIENTE MONITORADO</p><h1>{{ environment.name }}</h1><p>Todos os dispositivos associados a este espaço.</p></div>{% if can_edit %}<a class="secondary-button" href="{% url 'web:environment_edit' environment.id %}">Editar ambiente</a>{% endif %}</div>
+<div class="summary-strip"><span><strong>{{ cameras|length }}</strong> câmeras cadastradas</span><a href="{% url 'web:history' %}?environment={{ environment.id }}">Histórico deste ambiente →</a><a href="{% url 'web:indicators' %}?environment={{ environment.id }}">Indicadores →</a></div>
+<p class="field-help">As contagens são por câmera. Câmeras sobrepostas podem observar a mesma pessoa, por isso não apresentamos uma soma do ambiente.</p>
+<div class="camera-grid">{% for camera in cameras %}{% include 'web/camera_card.html' %}{% empty %}<div class="empty-state"><h2>Nenhuma câmera neste ambiente</h2><p>Associe uma câmera a este espaço para acompanhar suas leituras.</p>{% if can_edit %}<a class="primary-button" href="{% url 'web:camera_new' %}">Adicionar câmera</a>{% endif %}</div>{% endfor %}</div>
+{% endblock %}

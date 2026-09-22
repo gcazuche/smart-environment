@@ -1,0 +1,41 @@
+{% load static %}
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Smart Environment — ambientes, câmeras e recursos em um só lugar.">
+  <title>{{ title }} | Smart Environment</title>
+  <link rel="icon" href="{% static 'brand/smart-environment-symbol.png' %}" type="image/png">
+  <link rel="stylesheet" href="{% static 'web/dashboard.css' %}">
+  <script src="{% static 'web/dashboard.js' %}" defer></script>
+  <script src="{% static 'web/video.js' %}" type="module"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a href="{% url 'web:overview' %}" class="brand-link" aria-label="Smart Environment — início"><img src="{% static 'brand/smart-environment-horizontal.png' %}" alt="Smart Environment" width="363" height="154"></a>
+    <p class="nav-label">SEU AMBIENTE</p>
+    <nav aria-label="Navegação principal">
+      <a href="{% url 'web:overview' %}" {% if section == 'overview' %}aria-current="page"{% endif %}><span aria-hidden="true">◫</span>Visão geral</a>
+      <a href="{% url 'web:cameras' %}" {% if section == 'cameras' %}aria-current="page"{% endif %}><span aria-hidden="true">▣</span>Câmeras</a>
+      <a href="{% url 'web:environments' %}" {% if section == 'environments' %}aria-current="page"{% endif %}><span aria-hidden="true">⌂</span>Ambientes</a>
+      <a href="{% url 'web:indicators' %}" {% if section == 'indicators' %}aria-current="page"{% endif %}><span aria-hidden="true">▥</span>Indicadores</a>
+      <a href="{% url 'web:alerts' %}" {% if section == 'alerts' or section == 'rules' %}aria-current="page"{% endif %}><span aria-hidden="true">◇</span>Alertas</a>
+      <a href="{% url 'web:history' %}" {% if section == 'history' %}aria-current="page"{% endif %}><span aria-hidden="true">◷</span>Histórico</a>
+    </nav>
+    <div class="sidebar-footer"><p>Mais consciência.<br>Melhores ambientes.</p><a href="{% url 'web:profile' %}">Minha conta <span aria-hidden="true">↗</span></a><form action="{% url 'web:logout' %}" method="post">{% csrf_token %}<button type="submit" class="logout-button">Sair da conta</button></form></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <button class="menu-toggle" type="button" aria-controls="sidebar" aria-expanded="false" data-menu-toggle>Menu</button>
+      <div class="breadcrumb">Smart Environment <span>/</span> <strong>{{ title }}</strong></div>
+      <div class="topbar-tools"><time datetime="{{ clock_now|date:'c' }}" data-clock>{{ clock_now|date:'d/m/Y H:i' }} · Brasília</time><a class="account-link" href="{% url 'web:profile' %}" aria-label="Abrir minha conta"><span aria-hidden="true">{{ account.email|first|upper }}</span></a></div>
+    </header>
+    <main id="main-content" class="main-content" tabindex="-1">{% block maincontent %}{% endblock %}</main>
+    <footer class="page-footer"><span>Smart Environment</span><span>Presença não determina produtividade. Dados para análise de ambientes.</span></footer>
+  </div>
+</div>
+</body>
+</html>

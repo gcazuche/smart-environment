@@ -1,0 +1,56 @@
+{% extends "web/base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="auth-shell">
+  <section class="auth-story" aria-labelledby="story-title">
+    <a class="auth-brand" href="{% url 'web:login' %}" aria-label="Smart Environment — página de acesso">
+      <img class="brand-image" src="{% static 'brand/smart-environment-horizontal.png' %}" width="363" height="154" alt="Smart Environment" decoding="async" draggable="false">
+    </a>
+    <div class="auth-story-copy">
+      <p class="auth-kicker">AMBIENTE INTELIGENTE</p>
+      <h1 id="story-title">Seu ambiente,<br>em equilíbrio.</h1>
+      <p>Uma visão clara de ocupação, recursos e sustentabilidade para decisões melhores no dia a dia.</p>
+      <ul class="auth-highlights">
+        <li><span aria-hidden="true">↗</span><div><strong>Ocupação em contexto</strong><small>Indicadores por ambiente e horário.</small></div></li>
+        <li><span aria-hidden="true">⌁</span><div><strong>Monitoramento responsável</strong><small>Privacidade e revisão humana no centro.</small></div></li>
+      </ul>
+    </div>
+    <p class="auth-story-footer">Smart Environment <span aria-hidden="true">·</span> {{ current_year }}</p>
+  </section>
+
+  <section class="auth-panel" aria-labelledby="access-title">
+    <div class="auth-card">
+      <div class="auth-card-meta">
+        <img class="brand-image auth-mini-mark" src="{% static 'brand/smart-environment-symbol.png' %}" width="167" height="137" alt="" decoding="async" draggable="false">
+        <span class="auth-stage-pill">Acesso ao ambiente</span>
+      </div>
+      <p class="eyebrow">BEM-VINDO DE VOLTA</p>
+      <h2 id="access-title" tabindex="-1">Entrar no painel</h2>
+      <p class="auth-lead">Acesse a visão geral do seu ambiente e acompanhe os dispositivos conectados.</p>
+
+      {% if not configured %}<p class="migration-notice">O acesso precisa ser configurado neste servidor. Consulte o guia de instalação Django.</p>{% endif %}
+      {% if error %}<p class="migration-notice" role="alert">{{ error }}</p>{% endif %}
+      {% if local_logout %}<p class="migration-notice">Sessão encerrada neste navegador. Não foi possível confirmar a revogação no serviço remoto.</p>{% endif %}
+      <form class="auth-fields" method="post" action="{% url 'web:login' %}">
+        {% csrf_token %}
+        {% for field in form %}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}{% endfor %}
+        <button class="auth-submit" type="submit" {% if not configured %}disabled{% endif %}>Entrar no painel <span aria-hidden="true">→</span></button>
+      </form>
+
+      <div class="migration-details">
+        <button class="details-toggle" id="migration-toggle" type="button" aria-expanded="true" aria-controls="migration-content" hidden>Ocultar detalhes de acesso</button>
+        <div id="migration-content">
+          <h3>Seu acesso</h3>
+          <p>Use a conta vinculada à sua organização no Smart Environment.</p>
+          <ul>
+            <li>As permissões são verificadas antes de acessar os ambientes e dispositivos.</li>
+            <li>Não há criação de contas automática. Para obter acesso, consulte o administrador.</li>
+            <li>Credenciais são enviadas somente ao servidor e ao serviço de autenticação configurado.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

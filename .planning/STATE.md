@@ -1,6 +1,197 @@
 # Estado GSD — Smart Environment
 
-Atualizado em: 2026-09-08
+Atualizado em: 2026-09-20
+
+## SE-13 / DJ-02 a DJ-06 — aplicação Django migrada; aceite remoto pendente
+
+- Pedido autorizado: terminar a transição. Aplicação principal agora `app/web/` +
+  `manage.py`, Django/HTML/CSS/JavaScript puro. Não precisa de npm/TypeScript para
+  rodar; `dashboard/` legado e trabalho anterior preservados, fora do fluxo principal.
+- Login Supabase real implementado, mesmos usuários/organização e RLS, sem bootstrap.
+  Sessões DB server-side, cookie HttpOnly com identificador, refresh/logout, CSRF,
+  limite persistente de tentativas e papéis admin/viewer verificados no servidor.
+  Autenticação recusa DEBUG/chave efêmera; produção exige HTTPS e hosts explícitos.
+- Visão geral, perfil, câmeras, ambientes com todas as câmeras, formulários de
+  câmera/ambiente/regra, indicadores, histórico, alertas/revisão e CSV implementados.
+  Edições exigem versão original; exportação é da página consultada, não banco inteiro.
+- Vídeo WebRTC/WHEP e polling portados para JS puro. Django encaminha sinalização e
+  telemetria same-origin, nunca token para o browser nem vídeo pela view. Conexão
+  manual, cleanup/aba oculta, leitura vencida desconhecida e overlay transitório.
+  Ponte ao monitor loopback antiga é opt-in. Não abrimos câmera nesta migração.
+- `prepare_web` executado localmente: configuração privada ignorada criada com segredo
+  persistente e reaproveitamento allowlist do legado, sem exibir valores. `migrate`
+  criou somente SQLite local de sessões/tentativas; não consultou/alterou Supabase.
+- QA identificou Referrer-Policy/meta no-referrer incompatível com POST de formulário;
+  corrigidos para same-origin. Origem externa/null permanece recusada e há regressões.
+- Validação: **714 testes Python + 478 subtestes**, **17 testes JS**, Django check,
+  Ruff/formato e pip check aprovados. Revisão independente sem novos P0/P1/P2 concretos.
+  QA browser com base sintética isolada: login, navegação, ambiente com 2 câmeras,
+  edição de ambiente/regra, criação de câmera, histórico/indicadores, revisão e logout.
+  Perfil conferido em 390px. Evidência completa no arquivo abaixo; não é teste remoto.
+- Guia completo novo PC/configuração/VM em `docs/django-migration.md`. Exemplos de
+  Waitress (um processo, 8 threads) e Caddy em `config/web/`. CI principal Django;
+  workflow manual preserva testes/audit do legado, sem dizer que seus riscos sumiram.
+- Versão de pacote **0.3.0a1**, candidata Git **v0.3.0-alpha.1**, ainda NÃO publicada.
+  Tags locais v0.1.0/v0.2.0 verificadas e preservadas; sem commit/tag/push. Consulte
+  `docs/versioning.md`: árvore contém trabalho paralelo; revisar snapshot selecionado.
+- Próximo aceite: conta real admin/viewer, CRUD/RLS/ingestão autorizados, deploy Ubuntu
+  com TLS/proxy/permissões e vídeo real 720p/30 FPS medido. Não alegar treino concluído,
+  produtividade inferida, instalação Linux ou desempenho da VM com base nestes testes.
+- Especificação/evidências: `phases/se-13-django-migration/SPEC.md` e
+  `COMPLETION-VERIFICATION.md`; DJ-01 abaixo é histórico, não o comportamento atual.
+- QA encerrado, aba fechada, porta8001 sem listener. Cinco diretórios temporários
+  de sessões fictícias ficaram no Temp após interrupção; limpeza bloqueada pela
+  política da ferramenta, não contornada. Nenhum dado real ou arquivo Git envolvido.
+- Limites de fotos/revisão humana/celular e pendências SE-04 continuam preservados.
+  `h origin main` intocado. Nenhuma memória interna é exportada por estes documentos.
+
+## Histórico de 19/09: SE-13 / DJ-01 — fundação Django
+
+- Decisão confirmada: **Django + templates HTML/CSS/JavaScript puro, sem TypeScript
+  no destino**. Prioridade atual é migração web, não treinamento de visão.
+- Criados `manage.py`, `app/web/` e extra opcional `web` com Django 5.2.17 instalado
+  no Conda smart-environment. Novo runtime independe de npm/Node, modelos e `.env`.
+- Login visual preserva logos/cores; campos/Entrar desabilitados, aviso explícito.
+  Não há login simulado, sessão, DB, bootstrap, painel funcional ou dados de câmeras.
+- `/` → `/login/`; `/health/` somente liveness, autenticação/dados explicitamente false.
+  Rotas GET/HEAD, CSP sem conexões/submissões, settings apenas desenvolvimento loopback.
+- **Não implantar/usar autenticação real com DEBUG/chave efêmera.** DJ-02 deve introduzir
+  configuração segura, sessão server-side, refresh/logout, CSRF e papéis existentes.
+- `dashboard/` legado permanece intacto nesta etapa até paridade. Sua existência com
+  TS não significa que a migração já terminou; não excluir telas prematuramente.
+- Suíte final: **560 testes Python + 263 subtestes**, zero falhas/skips; **2 testes JS**
+  novos, Django check, Ruff/formato e pip check aprovados. Wheel gerado, seis assets
+  conferidos por hash; não houve instalação limpa/Linux nem auditoria SCA nova.
+- QA real local: desktop/celular, logos e toggle de detalhes confirmados. Servidor
+  127.0.0.1:8000 e aba de teste encerrados; não há servidor novo deixado em execução.
+- Plano/evidências em `phases/se-13-django-migration/{SPEC,VERIFICATION}.md`;
+  tutorial em `docs/django-migration.md`. CI Conda preparado, não rodou no GitHub.
+- Próximos: DJ-02 autenticação/permissões, DJ-03 consultas/navegação, DJ-04 cadastros,
+  DJ-05 vídeo/telemetria, DJ-06 relatórios/QA/deploy/corte do legado.
+- Vídeo continua separado da análise; mudar web não comprova 30 FPS na VM.
+  Câmeras, Supabase, fotos e detector intocados. Pendências SE-04 abaixo preservadas.
+- main/f5b1f18; tags v0.1.0/v0.2.0 existentes verificadas, sem commit/tag/push.
+  Alterações preexistentes e `h origin main` preservados; contagens incluem árvore local.
+
+## SE-04 / REV-01 a REV-04 — editor offline e métricas, revisão humana pendente
+
+- Criados app/datasets/workstation_review.py, assets HTML/JS, módulo de métricas e
+  scripts/review_workstation_signals.py. Sem mudanças no detector/modelo das câmeras.
+- Editor autocontido: caixas por arraste/campos, apagar/desfazer, importar/exportar,
+  decisões explícitas. Propostas ocultas/opcionais, nunca copiadas como verdade.
+  Campos ainda não aplicados bloqueiam download/decisão. Sem rede/telemetria/storage.
+- JSON vincula revisão ao hash exato do relatório e fontes públicas fixas; limites,
+  dimensões/classes/estados validados. Dados pendentes não produzem métricas; exclusões
+  exigem motivo e são divulgadas. Hash não autentica revisor nem prova qualidade.
+- Métricas TP/FP/FN/precision/recall/F1 por classe/modo, IoU 0,50 e matching 1:1.
+  Sem mAP/atividade/produtividade/treino. Só testes sintéticos foram pontuados.
+- Pacotes reais finais em data/reviews/workstations-{wide,close}-20260916-v3,
+  com 2 e 6 fotos, respectivamente, todas pendentes. V1/V2 anteriores preservadas.
+  V3 impede anotar/aprovar enquanto a imagem não carregou ou falhou no decode.
+- Validação: **547 testes Python + 252 subtestes** e **54 testes Node**, sem falhas/skips.
+  Ruff/formato em 5 arquivos Python e Mypy em 3 fontes/CLI do incremento.
+- QA visual/interações/download reais pendentes: navegador integrado recusou file://;
+  não houve workaround/servidor alternativo. Abrir HTML manualmente no navegador local.
+- Guia em docs/workstation-review.md, evidências em
+  phases/se-04-activity-observation/STEP-06-REVIEW-VERIFICATION.md. Assets incluídos
+  no package-data Python; artefatos e revisões em data/ continuam ignorados no Git.
+- Próximos: conferir interface, revisar caixas segundo convenção, medir nas fontes
+  reservadas antes de ajustar/treinar. Fotos privadas/VM/Supabase permanecem intocados.
+- Sem commit/tag/push, mudanças anteriores preservadas. Pendências independentes de
+  frontend/segurança e comissionamento VM não foram revalidadas aqui.
+
+## SE-04 / DET-01 a DET-04 — recortes offline avaliados, não promovidos
+
+- Modo experimental `letterbox-detail`: quadro inteiro + até quatro recortes 60%,
+  equipamento consolidado por classe, pessoas só do quadro inteiro, falha aborta tudo.
+  CLI opt-in `--include-detail`; `--reference-set wide` seleciona duas novas cenas.
+- Oito fotos públicas avaliadas com mesmos pesos/limiar 0,25 e sem ajuste posterior
+  de parâmetros. Laboratório vazio recuperou duas propostas de teclado; escritório,
+  uma. Surgiram falso mouse/caixa de laptop indevida e o notebook encoberto segue perdido.
+- Decisão: **não promover às câmeras**. Default stretch, associação geométrica e pesos
+  inalterados; sem treino, pose, tracking, celular, câmera, VM ou banco remoto.
+- Medianas locais finais: close letterbox 31,752 ms vs detalhe 162,856 ms; wide 32,170
+  vs 164,307 ms (~5,1x). Não são FPS de vídeo, desempenho VM ou métricas de precisão.
+- Artefatos fora do Git: data/evaluations/workstation-detail-20260915-v2 e
+  workstation-detail-wide-20260915-v1; rodada close v1 preservada. Oito comparações
+  inspecionadas pelo assistente, não anotadas/aprovadas por humano.
+- Validação final: **506 testes Python + 213 subtestes**, zero skips; Ruff/formato em
+  8 arquivos e Mypy em 4 fontes do incremento. Revisão estática independente sem
+  bloqueantes concretos; inclui teste adicional do perfil do wrapper real no relatório.
+- Fonte: docs/workstation-evaluation.md e
+  phases/se-04-activity-observation/STEP-05-DETAIL-DETECTION-VERIFICATION.md.
+- Próximo: anotações humanas, negativos monitor/estojo, orçamento CPU e separação por
+  cena antes de calibrar/treinar. Conjunto pequeno não mede mAP ou produtividade.
+- main/f5b1f18 e tags locais v0.1.0/v0.2.0 preservados. Sem commit/tag/push. Incrementos
+  anteriores e `h origin main` intactos. Segurança frontend/aceite VM continuam pendentes.
+
+## SE-04 / PUB-01 a PUB-04 — comparação pública offline
+
+- Retomado o pedido de melhoria com imagens da internet. Seis referências Commons
+  com autoria/licença/hash fixos, separadas das fotos privadas. Sem fine-tuning,
+  captura, uso da VM, banco remoto, novos pesos ou publicação Git.
+- `IntelYoloDetector` agora aceita `resize_mode="letterbox"`, preservando proporções
+  e invertendo padding; `stretch` continua default nos consumidores de câmera.
+- Nova evidência geométrica experimental conta pessoa/laptop/mouse/teclado e
+  proximidade. `activity_state` sempre inconclusivo; falha não vira zero. Sem celular.
+- CLI `scripts/evaluate_workstation_signals.py` compara ambos usando um runner CPU,
+  mesmas fontes/limiar e pastas novas. Downloads somente com `--download`, hashes
+  antes da inferência, limite de 16 MiB, créditos preservados mesmo na falha parcial.
+- Execução real: 6 imagens, 5 repetições, limiar 0,25. Stretch: 5 pessoa/5 laptop/
+  0 mouse/1 teclado; letterbox: 5/4/0/1. Uma duplicação aparente de laptop removida
+  na foto 05; laptop da foto 04 e mouse da 06 perdidos por ambos. Não são métricas GT.
+- Medianas detect: 31,509 / 31,861 ms no PC; não comprovam FPS de vídeo/VM. Relatório
+  e 18 prévias em data/evaluations/public-workstations-validated-20260915 (fora do Git).
+- Fonte detalhada: docs/workstation-evaluation.md e
+  phases/se-04-activity-observation/STEP-04-PUBLIC-EVALUATION-VERIFICATION.md.
+- `AGENTS.md` criado com regras permanentes para a pasta levada a outro PC.
+- Validação final: **468 testes Python + 126 subtestes**; Ruff e formato em 9 arquivos
+  do incremento; Mypy nos 5 arquivos de código/CLI. A suíte inclui mudanças anteriores
+  do worktree, não equivale a um snapshot publicado. 69 testes novos nesta etapa.
+- Estado Git verificado: main/HEAD f5b1f18; tags locais v0.1.0 **e v0.2.0** apontam
+  para esse commit. Não mover/recriar tags; os incrementos posteriores estão locais.
+  Preservar `h origin main` e demais alterações preexistentes. Não foi consultado remoto.
+- Próximo: revisão humana/dataset representativo, rótulos de ações observáveis,
+  clipes autorizados e critérios antes de treino/promoção. Etapa privada 3D segue pausada.
+- Pendência distinta anterior: mitigação image-size local iniciada em 12/09; não foi
+  retomada aqui nem revalidada no frontend. Riscos de exposição/VM continuam abertos.
+
+As seções seguintes são checkpoints históricos; datas e contagens não são atuais.
+
+## PERF-01 / OPS-02 — preparação local sem acesso à VM
+
+- Escopo atual: continuar pendências locais e melhorar desempenho enquanto o usuário
+  não tem acesso à VM. Nenhuma câmera, treino, implantação ou dado remoto em uso.
+- Estado Git atualizado: main/HEAD f5b1f18, tag local v0.1.0 existente, criada pelo
+  usuário. Histórico abaixo é datado. Não foi consultada publicação remota; preservar
+  arquivo não rastreado do usuário `h origin main`, sem incluir no novo commit.
+- Próximo marco preparado v0.2.0, manifests/lock coerentes, sem commit/tag/push feitos
+  pelo agente. Comandos revisados em docs/versioning.md não reutilizam v0.1.0.
+- Captura readinto/slot bruto/cópia apenas no consumo; sequência repetida é ignorada.
+  Telemetry.tick a 1 Hz e fechamento final no shutdown; observações seguem imediatas.
+- Polls do painel serializados, timeout/backoff e pausa oculta; expiração com deadline
+  independente, sem relógio global 500 ms. Falhas transitórias removem análise velha
+  preservando player; recusa de acesso ainda o desmonta. JPEG local com backpressure.
+- Backup offline da outbox completa para destino novo privado, verify e restore
+  separado de ativação, sem alteração da fila original. Ensaios só em dados sintéticos.
+- CI Conda Ubuntu preparado, sem disparo no GitHub; audit alto permanece gate real.
+  Instalação limpa Linux, browser/WebRTC real e VM não foram validados nesta rodada.
+- Build auxiliar Sites falhou no shim npm Windows (caminho npm-prefix.js incorreto);
+  fallback com o build nativo do projeto aprovado, executado via Conda smart-environment.
+  Não houve alteração da instalação global ou tentativa de hospedagem.
+- Evidência final Windows/Conda smart-environment: 399 testes Python + 11 subtestes
+  (inclui 42 de backup, zero skips), build + 66 testes do dashboard, ESLint, TypeScript,
+  Ruff do servidor/testes/benchmark e Mypy dos 10 módulos de servidor aprovados.
+  YAML do workflow/perfil lido e invariantes básicos verificados; não equivale a rodar CI.
+  Árvore npm válida. Audit completo reexecutado: 2 altas image-size/vinext, gate aberto.
+- Microbenchmark repetido: 640x360, 150 frames x 5 amostras, chunks4KiB, mediana
+  0,716041 -> 0,397766 ms/montagem, pico Python 1.405.787 -> 692.353 bytes. Somente
+  montagem sintética em memória, não FPS/rede/codec/modelo nem consumo total do processo.
+- Pytest usou basetemp novo fora do OneDrive devido à ACL da pasta temporária padrão;
+  nenhuma permissão foi alterada nem diretório preexistente removido. Testes Node
+  reexecutados com conda --no-capture-output para contornar erro cp1252 do wrapper.
+- Permanecem: aceite VM/720p/30 FPS, Auth/ingestão remotos, QA visual, dependências
+  residuais, retenção/custódia e avaliação do detector. Fotos/treino continuam pausados.
 
 ## VCS-01 / OPS-01 — versões preservadas e diagnóstico de instalação
 

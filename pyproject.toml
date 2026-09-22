@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multicam-inteligente"
-version = "0.1.0"
+version = "0.3.0a1"
 description = "Fundação modular para um sistema autorizado de câmeras inteligentes"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -15,6 +15,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+web = [
+  "Django==5.2.17",
+  "waitress==3.0.2",
+]
 stream = [
   "imageio-ffmpeg==0.6.0",
 ]
@@ -37,6 +41,10 @@ multicam = "app.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+"app.datasets" = ["review_assets/*.html", "review_assets/*.js"]
+"app.web" = ["templates/web/*.html", "static/web/*.css", "static/web/*.js", "static/brand/*.png"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers -p no:cacheprovider"

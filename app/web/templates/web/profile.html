@@ -1,0 +1,5 @@
+{% extends 'web/dashboard_base.html' %}
+{% block maincontent %}
+<div class="page-heading"><div><p class="eyebrow">ACESSO</p><h1>Minha conta</h1><p>Sua sessão no Smart Environment.</p></div></div>
+<section class="panel form-panel"><div class="profile-avatar" aria-hidden="true">{{ account.email|first|upper }}</div><h2>{{ account.email }}</h2><dl class="detail-list"><div><dt>Permissão</dt><dd>{% if can_edit %}Administrador{% else %}Consulta{% endif %}</dd></div><div><dt>Autenticação</dt><dd>Supabase</dd></div></dl><p class="muted">{% if can_edit %}Você pode consultar os dados, gerenciar cadastros e revisar alertas.{% else %}Você pode consultar os ambientes, câmeras, indicadores e registros. Alterações são reservadas aos administradores.{% endif %}</p><form action="{% url 'web:logout' %}" method="post">{% csrf_token %}<button class="secondary-button" type="submit">Sair desta sessão</button></form></section>
+{% endblock %}
